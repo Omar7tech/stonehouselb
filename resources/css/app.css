@@ -3,7 +3,18 @@
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
+@font-face {
+    font-family: 'StretchPro';
+    src:
+        url('../fonts/StretchPro.woff2') format('woff2'),
+        url('../fonts/StretchPro.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
 @theme {
+    --font-display: 'StretchPro', ui-sans-serif, system-ui, sans-serif;
     --font-sans:
         'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
