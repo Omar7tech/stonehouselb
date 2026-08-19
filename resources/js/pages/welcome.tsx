@@ -11,13 +11,16 @@ export default function Welcome() {
                 <StoneHouseLogo className="w-full max-w-md select-none sm:max-w-xl lg:max-w-2xl" />
 
                 <div className="flex w-full max-w-xs animate-in flex-col gap-3 delay-1100 duration-450 ease-out fill-mode-backwards fade-in slide-in-from-bottom-4 motion-reduce:animate-none sm:max-w-md sm:flex-row sm:justify-center">
-                    <Button size="lg" className="h-12 px-8 text-base sm:flex-1">
+                    <Button
+                        size="lg"
+                        className="h-12 px-8 font-display text-2xl uppercase sm:flex-1 sm:text-xl"
+                    >
                         Dine In
                     </Button>
                     <Button
                         size="lg"
                         variant="outline"
-                        className="h-12 px-8 text-base sm:flex-1"
+                        className="h-12 px-8 font-display text-2xl uppercase sm:flex-1 sm:text-xl"
                     >
                         Delivery
                     </Button>
