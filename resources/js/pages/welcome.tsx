@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import { ArrowRight } from 'lucide-react';
 
 import { StoneHouseLogo } from '@/components/stone-house-logo';
+import { StoneWallBackdrop } from '@/components/stone-wall-backdrop';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -45,6 +46,7 @@ export default function Welcome() {
     return (
         <>
             <Head title="Welcome" />
+            <StoneWallBackdrop />
             <div className="flex min-h-screen flex-col items-center justify-center gap-12 p-6">
                 <StoneHouseLogo className="w-full max-w-md select-none sm:max-w-xl lg:max-w-2xl" />
 
