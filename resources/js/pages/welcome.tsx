@@ -23,8 +23,11 @@ function ChoiceButton({
             variant={outline ? 'outline' : 'default'}
             className={cn(
                 'h-12 justify-start px-5 font-display text-3xl uppercase sm:h-16 sm:flex-1 sm:text-2xl lg:h-20 lg:text-3xl',
-                // The arrow is the whole of the hover; the button's own colours
-                // hold still, so the stock tint is cancelled out.
+                // Lifted off the stone wall, and a little further on hover.
+                'shadow-md transition-shadow duration-300 ease-out hover:shadow-xl',
+                // The arrow and the lift are the whole of the hover; the
+                // button's own colours hold still, so the stock tint is
+                // cancelled out.
                 outline
                     ? 'hover:bg-background hover:text-foreground'
                     : 'hover:bg-primary',
