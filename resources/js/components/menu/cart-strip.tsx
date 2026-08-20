@@ -37,9 +37,9 @@ export function CartStrip({
                 {lines.map(({ product, quantity }) => (
                     <li
                         key={product.id}
-                        className="relative w-32 shrink-0 snap-start rounded-2xl bg-muted/60 px-3 pt-4 pb-3"
+                        className="relative w-24 shrink-0 snap-start rounded-lg bg-muted/60 px-2 pt-3 pb-2"
                     >
-                        <span className="absolute top-1.5 left-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-[0.65rem] font-semibold text-primary-foreground tabular-nums">
+                        <span className="absolute top-1 left-1 flex size-4 items-center justify-center rounded-full bg-primary text-[0.6rem] font-semibold text-primary-foreground tabular-nums">
                             {quantity}
                             <span className="sr-only"> in cart</span>
                         </span>
@@ -49,7 +49,7 @@ export function CartStrip({
                             className="mx-auto aspect-square w-full"
                         />
 
-                        <p className="mt-2 truncate text-center font-display text-sm uppercase">
+                        <p className="mt-1.5 truncate text-center font-display text-xs uppercase">
                             {product.name}
                         </p>
                     </li>

@@ -114,7 +114,8 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                     <StretchText
                         as="h1"
                         aria-label="Choose your craving."
-                        className="text-center font-display text-2xl uppercase sm:text-3xl"
+                        style={{ fontSize: HEADING_SIZE }}
+                        className="text-center font-display whitespace-nowrap uppercase"
                     >
                         C<Stretch level={2}>H</Stretch>OOSE YOUR CRAVING.
                     </StretchText>
