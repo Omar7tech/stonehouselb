@@ -1,5 +1,4 @@
-import useEmblaCarousel from 'embla-carousel-react';
-
+import { useDragScroll } from '@/lib/use-drag-scroll';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/types';
 
@@ -8,8 +7,11 @@ import type { Category } from '@/types';
  * the selected one is marked by a ring and a lift rather than by colour — the
  * row keeps its stripe of orange either way.
  *
- * The row is an Embla carousel in free-drag mode, so it can be dragged with a
- * mouse as well as a finger and comes to rest wherever it is let go.
+ * The row is a plain scroll container rather than a carousel, because
+ * `scroll-fade-x` is driven by the element's own scroll position: it needs
+ * something that actually scrolls, which a transform-based carousel is not.
+ * The fade tracks that position, so the edge with more pills behind it is the
+ * edge that softens.
  */
 export function CategoryPills({
     categories,
@@ -20,36 +22,27 @@ export function CategoryPills({
     activeId: number;
     onSelect: (id: number) => void;
 }) {
-    const [emblaRef] = useEmblaCarousel({
-        dragFree: true,
-        align: 'start',
-        containScroll: 'trimSnaps',
-    });
+    const { ref, dragHandlers } = useDragScroll<HTMLDivElement>();
 
     return (
-        // The row bleeds into the panel's gutter so the active pill's ring and
-        // its offset — 4px beyond the pill — aren't cut off by the viewport's
-        // own clipping at either end.
+        // Pulled out through the panel's padding so the row owns the full width
+        // of its section: pills run to the panel's edges and fade out there,
+        // instead of stopping short inside it. The padding puts the same
+        // distance back at either end, so the first pill still lines up with
+        // the products below.
         <div
-            ref={emblaRef}
-            className="-mx-2 overflow-hidden px-2 py-2 select-none"
+            ref={ref}
+            {...dragHandlers}
+            className="-mx-4 no-scrollbar scroll-fade-x cursor-grab overflow-x-auto px-4 py-2 select-none active:cursor-grabbing"
         >
-            <ul className="-ml-2 flex">
-                {categories.map((category, index) => {
+            {/* `w-max` so the row is as wide as its pills, which is what makes
+                the trailing padding reachable at the end of the scroll. */}
+            <ul className="flex w-max gap-2">
+                {categories.map((category) => {
                     const isActive = category.id === activeId;
 
                     return (
-                        <li
-                            key={category.id}
-                            className={cn(
-                                'shrink-0 pl-2',
-                                // The trailing gutter has to sit inside the
-                                // last pill: Embla measures its scroll limit
-                                // from the slides, so padding on the track
-                                // would never be reachable.
-                                index === categories.length - 1 && 'pr-2',
-                            )}
-                        >
+                        <li key={category.id}>
                             <button
                                 type="button"
                                 aria-pressed={isActive}
