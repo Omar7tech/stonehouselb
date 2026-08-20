@@ -98,10 +98,14 @@ export function StoneHouseLogo({ className }: { className?: string }) {
                 </g>
             ))}
 
-            <path d={SLAB} fill="currentColor" />
-            {STONE_COUNTERS.map((d) => (
-                <path key={d} d={d} fill="var(--background)" />
-            ))}
+            {/* STONE is punched out of the slab with `evenodd` rather than
+                painted over in the page colour, so the letters are real holes
+                and whatever the logo stands on shows through them. */}
+            <path
+                d={`${SLAB} ${STONE_COUNTERS.join(' ')}`}
+                fillRule="evenodd"
+                fill="currentColor"
+            />
 
             {/* Above the slab, cutting the letters back out of it. */}
             <g clipPath={`url(#${slabClipId})`}>
