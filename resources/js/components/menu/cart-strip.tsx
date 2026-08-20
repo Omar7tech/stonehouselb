@@ -1,10 +1,13 @@
+import useEmblaCarousel from 'embla-carousel-react';
+
 import { ProductImage } from '@/components/menu/product-image';
+import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
 
 /**
  * What's in the cart so far, across the top of the menu.
  *
- * It runs the full width of the page and scrolls sideways — a half-cut tile at
+ * It runs the full width of the page and drags sideways — a half-cut tile at
  * the right edge is what tells you there is more in there, so a long cart needs
  * no arrows and no second screen to look at.
  */
@@ -22,6 +25,12 @@ export function CartStrip({
 }: {
     lines: readonly { product: Product; quantity: number }[];
 }) {
+    const [emblaRef] = useEmblaCarousel({
+        dragFree: true,
+        align: 'start',
+        containScroll: 'trimSnaps',
+    });
+
     return (
         <section aria-label="Your cart" className="relative">
             {/* The card itself, behind its own contents. Everything below is
@@ -33,33 +42,46 @@ export function CartStrip({
                 className="absolute inset-x-0 top-0 rounded-3xl bg-card shadow-lg"
             />
 
-            {/* Free scrolling, deliberately not snapped: snapping never lets
-                the row rest part-way, and a half-cut tile at the edge is the
-                whole cue that there is more of the cart to see. */}
-            <ul className="relative flex [scrollbar-width:none] gap-3 overflow-x-auto p-4 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                {lines.map(({ product, quantity }) => (
-                    <li
-                        key={product.id}
-                        className="relative w-24 shrink-0 rounded-lg bg-muted/60 px-2 pt-3 pb-2"
-                    >
-                        {/* Centred on the corner itself — half on the tile,
-                            half off it — rather than tucked inside. */}
-                        <span className="absolute top-0 left-0 flex size-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary text-[0.6rem] font-semibold text-primary-foreground tabular-nums">
-                            {quantity}
-                            <span className="sr-only"> in cart</span>
-                        </span>
+            {/* The vertical padding is what keeps the corner badges out of the
+                viewport's clipping. */}
+            <div
+                ref={emblaRef}
+                className="relative overflow-hidden py-4 select-none"
+            >
+                <ul className="flex pl-4">
+                    {lines.map(({ product, quantity }, index) => (
+                        <li
+                            key={product.id}
+                            className={cn(
+                                'shrink-0 pr-3',
+                                // The trailing gutter has to sit inside the
+                                // last tile: Embla measures its scroll limit
+                                // from the slides, so padding on the track
+                                // would never be reachable.
+                                index === lines.length - 1 && 'pr-4',
+                            )}
+                        >
+                            <div className="relative w-24 rounded-lg bg-muted/60 px-2 pt-3 pb-2">
+                                {/* Centred on the corner itself — half on the
+                                    tile, half off it — not tucked inside. */}
+                                <span className="absolute top-0 left-0 flex size-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary text-[0.6rem] font-semibold text-primary-foreground tabular-nums">
+                                    {quantity}
+                                    <span className="sr-only"> in cart</span>
+                                </span>
 
-                        <ProductImage
-                            product={product}
-                            className="mx-auto aspect-square w-full"
-                        />
+                                <ProductImage
+                                    product={product}
+                                    className="mx-auto aspect-square w-full"
+                                />
 
-                        <p className="mt-1.5 truncate text-center font-display text-xs uppercase">
-                            {product.name}
-                        </p>
-                    </li>
-                ))}
-            </ul>
+                                <p className="mt-1.5 truncate text-center font-display text-xs uppercase">
+                                    {product.name}
+                                </p>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            </div>
         </section>
     );
 }
