@@ -1,57 +1,117 @@
-import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, ShoppingBag } from 'lucide-react';
+import { Head } from '@inertiajs/react';
+import { useMemo, useState } from 'react';
 
+import { CartStrip } from '@/components/menu/cart-strip';
+import { CategoryPills } from '@/components/menu/category-pills';
+import { CheckoutBar } from '@/components/menu/checkout-bar';
+import { ProductCard } from '@/components/menu/product-card';
+import { SiteHeader } from '@/components/menu/site-header';
 import { StoneWallBackdrop } from '@/components/stone-wall-backdrop';
-import { Button } from '@/components/ui/button';
-import type { OrderType } from '@/types';
+import { Stretch, StretchText } from '@/components/stretch';
+import { CATEGORIES, INITIAL_CART, PRODUCTS } from '@/lib/menu-placeholder';
+import type { CartLine, OrderType, Product } from '@/types';
 
 interface MenuProps {
     orderType: OrderType;
     orderTypeLabel: string;
 }
 
-/**
- * Placeholder menu page. Both order types render this same page — the delivery
- * menu is the one that carries the cart, so anything ordering-related keys off
- * `orderType` rather than living on a second page.
- */
 export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
-    const title = `${orderTypeLabel} Menu`;
-    const isDelivery = orderType === 'delivery';
+    // Delivery is the menu you order from; dine-in is the same menu to read.
+    const canOrder = orderType === 'delivery';
+
+    const [activeCategoryId, setActiveCategoryId] = useState(CATEGORIES[0].id);
+    const [cart, setCart] = useState<CartLine[]>(
+        canOrder ? [...INITIAL_CART] : [],
+    );
+
+    const products = useMemo(
+        () =>
+            PRODUCTS.filter(
+                (product) => product.categoryId === activeCategoryId,
+            ),
+        [activeCategoryId],
+    );
+
+    // The cart is kept as a list rather than keyed by id so the strip shows
+    // items in the order they were added instead of in id order.
+    const cartLines = useMemo(
+        () =>
+            cart.flatMap((line) => {
+                const product = PRODUCTS.find(
+                    (candidate) => candidate.id === line.productId,
+                );
+
+                return product ? [{ product, quantity: line.quantity }] : [];
+            }),
+        [cart],
+    );
+
+    const itemCount = useMemo(
+        () => cart.reduce((total, line) => total + line.quantity, 0),
+        [cart],
+    );
+
+    const addToCart = (product: Product): void => {
+        setCart((current) =>
+            current.some((line) => line.productId === product.id)
+                ? current.map((line) =>
+                      line.productId === product.id
+                          ? { ...line, quantity: line.quantity + 1 }
+                          : line,
+                  )
+                : [...current, { productId: product.id, quantity: 1 }],
+        );
+    };
+
+    const quantityOf = (product: Product): number =>
+        cart.find((line) => line.productId === product.id)?.quantity ?? 0;
 
     return (
         <>
-            <Head title={title} />
+            <Head title={`${orderTypeLabel} Menu`} />
             <StoneWallBackdrop />
 
-            <div className="flex min-h-screen flex-col items-center justify-center gap-8 p-6 text-center">
-                <h1 className="font-display text-4xl uppercase sm:text-5xl lg:text-6xl">
-                    {title}
-                </h1>
+            <div className="mx-auto flex min-h-screen max-w-2xl flex-col">
+                <SiteHeader />
 
-                <p className="max-w-md text-muted-foreground">
-                    {isDelivery
-                        ? 'Delivery ordering is on the way. Browse, build a cart, and send it over — soon.'
-                        : 'The dine-in menu is being set. Ask the counter for today’s board in the meantime.'}
-                </p>
+                {cartLines.length > 0 && <CartStrip lines={cartLines} />}
 
-                <div className="flex flex-col items-center gap-3 sm:flex-row">
-                    <Button asChild variant="outline" size="lg">
-                        <Link href="/">
-                            <ArrowLeft />
-                            Back
-                        </Link>
-                    </Button>
+                {/* The menu proper: one white panel the stone runs alongside,
+                    reaching the bottom of the page however short the list is. */}
+                <main className="mx-2 mt-6 flex flex-1 flex-col gap-5 rounded-t-[2rem] bg-card px-4 pt-7 shadow-lg">
+                    <StretchText
+                        as="h1"
+                        aria-label="Choose your craving."
+                        className="text-center font-display text-2xl uppercase sm:text-3xl"
+                    >
+                        C<Stretch level={2}>H</Stretch>OOSE YOUR CRAVING.
+                    </StretchText>
 
-                    {/* The one difference between the two menus: only delivery
-                        gets a cart. Disabled until the products land. */}
-                    {isDelivery && (
-                        <Button size="lg" disabled>
-                            <ShoppingBag />
-                            Cart (0)
-                        </Button>
+                    <CategoryPills
+                        categories={CATEGORIES}
+                        activeId={activeCategoryId}
+                        onSelect={setActiveCategoryId}
+                    />
+
+                    <ul className="flex flex-col gap-4">
+                        {products.map((product) => (
+                            <li key={product.id}>
+                                <ProductCard
+                                    product={product}
+                                    quantity={quantityOf(product)}
+                                    onAdd={canOrder ? addToCart : undefined}
+                                />
+                            </li>
+                        ))}
+                    </ul>
+
+                    {canOrder ? (
+                        <CheckoutBar itemCount={itemCount} />
+                    ) : (
+                        <div className="pb-6" />
                     )}
-                </div>
+                </main>
             </div>
         </>
     );
