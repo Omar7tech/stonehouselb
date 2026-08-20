@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -24,8 +25,10 @@ const STONE_COUNTERS: readonly string[] = [
     'M137.48,37.91l-16.93,2.91-.97-19.42,17.9,16.52Z',
 ];
 
+type HouseLetter = { d: string; counter?: string };
+
 /** HOUSE, left to right, each letter with the counter it encloses. */
-const HOUSE_LETTERS: ReadonlyArray<{ d: string; counter?: string }> = [
+const HOUSE_LETTERS: ReadonlyArray<HouseLetter> = [
     {
         d: 'M91,90.75l-.62-12.46-73.5,12.57.64,12.45-8.96,1.53-.56.05-.02-.8-1.61-31.84,9.5-1.62.59,11.52,73.49-12.56-.59-11.52,9.51-1.62,1.65,32.69-9.52,1.62Z',
     },
@@ -61,6 +64,10 @@ const TAGLINE_PATHS: readonly string[] = [
     'M290.98,82.96l-7.6,1.27-1.25-7.53-3.42.57,1.67,10.03,11.02-1.84-.41-2.49Z',
 ];
 
+/** The artwork's own coordinate space, shared by the viewBox and the masks. */
+const VIEW_WIDTH = 291.18;
+const VIEW_HEIGHT = 118.35;
+
 /** The slab lands first; the letters wait for it to settle. */
 const LETTER_START_MS = 380;
 const LETTER_STEP_MS = 60;
@@ -69,59 +76,90 @@ const TAGLINE_STEP_MS = 25;
 
 export function StoneHouseLogo({ className }: { className?: string }) {
     // Two logos on one page would otherwise share — and fight over — one id.
-    const slabClipId = `stone-house-slab-${useId()}`;
+    const suffix = useId();
+    const slabMaskId = `stone-house-slab-${suffix}`;
+    const offSlabMaskId = `stone-house-off-slab-${suffix}`;
+
+    /** The letters, drawn once per layer and kept in step by a shared delay. */
+    const letters = (paint: (letter: HouseLetter) => ReactNode): ReactNode =>
+        HOUSE_LETTERS.map((letter, index) => (
+            <g
+                key={letter.d}
+                className="animate-logo-letter"
+                style={{
+                    animationDelay: `${LETTER_START_MS + index * LETTER_STEP_MS}ms`,
+                }}
+            >
+                {paint(letter)}
+            </g>
+        ));
 
     return (
         <svg
-            viewBox="0 0 291.18 118.35"
+            viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
             role="img"
             aria-label="Stone House — Crunch & Grill"
             className={cn('animate-logo-slab text-primary', className)}
         >
             <defs>
-                <clipPath id={slabClipId}>
-                    <path d={SLAB} />
-                </clipPath>
+                {/* What the slab keeps: itself, less STONE cut into its top
+                    edge, less each HOUSE letter crossing it — though each
+                    letter's counter stays slab, being enclosed by it. */}
+                <mask
+                    id={slabMaskId}
+                    maskUnits="userSpaceOnUse"
+                    x="0"
+                    y="0"
+                    width={VIEW_WIDTH}
+                    height={VIEW_HEIGHT}
+                >
+                    <path d={SLAB} fill="#fff" />
+                    {STONE_COUNTERS.map((d) => (
+                        <path key={d} d={d} fill="#000" />
+                    ))}
+                    {letters(({ d, counter }) => (
+                        <>
+                            <path d={d} fill="#000" />
+                            {counter && <path d={counter} fill="#fff" />}
+                        </>
+                    ))}
+                </mask>
+
+                {/* Everywhere the slab is not. The letters are drawn a second
+                    time underneath, for the parts that hang off the slab, and
+                    this keeps that copy out of the holes the mask above just
+                    cut — otherwise it would fill them straight back in and
+                    nothing would look knocked out at all. */}
+                <mask
+                    id={offSlabMaskId}
+                    maskUnits="userSpaceOnUse"
+                    x="0"
+                    y="0"
+                    width={VIEW_WIDTH}
+                    height={VIEW_HEIGHT}
+                >
+                    <rect width={VIEW_WIDTH} height={VIEW_HEIGHT} fill="#fff" />
+                    <path d={SLAB} fill="#000" />
+                    {STONE_COUNTERS.map((d) => (
+                        <path key={d} d={d} fill="#fff" />
+                    ))}
+                </mask>
             </defs>
 
-            {/* Beneath the slab, so only what hangs off it shows. */}
-            {HOUSE_LETTERS.map(({ d, counter }, index) => (
-                <g
-                    key={d}
-                    className="animate-logo-letter"
-                    style={{
-                        animationDelay: `${LETTER_START_MS + index * LETTER_STEP_MS}ms`,
-                    }}
-                >
-                    <path d={d} fill="currentColor" />
-                    {counter && <path d={counter} fill="var(--background)" />}
-                </g>
-            ))}
-
-            {/* STONE is punched out of the slab with `evenodd` rather than
-                painted over in the page colour, so the letters are real holes
-                and whatever the logo stands on shows through them. */}
-            <path
-                d={`${SLAB} ${STONE_COUNTERS.join(' ')}`}
-                fillRule="evenodd"
-                fill="currentColor"
-            />
-
-            {/* Above the slab, cutting the letters back out of it. */}
-            <g clipPath={`url(#${slabClipId})`}>
-                {HOUSE_LETTERS.map(({ d, counter }, index) => (
-                    <g
-                        key={d}
-                        className="animate-logo-letter"
-                        style={{
-                            animationDelay: `${LETTER_START_MS + index * LETTER_STEP_MS}ms`,
-                        }}
-                    >
-                        <path d={d} fill="var(--background)" />
-                        {counter && <path d={counter} fill="currentColor" />}
-                    </g>
+            {/* The overhanging parts of HOUSE. Each letter carries its counter
+                as a hole rather than a patch of page colour, so it stays empty
+                once the letter clears the slab. */}
+            <g mask={`url(#${offSlabMaskId})`}>
+                {letters(({ d, counter }) => (
+                    <path
+                        d={counter === undefined ? d : `${d} ${counter}`}
+                        fillRule="evenodd"
+                        fill="currentColor"
+                    />
                 ))}
             </g>
+
+            <path d={SLAB} fill="currentColor" mask={`url(#${slabMaskId})`} />
 
             {TAGLINE_PATHS.map((d, index) => (
                 <path
