@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react';
 
 import { ProductImage } from '@/components/menu/product-image';
+import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
 
 /**
@@ -27,7 +28,9 @@ export function ProductCard({
                 className="size-20 shrink-0 sm:size-24"
             />
 
-            <div className="min-w-0 flex-1 pr-10">
+            {/* The gutter is only kept clear when there is an add button to
+                keep clear of; on dine-in the name uses the full width. */}
+            <div className={cn('min-w-0 flex-1', onAdd && 'pr-10')}>
                 <h3 className="truncate font-display text-2xl uppercase sm:text-3xl">
                     {product.name}
                 </h3>

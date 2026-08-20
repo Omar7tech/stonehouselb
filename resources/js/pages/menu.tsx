@@ -9,6 +9,7 @@ import { SiteHeader } from '@/components/menu/site-header';
 import { StoneWallBackdrop } from '@/components/stone-wall-backdrop';
 import { Stretch, StretchText } from '@/components/stretch';
 import { CATEGORIES, INITIAL_CART, PRODUCTS } from '@/lib/menu-placeholder';
+import { cn } from '@/lib/utils';
 import type { CartLine, OrderType, Product } from '@/types';
 
 interface MenuProps {
@@ -52,6 +53,8 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
         [cart],
     );
 
+    const hasCart = cartLines.length > 0;
+
     const addToCart = (product: Product): void => {
         setCart((current) =>
             current.some((line) => line.productId === product.id)
@@ -75,13 +78,23 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
             <div className="mx-auto flex min-h-screen max-w-2xl flex-col">
                 <SiteHeader />
 
-                {cartLines.length > 0 && <CartStrip lines={cartLines} />}
+                {hasCart && <CartStrip lines={cartLines} />}
 
                 {/* The menu proper: one white panel the stone runs alongside,
                     reaching the bottom of the page however short the list is.
-                    It is pulled up over the cart above it, so the cart's card
-                    disappears behind its rounded top edge. */}
-                <main className="relative mx-2 -mt-10 flex flex-1 flex-col gap-5 rounded-t-[2rem] bg-surface px-4 pt-7 shadow-lg">
+                    The pull upwards is only there to tuck the cart's card
+                    behind this one's rounded top edge — with no cart above it
+                    there is nothing to overlap, and it would climb into the
+                    header instead. */}
+                <main
+                    className={cn(
+                        'relative mx-2 flex flex-1 flex-col gap-5 rounded-t-[2rem] bg-surface px-4 pt-7 shadow-lg',
+                        hasCart ? '-mt-10' : 'mt-6',
+                        // Delivery closes on the checkout bar, which brings its
+                        // own spacing; dine-in ends on the last product.
+                        canOrder || 'pb-6',
+                    )}
+                >
                     <StretchText
                         as="h1"
                         aria-label="Choose your craving."
@@ -108,11 +121,7 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                         ))}
                     </ul>
 
-                    {canOrder ? (
-                        <CheckoutBar itemCount={itemCount} />
-                    ) : (
-                        <div className="pb-6" />
-                    )}
+                    {canOrder && <CheckoutBar itemCount={itemCount} />}
                 </main>
             </div>
         </>
