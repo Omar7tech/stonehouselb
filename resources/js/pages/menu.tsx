@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { CartStrip } from '@/components/menu/cart-strip';
 import { CategoryPills } from '@/components/menu/category-pills';
 import { CheckoutBar } from '@/components/menu/checkout-bar';
+import { OrderTypeSwitch } from '@/components/menu/order-type-switch';
 import { ProductCard } from '@/components/menu/product-card';
 import { SiteHeader } from '@/components/menu/site-header';
 import { StoneWallBackdrop } from '@/components/stone-wall-backdrop';
@@ -133,6 +134,20 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
             <div className="mx-auto flex min-h-screen max-w-2xl flex-col pb-32">
                 <SiteHeader />
 
+                {/* Which menu you are on, and the way across to the other one.
+                    Ligatures off, or StretchPro would widen the double E in
+                    Delivery of its own accord. */}
+                <div className="flex items-center justify-between gap-3 px-5 pb-5">
+                    <StretchText
+                        as="h1"
+                        className="min-w-0 truncate font-display text-base uppercase sm:text-lg"
+                    >
+                        {orderTypeLabel} Menu
+                    </StretchText>
+
+                    <OrderTypeSwitch current={orderType} />
+                </div>
+
                 {hasCart && <CartStrip lines={cartLines} />}
 
                 {/* The menu proper: one panel the stone runs alongside, sized
@@ -172,7 +187,7 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                     />
 
                     <StretchText
-                        as="h1"
+                        as="h2"
                         aria-label="Choose your craving."
                         style={{ fontSize: HEADING_SIZE }}
                         className="text-center font-display whitespace-nowrap uppercase"
