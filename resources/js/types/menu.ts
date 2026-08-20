@@ -6,6 +6,11 @@ export type Product = {
     name: string;
     description?: string;
     /**
+     * In cents, not dollars. Money held as a float rounds badly the moment it
+     * is summed — and this will be summed, once the cart totals for real.
+     */
+    price: number;
+    /**
      * Photo for the card. Products without one fall back to `ProductImage`'s
      * placeholder rather than leaving a hole in the row.
      */

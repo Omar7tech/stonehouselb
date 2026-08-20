@@ -35,22 +35,26 @@ export const CATEGORIES: readonly Category[] = [
         products: withPhoto([
             {
                 id: 101,
+                price: 250,
                 name: 'Baalbek Sefiha',
                 description:
                     'Open-faced minced beef with tomato, onion and a squeeze of lemon.',
             },
             {
                 id: 102,
+                price: 300,
                 name: 'Cheese Sefiha',
                 description: 'Akkawi and mozzarella melted over thin dough.',
             },
             {
                 id: 103,
+                price: 350,
                 name: 'Lahm Bi Ajin',
                 description: 'Spiced lamb, pine nuts and pomegranate molasses.',
             },
             {
                 id: 104,
+                price: 200,
                 name: 'Zaatar Manoushe',
                 description:
                     'Wild thyme, sesame and olive oil, baked until the edges crisp.',
@@ -64,22 +68,26 @@ export const CATEGORIES: readonly Category[] = [
         products: withPhoto([
             {
                 id: 201,
+                price: 1200,
                 name: 'Crunch Bucket',
                 description: 'Eight pieces, double-dredged and fried to order.',
             },
             {
                 id: 202,
+                price: 750,
                 name: 'Hot Honey Tenders',
                 description: 'Buttermilk tenders finished with chilli honey.',
             },
             {
                 id: 203,
+                price: 650,
                 name: 'Chicken Zinger',
                 description:
                     'Fillet, lettuce and garlic mayo in a toasted bun.',
             },
             {
                 id: 204,
+                price: 550,
                 name: 'Popcorn Chicken',
                 description: 'Bite-sized, seasoned with our house seven-spice.',
             },
@@ -92,22 +100,26 @@ export const CATEGORIES: readonly Category[] = [
         products: withPhoto([
             {
                 id: 301,
+                price: 950,
                 name: 'Stone House Double',
                 description:
                     'Two smashed patties, cheddar, pickles and house sauce.',
             },
             {
                 id: 302,
+                price: 700,
                 name: 'Classic Smash',
                 description: 'Single patty, onion, tomato and melted cheese.',
             },
             {
                 id: 303,
+                price: 850,
                 name: 'Mushroom Swiss',
                 description: 'Sauteed mushrooms and swiss over a beef patty.',
             },
             {
                 id: 304,
+                price: 900,
                 name: 'Spicy Angus',
                 description:
                     'Angus patty, jalapeno, pepper jack, chipotle mayo.',
@@ -121,21 +133,25 @@ export const CATEGORIES: readonly Category[] = [
         products: withPhoto([
             {
                 id: 401,
+                price: 600,
                 name: 'Shish Taouk',
                 description: 'Grilled chicken, garlic toum, pickles and fries.',
             },
             {
                 id: 402,
+                price: 650,
                 name: 'Beef Shawarma',
                 description: 'Thin-shaved beef, tahini, tomato and parsley.',
             },
             {
                 id: 403,
+                price: 450,
                 name: 'Falafel Wrap',
                 description: 'Fried chickpea patties, turnips and tarator.',
             },
             {
                 id: 404,
+                price: 550,
                 name: 'Halloumi Wrap',
                 description: 'Grilled halloumi, mint and roasted red pepper.',
             },
@@ -148,21 +164,25 @@ export const CATEGORIES: readonly Category[] = [
         products: withPhoto([
             {
                 id: 501,
+                price: 300,
                 name: 'House Fries',
                 description: 'Skin-on, salted the moment they leave the fryer.',
             },
             {
                 id: 502,
+                price: 350,
                 name: 'Onion Rings',
                 description: 'Beer-battered, stacked, and gone in a minute.',
             },
             {
                 id: 503,
+                price: 150,
                 name: 'Garlic Toum',
                 description: 'Whipped garlic, lemon and oil. Order two.',
             },
             {
                 id: 504,
+                price: 250,
                 name: 'Coleslaw',
                 description: 'Cabbage and carrot in a light lemon dressing.',
             },
@@ -175,21 +195,25 @@ export const CATEGORIES: readonly Category[] = [
         products: withPhoto([
             {
                 id: 601,
+                price: 200,
                 name: 'Fresh Lemonade',
                 description: 'Lemon, mint and just enough sugar.',
             },
             {
                 id: 602,
+                price: 150,
                 name: 'Ayran',
                 description: 'Salted yoghurt, served properly cold.',
             },
             {
                 id: 603,
+                price: 150,
                 name: 'Soft Drinks',
                 description: "Chilled cans, whatever's in the fridge.",
             },
             {
                 id: 604,
+                price: 250,
                 name: 'Turkish Coffee',
                 description: 'Ground fine, served with the foam on top.',
             },
