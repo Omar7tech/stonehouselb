@@ -1,7 +1,6 @@
 import useEmblaCarousel from 'embla-carousel-react';
 
 import { ProductImage } from '@/components/menu/product-image';
-import { StretchText } from '@/components/stretch';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
 
@@ -75,14 +74,10 @@ export function CartStrip({
                                     className="mx-auto aspect-square w-full"
                                 />
 
-                                {/* Ligatures off, as on the product cards: a
-                                    doubled letter would widen itself. */}
-                                <StretchText
-                                    as="p"
-                                    className="mt-1.5 truncate text-center font-display text-[0.7rem] uppercase"
-                                >
+                                {/* Body face, as on the product cards. */}
+                                <p className="mt-1.5 truncate text-center text-[0.7rem] font-medium uppercase">
                                     {product.name}
-                                </StretchText>
+                                </p>
                             </div>
                         </li>
                     ))}

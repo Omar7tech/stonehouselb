@@ -1,7 +1,6 @@
 import { Plus } from 'lucide-react';
 
 import { ProductImage } from '@/components/menu/product-image';
-import { StretchText } from '@/components/stretch';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
 
@@ -32,15 +31,13 @@ export function ProductCard({
             {/* The gutter is only kept clear when there is an add button to
                 keep clear of; on dine-in the name uses the full width. */}
             <div className={cn('min-w-0 flex-1', onAdd && 'pr-8')}>
-                {/* Ligatures off: StretchPro draws doubled letters as one wide
-                    glyph, so a name like Classic Smash or Turkish Coffee would
-                    stretch itself. Widening is only ever deliberate. */}
-                <StretchText
-                    as="h3"
-                    className="truncate font-display text-base uppercase sm:text-lg"
-                >
+                {/* Body face, not the display one: product names are read, not
+                    admired, and StretchPro is too wide to hold a full name on
+                    one line. It also takes the ligature problem with it — no
+                    doubled letter can widen itself here. */}
+                <h3 className="truncate text-base font-semibold uppercase sm:text-lg">
                     {product.name}
-                </StretchText>
+                </h3>
 
                 {product.description === undefined ? (
                     /* Nothing written for this one yet. */
