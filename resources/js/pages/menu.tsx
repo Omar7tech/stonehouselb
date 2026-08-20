@@ -130,7 +130,7 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                         onSelect={setActiveCategoryId}
                     />
 
-                    <ul className="flex flex-col gap-4">
+                    <ul className="flex flex-col gap-3">
                         {products.map((product) => (
                             <li key={product.id}>
                                 <ProductCard
