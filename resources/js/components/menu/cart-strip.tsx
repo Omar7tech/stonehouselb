@@ -42,7 +42,9 @@ export function CartStrip({
                         key={product.id}
                         className="relative w-24 shrink-0 rounded-lg bg-muted/60 px-2 pt-3 pb-2"
                     >
-                        <span className="absolute top-1 left-1 flex size-4 items-center justify-center rounded-full bg-primary text-[0.6rem] font-semibold text-primary-foreground tabular-nums">
+                        {/* Centred on the corner itself — half on the tile,
+                            half off it — rather than tucked inside. */}
+                        <span className="absolute top-0 left-0 flex size-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-primary text-[0.6rem] font-semibold text-primary-foreground tabular-nums">
                             {quantity}
                             <span className="sr-only"> in cart</span>
                         </span>
