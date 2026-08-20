@@ -33,11 +33,14 @@ export function CartStrip({
                 className="absolute inset-x-0 top-0 rounded-3xl bg-card shadow-lg"
             />
 
-            <ul className="relative flex snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto p-4 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            {/* Free scrolling, deliberately not snapped: snapping never lets
+                the row rest part-way, and a half-cut tile at the edge is the
+                whole cue that there is more of the cart to see. */}
+            <ul className="relative flex [scrollbar-width:none] gap-3 overflow-x-auto p-4 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 {lines.map(({ product, quantity }) => (
                     <li
                         key={product.id}
-                        className="relative w-24 shrink-0 snap-start rounded-lg bg-muted/60 px-2 pt-3 pb-2"
+                        className="relative w-24 shrink-0 rounded-lg bg-muted/60 px-2 pt-3 pb-2"
                     >
                         <span className="absolute top-1 left-1 flex size-4 items-center justify-center rounded-full bg-primary text-[0.6rem] font-semibold text-primary-foreground tabular-nums">
                             {quantity}
