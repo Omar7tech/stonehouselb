@@ -137,14 +137,10 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                 {/* Which menu you are on, and the way across to the other one.
                     Ligatures off, or StretchPro would widen the double E in
                     Delivery of its own accord. */}
-                <div className="flex items-center justify-between gap-3 px-5 pb-5">
-                    <StretchText
-                        as="h1"
-                        className="min-w-0 truncate font-display text-base uppercase sm:text-lg"
-                    >
-                        {orderTypeLabel} Menu
-                    </StretchText>
-
+                {/* The way across to the other menu. Which one you are on is
+                    already said by the selected half, so it carries no title
+                    of its own. */}
+                <div className="px-5 pb-5">
                     <OrderTypeSwitch current={orderType} />
                 </div>
 
@@ -187,7 +183,7 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                     />
 
                     <StretchText
-                        as="h2"
+                        as="h1"
                         aria-label="Choose your craving."
                         style={{ fontSize: HEADING_SIZE }}
                         className="text-center font-display whitespace-nowrap uppercase"

@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { Bike, UtensilsCrossed } from 'lucide-react';
 
+import { StretchText } from '@/components/stretch';
 import { cn } from '@/lib/utils';
 import type { OrderType } from '@/types';
 
@@ -33,7 +34,10 @@ export function OrderTypeSwitch({ current }: { current: OrderType }) {
     );
 
     return (
-        <div className="relative grid shrink-0 grid-cols-2 gap-1 rounded-full border border-primary/20 bg-primary/10 p-1">
+        // The track is opaque on purpose. A translucent tint here sits over the
+        // stone wall, and the stones and mortar reading through it turn the
+        // whole control muddy — it has to be its own surface, like the cards.
+        <div className="relative grid w-full grid-cols-2 gap-1 rounded-full border border-primary/15 bg-card p-1 shadow-sm">
             {/* The pill tracks the active option. Its width is one grid
                 column: half the box, less the padding and half the gap. */}
             <span
@@ -56,7 +60,7 @@ export function OrderTypeSwitch({ current }: { current: OrderType }) {
                         href={href}
                         aria-current={isActive ? 'page' : undefined}
                         className={cn(
-                            'relative z-10 flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-[0.65rem] tracking-wider uppercase transition-colors duration-300 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none sm:px-4 sm:text-xs',
+                            'relative z-10 flex items-center justify-center gap-2 rounded-full px-3 py-2.5 font-display text-[0.65rem] uppercase transition-colors duration-300 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none sm:text-xs',
                             isActive
                                 ? 'text-primary-foreground'
                                 : 'text-primary/60 hover:text-primary',
@@ -64,11 +68,13 @@ export function OrderTypeSwitch({ current }: { current: OrderType }) {
                     >
                         <Icon
                             className={cn(
-                                'size-3.5 transition-transform duration-300',
+                                'size-4 shrink-0 transition-transform duration-300',
                                 isActive && 'scale-110',
                             )}
                         />
-                        <span className="hidden sm:inline">{label}</span>
+                        {/* Ligatures off, or StretchPro widens the double E in
+                            Delivery into a single glyph. */}
+                        <StretchText className="truncate">{label}</StretchText>
                     </Link>
                 );
             })}
