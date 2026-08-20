@@ -31,7 +31,7 @@ export function ProductPrice({
                 )}
             >
                 <span className="flex items-baseline gap-2">
-                    <span className="text-sm font-semibold text-primary tabular-nums">
+                    <span className="text-base font-semibold text-primary tabular-nums">
                         {pricing.usd(effectivePrice)}
                     </span>
                     {hasDiscount && (
@@ -40,7 +40,7 @@ export function ProductPrice({
                         </span>
                     )}
                 </span>
-                <span className="text-[0.7rem] tracking-wide text-primary/60 tabular-nums">
+                <span className="text-xs tracking-wide text-primary/60 tabular-nums">
                     {pricing.lbp(effectivePrice)}
                 </span>
             </span>
@@ -54,7 +54,7 @@ export function ProductPrice({
                 className,
             )}
         >
-            <span className="text-sm font-semibold text-primary tabular-nums">
+            <span className="text-base font-semibold text-primary tabular-nums">
                 {pricing.primary(effectivePrice)}
             </span>
             {hasDiscount && (

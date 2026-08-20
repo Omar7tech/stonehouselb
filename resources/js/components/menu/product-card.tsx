@@ -36,7 +36,9 @@ export function ProductCard({
                     admired, and StretchPro is too wide to hold a full name on
                     one line. It also takes the ligature problem with it — no
                     doubled letter can widen itself here. */}
-                <h3 className="truncate text-base font-semibold uppercase sm:text-lg">
+                {/* `leading-tight`, or the line's own leading sits under the
+                    name as a gap no margin below it can take back. */}
+                <h3 className="truncate text-base leading-tight font-semibold uppercase sm:text-lg">
                     {product.name}
                 </h3>
 
@@ -47,7 +49,7 @@ export function ProductCard({
                         <span className="h-2 w-14 rounded-full bg-muted" />
                     </div>
                 ) : (
-                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                    <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
                         {product.description}
                     </p>
                 )}
