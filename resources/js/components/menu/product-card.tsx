@@ -22,7 +22,7 @@ export function ProductCard({
     onAdd?: (product: Product) => void;
 }) {
     return (
-        <article className="relative flex items-center gap-4 rounded-3xl bg-card p-3 shadow-md">
+        <article className="relative flex items-center gap-4 rounded-3xl bg-card p-3">
             <ProductImage
                 product={product}
                 className="size-20 shrink-0 sm:size-24"
