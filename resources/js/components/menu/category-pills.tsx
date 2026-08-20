@@ -36,7 +36,7 @@ export function CategoryPills({
             {...dragHandlers}
             // `scroll-fade-4` pins the fade to 16px. Left alone it is 12% of
             // the row's width, which on a phone eats most of a pill.
-            className="-mx-4 no-scrollbar scroll-fade-x cursor-grab overflow-x-auto px-4 py-2 select-none scroll-fade-4 active:cursor-grabbing"
+            className="-mx-3 no-scrollbar scroll-fade-x cursor-grab overflow-x-auto px-3 py-2 select-none scroll-fade-4 active:cursor-grabbing"
         >
             {/* `w-max` so the row is as wide as its pills, which is what makes
                 the trailing padding reachable at the end of the scroll. */}

@@ -33,7 +33,7 @@ const HEADING_EM = 20.565;
  * has, with a little taken off so a desktop scrollbar can't tip it into an
  * overflow. The ceiling is where the panel stops widening at `max-w-2xl`.
  */
-const HEADING_SIZE = `clamp(0.8rem, calc((100vw - 3.5rem) / ${HEADING_EM}), 1.85rem)`;
+const HEADING_SIZE = `clamp(0.8rem, calc((100vw - 3rem) / ${HEADING_EM}), 1.85rem)`;
 
 /** Categories worth showing: one with nothing in it opens onto an empty list. */
 const MENU: readonly Category[] = CATEGORIES.filter(
@@ -149,7 +149,7 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                         // layer: it puts it above the panel's own background
                         // but under the cards, without every card needing a
                         // stacking order of its own.
-                        'relative isolate mx-2 mt-3 flex flex-col gap-5 rounded-[2rem] bg-surface px-4 pt-7',
+                        'relative isolate mx-2 mt-3 flex flex-col gap-5 rounded-t-[2rem] rounded-b-[3rem] bg-surface px-3 pt-7',
                         // Thrown upwards, onto the cart sheet this panel
                         // overlaps. The stock shadows all fall downwards,
                         // where there is nothing to catch them.
