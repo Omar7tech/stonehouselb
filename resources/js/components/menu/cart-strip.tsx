@@ -8,20 +8,32 @@ import type { Product } from '@/types';
  * the right edge is what tells you there is more in there, so a long cart needs
  * no arrows and no second screen to look at.
  */
+
+/**
+ * How far the card's white carries on below the tiles, for the products panel
+ * to sit on top of. It is drawn out of flow, so this is a purely visual number:
+ * raising it slides more white behind the panel and cannot move anything on the
+ * page, whatever the rest of the layout is doing.
+ */
+const SHEET_BLEED = '-6rem';
+
 export function CartStrip({
     lines,
 }: {
     lines: readonly { product: Product; quantity: number }[];
 }) {
     return (
-        <section
-            aria-label="Your cart"
-            // The white runs on well past the tiles: the products panel below
-            // overlaps that surplus, so the two cards read as stacked sheets
-            // instead of two boxes with a strip of wall between them.
-            className="rounded-3xl bg-card px-4 pt-4 pb-14 shadow-lg"
-        >
-            <ul className="flex snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <section aria-label="Your cart" className="relative">
+            {/* The card itself, behind its own contents. Everything below is
+                laid out from the tiles alone, so this can reach as far down as
+                the design wants without any sibling having to know. */}
+            <div
+                aria-hidden
+                style={{ bottom: SHEET_BLEED }}
+                className="absolute inset-x-0 top-0 rounded-3xl bg-card shadow-lg"
+            />
+
+            <ul className="relative flex snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto p-4 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 {lines.map(({ product, quantity }) => (
                     <li
                         key={product.id}

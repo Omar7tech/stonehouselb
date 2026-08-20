@@ -82,14 +82,12 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
 
                 {/* The menu proper: one white panel the stone runs alongside,
                     reaching the bottom of the page however short the list is.
-                    The pull upwards is only there to tuck the cart's card
-                    behind this one's rounded top edge — with no cart above it
-                    there is nothing to overlap, and it would climb into the
-                    header instead. */}
+                    Its position is the same with a cart or without one — the
+                    cart's surplus white passes behind it rather than moving
+                    it, so nothing here has to reach up to meet it. */}
                 <main
                     className={cn(
-                        'relative mx-2 flex flex-1 flex-col gap-5 rounded-t-[2rem] bg-surface px-4 pt-7 shadow-lg',
-                        hasCart ? '-mt-10' : 'mt-6',
+                        'relative mx-2 mt-6 flex flex-1 flex-col gap-5 rounded-t-[2rem] bg-surface px-4 pt-7 shadow-lg',
                         // Delivery closes on the checkout bar, which brings its
                         // own spacing; dine-in ends on the last product.
                         canOrder || 'pb-6',
