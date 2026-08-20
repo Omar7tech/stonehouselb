@@ -109,7 +109,7 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                         // Thrown upwards, onto the cart sheet this panel
                         // overlaps. The stock shadows all fall downwards,
                         // where there is nothing to catch them.
-                        'shadow-[0_-8px_24px_rgb(0_0_0/0.14)]',
+                        'shadow-[0_-6px_20px_rgb(0_0_0/0.11)]',
                         // Delivery closes on the checkout bar, which brings its
                         // own spacing; dine-in ends on the last product.
                         canOrder || 'pb-6',
