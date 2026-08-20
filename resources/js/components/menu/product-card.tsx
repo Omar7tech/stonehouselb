@@ -25,7 +25,7 @@ export function ProductCard({
         <article className="relative flex items-center gap-3 rounded-2xl bg-card p-2.5">
             <ProductImage
                 product={product}
-                className="size-16 shrink-0 sm:size-18"
+                className="size-20 shrink-0 sm:size-22"
             />
 
             {/* The gutter is only kept clear when there is an add button to
