@@ -105,7 +105,11 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                     it, so nothing here has to reach up to meet it. */}
                 <main
                     className={cn(
-                        'relative mx-2 mt-6 flex flex-1 flex-col gap-5 rounded-t-[2rem] bg-surface px-4 pt-7 shadow-lg',
+                        'relative mx-2 mt-6 flex flex-1 flex-col gap-5 rounded-t-[2rem] bg-surface px-4 pt-7',
+                        // Thrown upwards, onto the cart sheet this panel
+                        // overlaps. The stock shadows all fall downwards,
+                        // where there is nothing to catch them.
+                        'shadow-[0_-8px_24px_rgb(0_0_0/0.14)]',
                         // Delivery closes on the checkout bar, which brings its
                         // own spacing; dine-in ends on the last product.
                         canOrder || 'pb-6',
