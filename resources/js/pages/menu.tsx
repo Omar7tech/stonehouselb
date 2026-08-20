@@ -145,7 +145,11 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                     it, so nothing here has to reach up to meet it. */}
                 <main
                     className={cn(
-                        'relative mx-2 mt-3 flex flex-col gap-5 rounded-[2rem] bg-surface px-4 pt-7',
+                        // `isolate` so the pattern below can sit on a negative
+                        // layer: it puts it above the panel's own background
+                        // but under the cards, without every card needing a
+                        // stacking order of its own.
+                        'relative isolate mx-2 mt-3 flex flex-col gap-5 rounded-[2rem] bg-surface px-4 pt-7',
                         // Thrown upwards, onto the cart sheet this panel
                         // overlaps. The stock shadows all fall downwards,
                         // where there is nothing to catch them.
@@ -155,6 +159,18 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                         canOrder || 'pb-6',
                     )}
                 >
+                    {/* Texture at the foot of the section, so the panel closes
+                        on something rather than just stopping. A dot grid in
+                        `currentColor` at very low opacity, masked so it fades
+                        out as it rises — the bottom corners are rounded to
+                        match the panel, which keeps it inside the card without
+                        an `overflow-hidden` that would break the sticky
+                        button. Decorative, so it is hidden from readers. */}
+                    <div
+                        aria-hidden
+                        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-56 rounded-b-[2rem] bg-[radial-gradient(currentColor_1px,transparent_1px)] [mask-image:linear-gradient(to_top,#000_20%,transparent)] [background-size:14px_14px] opacity-[0.07] [-webkit-mask-image:linear-gradient(to_top,#000_20%,transparent)]"
+                    />
+
                     <StretchText
                         as="h1"
                         aria-label="Choose your craving."
