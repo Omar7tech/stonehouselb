@@ -80,9 +80,9 @@ export function SiteFooter() {
                     className="w-full"
                 />
 
-                {/* One line per account, ruled like a listing. Hovering sweeps the
-                row white and drops the type back to orange — the row lights up
-                where an icon would otherwise have to do the pointing. */}
+                {/* One line per account, ruled like a listing. Nothing changes
+                    colour on hover — the row's own rule simply draws itself in
+                    under the name, which is all the pointing it needs. */}
                 <ul className="relative mt-9 border-t border-primary-foreground/20">
                     {SOCIALS.map(({ label, href }) => (
                         <li
@@ -93,23 +93,24 @@ export function SiteFooter() {
                                 href={href}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="group relative flex items-center justify-between gap-4 overflow-hidden py-3 focus-visible:outline-none"
+                                className="group relative flex items-center justify-between gap-4 py-3 focus-visible:outline-none"
                             >
-                                {/* Run out past the row's own box so the sweep
-                                reaches the slab's edges; the footer clips it. */}
+                                {/* Drawn straight over the faint rule the row
+                                    already sits on, so the line brightens in
+                                    place rather than a second one appearing. */}
                                 <span
                                     aria-hidden
-                                    className="absolute -inset-x-6 inset-y-0 origin-left scale-x-0 bg-primary-foreground transition-transform duration-400 ease-[cubic-bezier(0.65,0,0.35,1)] group-hover:scale-x-100 group-focus-visible:scale-x-100 motion-reduce:transition-none"
+                                    className="absolute inset-x-0 -bottom-px h-px origin-left scale-x-0 bg-primary-foreground transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)] group-hover:scale-x-100 group-focus-visible:scale-x-100 motion-reduce:transition-none"
                                 />
 
-                                <StretchText className="relative font-display text-lg uppercase transition-colors duration-300 group-hover:text-primary group-focus-visible:text-primary sm:text-xl">
+                                <StretchText className="font-display text-lg uppercase transition-transform duration-300 ease-out group-hover:translate-x-1.5 group-focus-visible:translate-x-1.5 motion-reduce:transform-none sm:text-xl">
                                     {label}
                                 </StretchText>
 
                                 {/* The arrow rides off the corner and a fresh
                                     one climbs in behind it, the same way the
                                     landing buttons handle theirs. */}
-                                <span className="relative flex size-5 items-center justify-center overflow-hidden transition-colors duration-300 group-hover:text-primary group-focus-visible:text-primary">
+                                <span className="relative flex size-5 items-center justify-center overflow-hidden">
                                     <ArrowUpRight
                                         className="size-5 shrink-0 transition-transform duration-300 ease-out group-hover:translate-x-6 group-hover:-translate-y-6 group-focus-visible:translate-x-6 group-focus-visible:-translate-y-6 motion-reduce:transform-none"
                                         strokeWidth={2.5}
