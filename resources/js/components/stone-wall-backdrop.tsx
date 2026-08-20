@@ -34,17 +34,17 @@ const COURSE_JOINTS: readonly (readonly number[])[] = [
     [8, 80, 136, 186, 248],
 ];
 
-/** Warm off-whites, close enough together to read as one wall. */
+/** Cool greys, close enough together to read as one wall. */
 const STONE_FILLS = [
-    '#f8f6f2',
-    '#f1eee8',
-    '#fbfaf7',
-    '#ece8e0',
-    '#f5f2ed',
-    '#f7f4ef',
+    '#eceae7',
+    '#e3e1de',
+    '#f0efec',
+    '#dad7d3',
+    '#e8e6e3',
+    '#eae8e5',
 ] as const;
 
-const MORTAR = '#e6e2da';
+const MORTAR = '#d2cfca';
 
 type Stone = {
     x: number;
@@ -135,8 +135,8 @@ export function StoneWallBackdrop({ className }: { className?: string }) {
                 {/* Light pooled in the middle: the wall stays a wall at the
                     edges and gets out of the way behind the content. */}
                 <radialGradient id={washId} cx="50%" cy="45%" r="75%">
-                    <stop offset="0%" stopColor="#fff" stopOpacity="0.88" />
-                    <stop offset="55%" stopColor="#fff" stopOpacity="0.4" />
+                    <stop offset="0%" stopColor="#fff" stopOpacity="0.62" />
+                    <stop offset="55%" stopColor="#fff" stopOpacity="0.28" />
                     <stop offset="100%" stopColor="#fff" stopOpacity="0" />
                 </radialGradient>
             </defs>
