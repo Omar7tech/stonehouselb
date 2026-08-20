@@ -105,7 +105,7 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                     it, so nothing here has to reach up to meet it. */}
                 <main
                     className={cn(
-                        'relative mx-2 mt-6 flex flex-1 flex-col gap-5 rounded-t-[2rem] bg-surface px-4 pt-7',
+                        'relative mx-2 mt-3 flex flex-1 flex-col gap-5 rounded-t-[2rem] bg-surface px-4 pt-7',
                         // Thrown upwards, onto the cart sheet this panel
                         // overlaps. The stock shadows all fall downwards,
                         // where there is nothing to catch them.
