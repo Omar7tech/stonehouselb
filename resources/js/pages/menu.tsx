@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { CartStrip } from '@/components/menu/cart-strip';
 import { CategoryPills } from '@/components/menu/category-pills';
@@ -8,9 +8,9 @@ import { ProductCard } from '@/components/menu/product-card';
 import { SiteHeader } from '@/components/menu/site-header';
 import { StoneWallBackdrop } from '@/components/stone-wall-backdrop';
 import { Stretch, StretchText } from '@/components/stretch';
-import { CATEGORIES, INITIAL_CART, PRODUCTS } from '@/lib/menu-placeholder';
+import { ALL_PRODUCTS, CATEGORIES, INITIAL_CART } from '@/lib/menu-placeholder';
 import { cn } from '@/lib/utils';
-import type { CartLine, OrderType, Product } from '@/types';
+import type { Category, CartLine, OrderType, Product } from '@/types';
 
 interface MenuProps {
     orderType: OrderType;
@@ -35,29 +35,60 @@ const HEADING_EM = 20.565;
  */
 const HEADING_SIZE = `clamp(0.8rem, calc((100vw - 3.5rem) / ${HEADING_EM}), 1.85rem)`;
 
+/** Categories worth showing: one with nothing in it opens onto an empty list. */
+const MENU: readonly Category[] = CATEGORIES.filter(
+    (category) => category.products.length > 0,
+);
+
+/** The category named in `?category=`, or null when it names nothing known. */
+function readCategoryFromUrl(): number | null {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+
+    const slug = new URLSearchParams(window.location.search).get('category');
+
+    if (slug === null) {
+        return null;
+    }
+
+    return MENU.find((category) => category.slug === slug)?.id ?? null;
+}
+
 export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
     // Delivery is the menu you order from; dine-in is the same menu to read.
     const canOrder = orderType === 'delivery';
 
-    const [activeCategoryId, setActiveCategoryId] = useState(CATEGORIES[0].id);
+    const [activeCategoryId, setActiveCategoryId] = useState(
+        () => readCategoryFromUrl() ?? MENU[0].id,
+    );
     const [cart, setCart] = useState<CartLine[]>(
         canOrder ? [...INITIAL_CART] : [],
     );
 
-    const products = useMemo(
-        () =>
-            PRODUCTS.filter(
-                (product) => product.categoryId === activeCategoryId,
-            ),
-        [activeCategoryId],
-    );
+    const activeCategory =
+        MENU.find((category) => category.id === activeCategoryId) ?? MENU[0];
+    const products = activeCategory.products;
+
+    // Mirror the open category into the URL so the view survives a refresh and
+    // can be shared, without a server round-trip.
+    useEffect(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('category', activeCategory.slug);
+        window.history.replaceState(window.history.state, '', url);
+    }, [activeCategory]);
+
+    const selectCategory = (id: number): void => {
+        setActiveCategoryId(id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     // The cart is kept as a list rather than keyed by id so the strip shows
     // items in the order they were added instead of in id order.
     const cartLines = useMemo(
         () =>
             cart.flatMap((line) => {
-                const product = PRODUCTS.find(
+                const product = ALL_PRODUCTS.find(
                     (candidate) => candidate.id === line.productId,
                 );
 
@@ -125,9 +156,9 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                     </StretchText>
 
                     <CategoryPills
-                        categories={CATEGORIES}
-                        activeId={activeCategoryId}
-                        onSelect={setActiveCategoryId}
+                        categories={MENU}
+                        activeId={activeCategory.id}
+                        onSelect={selectCategory}
                     />
 
                     <ul className="flex flex-col gap-3">

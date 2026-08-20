@@ -35,11 +35,17 @@ export function ProductCard({
                     {product.name}
                 </h3>
 
-                {/* Description and price, still to come. */}
-                <div aria-hidden className="mt-2 flex gap-1.5">
-                    <span className="h-2 w-20 rounded-full bg-muted" />
-                    <span className="h-2 w-14 rounded-full bg-muted" />
-                </div>
+                {product.description === undefined ? (
+                    /* Nothing written for this one yet. */
+                    <div aria-hidden className="mt-2 flex gap-1.5">
+                        <span className="h-2 w-20 rounded-full bg-muted" />
+                        <span className="h-2 w-14 rounded-full bg-muted" />
+                    </div>
+                ) : (
+                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                        {product.description}
+                    </p>
+                )}
             </div>
 
             {onAdd && (
