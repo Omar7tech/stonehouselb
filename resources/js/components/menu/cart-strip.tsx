@@ -79,7 +79,7 @@ export function CartStrip({
                                     doubled letter would widen itself. */}
                                 <StretchText
                                     as="p"
-                                    className="mt-1.5 truncate text-center font-display text-xs uppercase"
+                                    className="mt-1.5 truncate text-center font-display text-[0.7rem] uppercase"
                                 >
                                     {product.name}
                                 </StretchText>

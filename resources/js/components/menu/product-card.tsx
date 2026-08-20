@@ -37,7 +37,7 @@ export function ProductCard({
                     stretch itself. Widening is only ever deliberate. */}
                 <StretchText
                     as="h3"
-                    className="truncate font-display text-lg uppercase sm:text-xl"
+                    className="truncate font-display text-base uppercase sm:text-lg"
                 >
                     {product.name}
                 </StretchText>
