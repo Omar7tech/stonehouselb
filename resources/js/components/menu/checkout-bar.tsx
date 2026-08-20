@@ -7,7 +7,7 @@
  */
 export function CheckoutBar({ itemCount }: { itemCount: number }) {
     return (
-        <div className="sticky bottom-0 -mx-1 bg-gradient-to-t from-card via-card/95 to-transparent px-1 pt-6 pb-4">
+        <div className="sticky bottom-0 -mx-1 bg-gradient-to-t from-surface via-surface/95 to-transparent px-1 pt-6 pb-4">
             <button
                 type="button"
                 disabled={itemCount === 0}

@@ -16,7 +16,10 @@ export function CartStrip({
     return (
         <section
             aria-label="Your cart"
-            className="rounded-3xl bg-card p-4 shadow-lg"
+            // The white runs on well past the tiles: the products panel below
+            // overlaps that surplus, so the two cards read as stacked sheets
+            // instead of two boxes with a strip of wall between them.
+            className="rounded-3xl bg-card px-4 pt-4 pb-14 shadow-lg"
         >
             <ul className="flex snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 {lines.map(({ product, quantity }) => (

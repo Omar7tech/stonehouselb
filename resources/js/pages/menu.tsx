@@ -78,8 +78,10 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                 {cartLines.length > 0 && <CartStrip lines={cartLines} />}
 
                 {/* The menu proper: one white panel the stone runs alongside,
-                    reaching the bottom of the page however short the list is. */}
-                <main className="mx-2 mt-6 flex flex-1 flex-col gap-5 rounded-t-[2rem] bg-card px-4 pt-7 shadow-lg">
+                    reaching the bottom of the page however short the list is.
+                    It is pulled up over the cart above it, so the cart's card
+                    disappears behind its rounded top edge. */}
+                <main className="relative mx-2 -mt-10 flex flex-1 flex-col gap-5 rounded-t-[2rem] bg-surface px-4 pt-7 shadow-lg">
                     <StretchText
                         as="h1"
                         aria-label="Choose your craving."
