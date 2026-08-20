@@ -36,15 +36,15 @@ const COURSE_JOINTS: readonly (readonly number[])[] = [
 
 /** Cool greys, close enough together to read as one wall. */
 const STONE_FILLS = [
-    '#eceae7',
     '#e3e1de',
-    '#f0efec',
-    '#dad7d3',
+    '#dad8d5',
     '#e8e6e3',
-    '#eae8e5',
+    '#d0cdc9',
+    '#dfddda',
+    '#e1dfdc',
 ] as const;
 
-const MORTAR = '#d2cfca';
+const MORTAR = '#c4c1bb';
 
 type Stone = {
     x: number;
