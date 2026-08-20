@@ -44,22 +44,10 @@ const SOCIALS = [
 export function SiteFooter() {
     return (
         <footer className="relative overflow-hidden rounded-t-[2rem] bg-primary text-primary-foreground shadow-[0_-6px_20px_rgb(0_0_0/0.11)]">
-            {/* Light gathered along the top edge, the same trick the stone wall
-                plays: it keeps a large flat field of orange from going dead. */}
-            <div
-                aria-hidden
-                className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(120%_100%_at_50%_0%,rgb(255_255_255/0.18),transparent)]"
-            />
-
             {/* The slab runs edge to edge; only its contents keep to the same
                 column the menu above them stands in. */}
-            <div className="mx-auto w-full max-w-2xl px-6 pt-10">
-                <div className="relative flex flex-col gap-3">
-                    <StoneHouseLogo className="w-32 text-primary-foreground select-none sm:w-40" />
-                    <StretchText className="pl-1 font-display text-[0.7rem] uppercase opacity-80 sm:text-xs">
-                        Come hungry.
-                    </StretchText>
-                </div>
+            <div className="mx-auto w-full max-w-2xl px-6 py-10">
+                <StoneHouseLogo className="relative w-32 text-primary-foreground select-none sm:w-40" />
 
                 {/* One line per account, ruled like a listing. Hovering sweeps the
                 row white and drops the type back to orange — the row lights up
@@ -99,16 +87,6 @@ export function SiteFooter() {
                     <span>© {new Date().getFullYear()} Stone House</span>
                     <span>Crunch &amp; Grill</span>
                 </div>
-
-                {/* The name once more, oversized and cut off by the foot of the
-                slab. It is texture rather than a heading — the page runs out of
-                room before the word does, which is the point. */}
-                <p
-                    aria-hidden
-                    className="relative mt-6 -mb-[0.17em] text-center font-display text-[clamp(2.25rem,12vw,4.5rem)] leading-[0.78] whitespace-nowrap uppercase opacity-15 select-none"
-                >
-                    Stone House
-                </p>
             </div>
         </footer>
     );
