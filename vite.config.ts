@@ -11,10 +11,10 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
             refresh: true,
             fonts: [
-                // Body text. Only the two weights the UI actually uses, so the
-                // preload budget isn't spent on a weight nothing renders.
-                bunny('Inter', {
-                    weights: [400, 500],
+                // Body text. Only the weights the UI actually renders, so the
+                // preload budget isn't spent on one nothing uses.
+                bunny('Archivo', {
+                    weights: [400, 500, 600],
                 }),
                 // Display face, run through the same pipeline as the remote
                 // font so it is hashed, its @font-face lands inline in <head>,
