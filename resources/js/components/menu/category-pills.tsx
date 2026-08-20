@@ -1,3 +1,4 @@
+import { StretchText } from '@/components/stretch';
 import { useDragScroll } from '@/lib/use-drag-scroll';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/types';
@@ -55,7 +56,10 @@ export function CategoryPills({
                                         : 'opacity-90 hover:opacity-100',
                                 )}
                             >
-                                {category.name}
+                                {/* Ligatures off: a category named Grills or
+                                    Coffee would otherwise widen its own
+                                    doubled letter. */}
+                                <StretchText>{category.name}</StretchText>
                             </button>
                         </li>
                     );
