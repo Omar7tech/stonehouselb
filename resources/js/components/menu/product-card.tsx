@@ -1,7 +1,8 @@
 import { Plus } from 'lucide-react';
 
 import { ProductImage } from '@/components/menu/product-image';
-import { cn, formatPrice } from '@/lib/utils';
+import { ProductPrice } from '@/components/menu/product-price';
+import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
 
 /**
@@ -51,9 +52,11 @@ export function ProductCard({
                     </p>
                 )}
 
-                <p className="mt-1.5 text-sm font-semibold text-primary tabular-nums">
-                    {formatPrice(product.price)}
-                </p>
+                <ProductPrice
+                    price={product.price}
+                    discountPrice={product.discountPrice}
+                    className="mt-1.5"
+                />
             </div>
 
             {onAdd && (

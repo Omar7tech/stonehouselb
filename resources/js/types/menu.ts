@@ -1,15 +1,23 @@
 /** Mirrors `App\Enums\OrderType` — which menu the page is rendering. */
 export type OrderType = 'dine_in' | 'delivery';
 
+/** Which currency the menu prices are rendered in. */
+export type PriceDisplay = 'usd' | 'lbp' | 'both';
+
+export type Pricing = {
+    display: PriceDisplay;
+    /** LBP per 1 USD, or null when LBP pricing is unavailable. */
+    lbpRate: number | null;
+};
+
 export type Product = {
     id: number;
     name: string;
     description?: string;
-    /**
-     * In cents, not dollars. Money held as a float rounds badly the moment it
-     * is summed — and this will be summed, once the cart totals for real.
-     */
+    /** In USD. LBP is derived from it at the configured rate, never stored. */
     price: number;
+    /** Set only while the product is on offer; `price` stays the full one. */
+    discountPrice?: number | null;
     /**
      * Photo for the card. Products without one fall back to `ProductImage`'s
      * placeholder rather than leaving a hole in the row.
