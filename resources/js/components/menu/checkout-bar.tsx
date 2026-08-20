@@ -10,7 +10,7 @@
  */
 export function CheckoutBar({ itemCount }: { itemCount: number }) {
     return (
-        <div className="pointer-events-none sticky bottom-0 pt-2 pb-3">
+        <div className="pointer-events-none sticky bottom-0 pt-2 pb-4">
             <button
                 type="button"
                 disabled={itemCount === 0}

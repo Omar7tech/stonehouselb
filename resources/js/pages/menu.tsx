@@ -149,7 +149,7 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                         // layer: it puts it above the panel's own background
                         // but under the cards, without every card needing a
                         // stacking order of its own.
-                        'relative isolate mx-2 mt-3 flex flex-col gap-5 rounded-t-[2rem] rounded-b-[3rem] bg-surface px-3 pt-7',
+                        'relative isolate mx-2 mt-3 flex flex-col gap-5 rounded-[2rem]  bg-surface px-3 pt-7',
                         // Thrown upwards, onto the cart sheet this panel
                         // overlaps. The stock shadows all fall downwards,
                         // where there is nothing to catch them.
@@ -168,7 +168,7 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                         button. Decorative, so it is hidden from readers. */}
                     <div
                         aria-hidden
-                        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-56 rounded-b-[2rem] bg-[radial-gradient(currentColor_1px,transparent_1px)] [mask-image:linear-gradient(to_top,#000_20%,transparent)] [background-size:14px_14px] opacity-[0.07] [-webkit-mask-image:linear-gradient(to_top,#000_20%,transparent)]"
+                        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-56 rounded-b-[2rem] bg-[radial-gradient(currentColor_1px,transparent_1px)] mask-[linear-gradient(to_top,#000_20%,transparent)] bg-size-[14px_14px] opacity-[0.07] [-webkit-mask-image:linear-gradient(to_top,#000_20%,transparent)]"
                     />
 
                     <StretchText

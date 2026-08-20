@@ -51,11 +51,17 @@ export function CategoryPills({
                                 aria-pressed={isActive}
                                 onClick={() => onSelect(category.id)}
                                 className={cn(
-                                    'rounded-full bg-primary px-4 py-2 font-display text-xs whitespace-nowrap text-primary-foreground uppercase',
-                                    'transition-shadow duration-200 ease-out focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
+                                    'rounded-full px-4 py-2 font-display text-xs whitespace-nowrap uppercase',
+                                    'transition-colors duration-200 ease-out focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
+                                    // The selected one is the only pill filled
+                                    // with the brand orange; the rest are the
+                                    // same orange held back to a tint. Weight
+                                    // carries the state, not a ring around it,
+                                    // so which category is open reads at a
+                                    // glance from across the row.
                                     isActive
-                                        ? 'shadow-md ring-2 ring-primary/35 ring-offset-2 ring-offset-surface'
-                                        : 'opacity-90 hover:opacity-100',
+                                        ? 'bg-primary text-primary-foreground shadow-sm'
+                                        : 'bg-primary/10 text-primary hover:bg-primary/20',
                                 )}
                             >
                                 {/* Ligatures off: a category named Grills or
