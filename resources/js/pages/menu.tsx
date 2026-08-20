@@ -124,19 +124,28 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
             <Head title={`${orderTypeLabel} Menu`} />
             <StoneWallBackdrop />
 
-            <div className="mx-auto flex min-h-screen max-w-2xl flex-col">
+            {/* Room after the last section, so the page scrolls on past the
+                menu onto bare wall. It is also what lets the checkout button
+                let go: sticky only releases once its panel's bottom edge has
+                travelled up past the foot of the screen, which cannot happen
+                while that panel is the last thing in the document. Whatever
+                goes under the menu later replaces this padding. */}
+            <div className="mx-auto flex min-h-screen max-w-2xl flex-col pb-32">
                 <SiteHeader />
 
                 {hasCart && <CartStrip lines={cartLines} />}
 
-                {/* The menu proper: one white panel the stone runs alongside,
-                    reaching the bottom of the page however short the list is.
+                {/* The menu proper: one panel the stone runs alongside, sized
+                    to its own contents so it closes on the last product rather
+                    than running on to the foot of the window. Both ends are
+                    rounded, since the bottom one is now on show.
+
                     Its position is the same with a cart or without one — the
                     cart's surplus white passes behind it rather than moving
                     it, so nothing here has to reach up to meet it. */}
                 <main
                     className={cn(
-                        'relative mx-2 mt-3 flex flex-1 flex-col gap-5 rounded-t-[2rem] bg-surface px-4 pt-7',
+                        'relative mx-2 mt-3 flex flex-col gap-5 rounded-[2rem] bg-surface px-4 pt-7',
                         // Thrown upwards, onto the cart sheet this panel
                         // overlaps. The stock shadows all fall downwards,
                         // where there is nothing to catch them.
