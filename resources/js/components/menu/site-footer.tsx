@@ -1,6 +1,6 @@
 import { ArrowUpRight } from 'lucide-react';
+import type { CSSProperties } from 'react';
 
-import { StoneHouseLogo } from '@/components/stone-house-logo';
 import { StretchText } from '@/components/stretch';
 
 /**
@@ -19,6 +19,34 @@ const SOCIALS = [
     { label: 'WhatsApp', href: 'https://wa.me/96171000000' },
 ] as const;
 
+/** The mark's own proportions, taken from the artwork's viewBox. */
+const LOGO_ASPECT = '291.18 / 118.35';
+
+/**
+ * The wordmark, cut out of the slab rather than drawn on it.
+ *
+ * Two mask layers: the whole sheet, and the artwork on top of it composited
+ * away, which leaves the sheet with the mark missing. The artwork is the same
+ * file the inline logo was traced from, so the hole is the mark exactly.
+ *
+ * Its place is set by the numbers the column below already uses — centred,
+ * `py-10` from the top, and as wide as `max-w-2xl` less its `px-6` — so the
+ * hole lands on the space held open for it without either side measuring the
+ * other. `auto` takes the height from the artwork's own ratio.
+ */
+const LOGO_KNOCKOUT = {
+    maskImage: "url('/logos/logo.svg'), linear-gradient(#000, #000)",
+    WebkitMaskImage: "url('/logos/logo.svg'), linear-gradient(#000, #000)",
+    maskPosition: 'center 2.5rem, 0 0',
+    WebkitMaskPosition: 'center 2.5rem, 0 0',
+    maskSize: 'min(100% - 3rem, 39rem) auto, auto',
+    WebkitMaskSize: 'min(100% - 3rem, 39rem) auto, auto',
+    maskRepeat: 'no-repeat, repeat',
+    WebkitMaskRepeat: 'no-repeat, repeat',
+    maskComposite: 'exclude',
+    WebkitMaskComposite: 'xor',
+} satisfies CSSProperties;
+
 /**
  * The foot of the page: one orange slab the whole menu comes to rest on.
  *
@@ -29,11 +57,28 @@ const SOCIALS = [
  */
 export function SiteFooter() {
     return (
-        <footer className="relative overflow-hidden rounded-t-[2rem] bg-primary text-primary-foreground shadow-[0_-6px_20px_rgb(0_0_0/0.11)]">
+        <footer className="relative overflow-hidden rounded-t-[2rem] text-primary-foreground shadow-[0_-6px_20px_rgb(0_0_0/0.11)]">
+            {/* The orange itself, so the wordmark can be taken out of it. The
+                colour cannot sit on the footer: whatever is behind the hole
+                would be filled straight back in. */}
+            <div
+                aria-hidden
+                style={LOGO_KNOCKOUT}
+                className="absolute inset-0 bg-primary"
+            />
+
             {/* The slab runs edge to edge; only its contents keep to the same
                 column the menu above them stands in. */}
-            <div className="mx-auto w-full max-w-2xl px-6 py-10">
-                <StoneHouseLogo className="relative w-full text-primary-foreground select-none" />
+            <div className="relative mx-auto w-full max-w-2xl px-6 py-10">
+                {/* The room the cut-out mark stands in. It is the wall showing
+                    through the slab rather than any ink of its own, so there is
+                    nothing here to draw — only its name, for readers. */}
+                <div
+                    role="img"
+                    aria-label="Stone House — Crunch &amp; Grill"
+                    style={{ aspectRatio: LOGO_ASPECT }}
+                    className="w-full"
+                />
 
                 {/* One line per account, ruled like a listing. Hovering sweeps the
                 row white and drops the type back to orange — the row lights up
