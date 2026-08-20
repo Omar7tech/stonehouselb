@@ -15,7 +15,7 @@ import type { Product } from '@/types';
  * raising it slides more white behind the panel and cannot move anything on the
  * page, whatever the rest of the layout is doing.
  */
-const SHEET_BLEED = '-6rem';
+const SHEET_BLEED = '-12rem';
 
 export function CartStrip({
     lines,

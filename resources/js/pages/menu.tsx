@@ -17,6 +17,24 @@ interface MenuProps {
     orderTypeLabel: string;
 }
 
+/**
+ * Width of "CHOOSE YOUR CRAVING." set in StretchPro, measured from the font's
+ * own advance widths with the wide H counted as the single ligature glyph it
+ * renders as. Dividing the space the line has by this gives the size at which
+ * it spans that space exactly.
+ */
+const HEADING_EM = 20.565;
+
+/**
+ * So the heading is sized from the page rather than from a type scale: it grows
+ * with the viewport and always fills the line instead of wrapping.
+ *
+ * `100vw` less the panel's own margins and padding is what the line actually
+ * has, with a little taken off so a desktop scrollbar can't tip it into an
+ * overflow. The ceiling is where the panel stops widening at `max-w-2xl`.
+ */
+const HEADING_SIZE = `clamp(0.8rem, calc((100vw - 3.5rem) / ${HEADING_EM}), 1.85rem)`;
+
 export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
     // Delivery is the menu you order from; dine-in is the same menu to read.
     const canOrder = orderType === 'delivery';
