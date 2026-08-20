@@ -31,14 +31,16 @@ export function useDragScroll<T extends HTMLElement>() {
             return;
         }
 
+        // Deliberately no `setPointerCapture` here. While an element holds
+        // pointer capture, the click that follows is retargeted to it — so
+        // capturing on press would swallow every click on a child before it
+        // could act. Capture is taken below, once this is known to be a drag.
         drag.current = {
             active: true,
             startX: event.clientX,
             startScrollLeft: element.scrollLeft,
             moved: false,
         };
-
-        element.setPointerCapture(event.pointerId);
     };
 
     const onPointerMove = (event: ReactPointerEvent<T>): void => {
@@ -51,8 +53,12 @@ export function useDragScroll<T extends HTMLElement>() {
         const travelled = event.clientX - drag.current.startX;
 
         // A few pixels of slop, so a slightly shaky click is still a click.
-        if (Math.abs(travelled) > 3) {
+        // Crossing it is what turns a press into a drag, and only then is the
+        // pointer captured — so the drag survives the cursor leaving the row,
+        // while a plain click is left alone to reach whatever it landed on.
+        if (!drag.current.moved && Math.abs(travelled) > 3) {
             drag.current.moved = true;
+            element.setPointerCapture(event.pointerId);
         }
 
         element.scrollLeft = drag.current.startScrollLeft - travelled;
