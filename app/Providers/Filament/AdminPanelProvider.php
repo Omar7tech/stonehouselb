@@ -49,8 +49,8 @@ class AdminPanelProvider extends PanelProvider
                 AuthDesignerPlugin::make()
                     ->login(
                         fn (AuthPageConfig $config) => $config
-                            /* ->media(asset('cover/cover.webp'))
-                            ->mediaPosition(MediaPosition::Left) */
+                            ->media(asset('cover/cover.webp'))
+                            ->mediaPosition(MediaPosition::Left)
                             ->mediaSize('65%')
                             ->themeToggle()
                     )
