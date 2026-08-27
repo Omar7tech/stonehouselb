@@ -1,5 +1,6 @@
 import useEmblaCarousel from 'embla-carousel-react';
 import { ArrowRight } from 'lucide-react';
+import { useMemo } from 'react';
 
 import { ProductImage } from '@/components/menu/product-image';
 import { useCart } from '@/contexts/cart-context';
@@ -37,6 +38,11 @@ export function CartStrip() {
         containScroll: 'trimSnaps',
     });
 
+    // Newest first: what you just added is the thing you want to see, and at
+    // the head of the row it is on screen without dragging to it. The basket
+    // keeps the other order, where a list reads as the order you built it in.
+    const newestFirst = useMemo(() => [...items].reverse(), [items]);
+
     // Nothing drawn but the card and a line saying what it is for. Outlines
     // where the tiles will go only invite a press that does nothing — an empty
     // shelf doesn't need a picture of the tins.
@@ -59,7 +65,7 @@ export function CartStrip() {
                 className="relative overflow-hidden pt-4 pb-3 select-none"
             >
                 <ul className="flex pl-4">
-                    {items.map((item, index) => (
+                    {newestFirst.map((item, index) => (
                         <li
                             key={item.key}
                             className={cn(
@@ -68,7 +74,7 @@ export function CartStrip() {
                                 // last tile: Embla measures its scroll limit
                                 // from the slides, so padding on the track
                                 // would never be reachable.
-                                index === items.length - 1 && 'pr-4',
+                                index === newestFirst.length - 1 && 'pr-4',
                             )}
                         >
                             <button

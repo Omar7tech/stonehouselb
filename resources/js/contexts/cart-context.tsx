@@ -148,12 +148,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setItems((previous) => {
             const existing = previous.find((item) => item.key === key);
 
+            // Re-adding moves the line to the end rather than topping it up
+            // where it sits, so the list stays in the order things were last
+            // added — which is what the strip reads to lead with the newest.
+            // Only adding does this; the +/- in the basket leave order alone.
             if (existing) {
-                return previous.map((item) =>
-                    item.key === key
-                        ? { ...item, quantity: item.quantity + quantity }
-                        : item,
-                );
+                return [
+                    ...previous.filter((item) => item.key !== key),
+                    { ...existing, quantity: existing.quantity + quantity },
+                ];
             }
 
             return [
