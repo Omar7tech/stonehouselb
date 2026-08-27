@@ -26,21 +26,25 @@ export function ProductPrice({
         return (
             <span
                 className={cn(
-                    'inline-flex flex-col items-start leading-tight',
+                    'inline-flex min-w-0 flex-col items-start gap-0.5',
                     className,
                 )}
             >
+                {/* The `/none` line-heights are what keep the two currency rows
+                   together: every font-size utility brings its own leading with
+                   it, so setting it once on this element would just be
+                   overridden a line later and pad the rows apart. */}
                 <span className="flex items-baseline gap-2">
-                    <span className="text-lg font-semibold text-primary tabular-nums">
+                    <span className="text-lg/none font-semibold text-primary tabular-nums">
                         {pricing.usd(effectivePrice)}
                     </span>
                     {hasDiscount && (
-                        <span className="text-[0.8rem] text-muted-foreground tabular-nums line-through">
+                        <span className="text-[0.8rem]/none text-muted-foreground tabular-nums line-through">
                             {pricing.usd(price)}
                         </span>
                     )}
                 </span>
-                <span className="text-[0.8rem] tracking-wide text-primary/60 tabular-nums">
+                <span className="text-[0.8rem]/none tracking-wide text-primary/60 tabular-nums">
                     {pricing.lbp(effectivePrice)}
                 </span>
             </span>

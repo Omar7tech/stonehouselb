@@ -13,7 +13,7 @@ export default defineConfig({
             fonts: [
                 // Body text. Only the weights the UI actually renders, so the
                 // preload budget isn't spent on one nothing uses.
-                bunny('Archivo', {
+                bunny('Geist', {
                     weights: [400, 500, 600],
                 }),
                 // Display face, run through the same pipeline as the remote
