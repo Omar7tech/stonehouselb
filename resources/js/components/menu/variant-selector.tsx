@@ -125,7 +125,7 @@ export function VariantSelector({
                         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                             <span
                                 className={cn(
-                                    'text-xs leading-snug tracking-wide break-words uppercase',
+                                    'text-sm leading-snug tracking-wide break-words uppercase',
                                     selected
                                         ? 'font-semibold text-primary'
                                         : 'text-primary/70',
@@ -134,7 +134,7 @@ export function VariantSelector({
                                 {variant.name}
                             </span>
 
-                            <span className="flex flex-wrap items-baseline gap-x-1.5 text-[0.7rem] leading-none">
+                            <span className="flex flex-wrap items-baseline gap-x-1.5 text-[0.8rem] leading-none">
                                 <span
                                     className={cn(
                                         'font-semibold tabular-nums',
@@ -147,7 +147,7 @@ export function VariantSelector({
                                 </span>
 
                                 {variant.discountPrice !== null && (
-                                    <span className="text-[0.65rem] text-muted-foreground tabular-nums line-through">
+                                    <span className="text-[0.7rem] text-muted-foreground tabular-nums line-through">
                                         {pricing.primary(variant.price)}
                                     </span>
                                 )}

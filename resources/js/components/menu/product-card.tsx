@@ -97,6 +97,8 @@ export function ProductCard({
                 </div>
             </div>
 
+            {/* Raised over the card's own tap target, or the options would be
+                pressed through to the sheet instead of switching. */}
             {hasVariants && (
                 <div className="relative z-10 mt-2.5 border-t border-foreground/10 pt-2.5">
                     <VariantSelector
