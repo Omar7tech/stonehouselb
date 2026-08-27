@@ -1,5 +1,5 @@
 import useEmblaCarousel from 'embla-carousel-react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ShoppingBag } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { ProductImage } from '@/components/menu/product-image';
@@ -49,7 +49,12 @@ export function CartStrip() {
     if (items.length === 0) {
         return (
             <Sheet>
-                <p className="relative px-6 py-7 text-center text-[0.7rem] tracking-wide text-muted-foreground uppercase">
+                <p className="relative flex items-center justify-center gap-2 px-6 py-7 text-center text-[0.7rem] tracking-wide text-muted-foreground uppercase">
+                    {/* Decorative: the line beside it already says this. */}
+                    <ShoppingBag
+                        aria-hidden
+                        className="size-4 shrink-0 text-primary/50"
+                    />
                     Your order will show up here
                 </p>
             </Sheet>
