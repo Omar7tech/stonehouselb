@@ -89,6 +89,9 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
     // The product whose sheet is open. It is kept after closing so the sheet
     // has something to draw while it animates out.
     const [openProduct, setOpenProduct] = useState<Product | null>(null);
+    const [openVariantIndex, setOpenVariantIndex] = useState<number | null>(
+        null,
+    );
     const [productOpen, setProductOpen] = useState(false);
 
     const activeCategory =
@@ -130,32 +133,42 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
             .filter((item) => item.productId === product.id)
             .reduce((total, item) => total + item.quantity, 0);
 
-    const openDialog = (product: Product): void => {
+    const openDialog = (
+        product: Product,
+        variantIndex: number | null,
+    ): void => {
         setOpenProduct(product);
+        setOpenVariantIndex(variantIndex);
         setProductOpen(true);
     };
 
     /**
-     * The corner button is a shortcut, not a substitute for the sheet. A
-     * product sold in sizes, or one whose category offers extras, has a choice
-     * to make first — adding blind would put a line in the cart the customer
-     * never chose, so those open the sheet instead.
+     * The corner button adds the size already chosen on the card, so a product
+     * sold in sizes needs no detour. Extras are the one choice the card can't
+     * make — the sheet is where those are picked, so a category offering them
+     * opens it rather than adding without them.
      */
-    const quickAdd = (product: Product): void => {
+    const quickAdd = (product: Product, variantIndex: number | null): void => {
         const addons = activeCategory?.addons ?? [];
 
-        if (product.variants.length > 0 || addons.length > 0) {
-            openDialog(product);
+        if (addons.length > 0) {
+            openDialog(product, variantIndex);
 
             return;
         }
 
+        const variant =
+            variantIndex === null ? null : product.variants[variantIndex];
+
         addItem({
             productId: product.id,
-            variantIndex: null,
+            variantIndex,
             name: product.name,
-            variantName: null,
-            unitUsd: product.discountPrice ?? product.price,
+            variantName: variant?.name ?? null,
+            unitUsd:
+                variant === null
+                    ? (product.discountPrice ?? product.price)
+                    : (variant.discountPrice ?? variant.price),
             image: product.image,
         });
     };
@@ -324,6 +337,7 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
             <ProductDialog
                 product={openProduct}
                 addons={activeCategory?.addons ?? []}
+                initialVariantIndex={openVariantIndex}
                 open={productOpen}
                 onOpenChange={setProductOpen}
                 onAdd={canOrder ? addFromDialog : undefined}

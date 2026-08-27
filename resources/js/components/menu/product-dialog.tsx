@@ -26,6 +26,7 @@ import type { Addon, Product } from '@/types';
 export function ProductDialog({
     product,
     addons,
+    initialVariantIndex,
     open,
     onOpenChange,
     onAdd,
@@ -33,6 +34,8 @@ export function ProductDialog({
     product: Product | null;
     /** Extras from the product's category; empty when none are configured. */
     addons: readonly Addon[];
+    /** The size chosen on the card, so the sheet opens on the same one. */
+    initialVariantIndex: number | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onAdd?: (input: {
@@ -56,7 +59,7 @@ export function ProductDialog({
         setWasOpen(open);
 
         if (open) {
-            setVariantIndex(0);
+            setVariantIndex(initialVariantIndex ?? 0);
             setQuantity(1);
             setAddonQuantities(addons.map(() => 0));
         }
