@@ -1,14 +1,12 @@
-import { Sandwich } from 'lucide-react';
-
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
 
 /**
- * A product's photo, or a marked placeholder while there isn't one.
+ * A product's photo, or the Stone House mark while there isn't one.
  *
- * The placeholder is deliberately plain rather than a stock burger: it reads as
- * "no photo yet" at a glance, so an unshot product can't quietly ship looking
- * finished.
+ * The file is used rather than `StoneHouseLogo`: that one is the animated
+ * wordmark built for the header, and a menu full of products would set every
+ * copy of it running at once. Here it only has to fill a gap.
  */
 export function ProductImage({
     product,
@@ -22,11 +20,20 @@ export function ProductImage({
             <div
                 aria-hidden
                 className={cn(
-                    'flex items-center justify-center rounded-2xl bg-muted text-muted-foreground/40',
+                    'flex items-center justify-center rounded-2xl bg-muted p-3',
                     className,
                 )}
             >
-                <Sandwich className="size-1/2" strokeWidth={1.5} />
+                {/* The mark is far wider than it is tall, so it sets its own
+                    height off the width it is given rather than stretching to
+                    the square it sits in. */}
+                <img
+                    src="/logos/logo.svg"
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full"
+                />
             </div>
         );
     }
