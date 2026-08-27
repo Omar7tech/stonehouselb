@@ -54,6 +54,9 @@ class HandleInertiaRequests extends Middleware
             'whatsappNumber' => $settings->canReceiveOrders()
                 ? $settings->whatsapp_number
                 : null,
+            // Where to find the shop once you are off the menu. Empty simply
+            // leaves the footer's list out.
+            'socialLinks' => $settings->usableSocialLinks(),
             // What the customer has to provide before an order can be sent.
             'checkout' => [
                 'requireFullName' => $settings->require_full_name,

@@ -19,6 +19,13 @@ export type Checkout = {
     getClientLocation: boolean;
 };
 
+/** One row in the footer's list of places to find the shop. */
+export type SocialLink = {
+    /** The platform's name, as the owner typed it. */
+    label: string;
+    url: string;
+};
+
 /** One size a product is sold in. Mirrors the `variants` JSON column. */
 export type Variant = {
     name: string;

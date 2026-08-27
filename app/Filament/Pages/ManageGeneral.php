@@ -6,6 +6,8 @@ use App\Enums\PriceDisplay;
 use App\Settings\GeneralSettings;
 use BackedEnum;
 use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Pages\SettingsPage;
@@ -132,6 +134,34 @@ class ManageGeneral extends SettingsPage
                                     ->helperText('Attaches a map pin to the order. The customer is asked by their browser and can decline, in which case they are told to share it in the chat.')
                                     ->default(false)
                                     ->columnSpanFull(),
+                            ]),
+
+                        Tab::make('Footer')
+                            ->icon(Heroicon::OutlinedLink)
+                            ->schema([
+                                Repeater::make('social_links')
+                                    ->label('Footer links')
+                                    ->helperText('Listed at the foot of the menu, in this order. Rows missing a name or an address are not shown.')
+                                    ->defaultItems(0)
+                                    ->table([
+                                        TableColumn::make('Name')->markAsRequired(),
+                                        TableColumn::make('Address')->markAsRequired(),
+                                    ])
+                                    ->compact()
+                                    ->addActionLabel('Add link')
+                                    ->reorderable()
+                                    ->columnSpanFull()
+                                    ->schema([
+                                        TextInput::make('label')
+                                            ->placeholder('Instagram')
+                                            ->required()
+                                            ->maxLength(255),
+                                        TextInput::make('url')
+                                            ->placeholder('https://instagram.com/stonehouselb')
+                                            ->url()
+                                            ->required()
+                                            ->maxLength(255),
+                                    ]),
                             ]),
                     ]),
             ]);
