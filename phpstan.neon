@@ -11,3 +11,8 @@ parameters:
         - routes/
 
     level: 7
+
+    # Models declare their casts with the `casts()` method rather than the
+    # `$casts` property, so Larastan has to read the method body to know that
+    # e.g. `Product::$order_type` is an OrderType and not a plain string.
+    parseModelCastsMethod: true
