@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Enums\OrderType;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
+use App\Settings\GeneralSettings;
 use Closure;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,8 +19,14 @@ class MenuController extends Controller
         return $this->renderMenu(OrderType::DineIn);
     }
 
-    public function delivery(): Response
+    public function delivery(GeneralSettings $settings): Response|RedirectResponse
     {
+        // The delivery menu only exists while online ordering is active;
+        // otherwise the shop is dine-in only, so send customers back there.
+        if (! $settings->online_ordering_active) {
+            return redirect()->route('menu.dine-in');
+        }
+
         return $this->renderMenu(OrderType::Delivery);
     }
 

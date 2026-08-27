@@ -1,18 +1,22 @@
 import { Head } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
+import { CartSheet } from '@/components/menu/cart-sheet';
 import { CartStrip } from '@/components/menu/cart-strip';
 import { CategoryGrid } from '@/components/menu/category-grid';
 import { CategoryPills } from '@/components/menu/category-pills';
 import { CheckoutBar } from '@/components/menu/checkout-bar';
 import { OrderTypeSwitch } from '@/components/menu/order-type-switch';
 import { ProductCard } from '@/components/menu/product-card';
+import { ProductDialog } from '@/components/menu/product-dialog';
 import { SiteFooter } from '@/components/menu/site-footer';
 import { SiteHeader } from '@/components/menu/site-header';
 import { StoneWallBackdrop } from '@/components/stone-wall-backdrop';
 import { Stretch, StretchText } from '@/components/stretch';
+import { CartProvider, useCart } from '@/contexts/cart-context';
+import type { CartAddon } from '@/contexts/cart-context';
 import { cn } from '@/lib/utils';
-import type { Category, CartLine, OrderType, Product } from '@/types';
+import type { Category, OrderType, Product } from '@/types';
 
 interface MenuProps {
     orderType: OrderType;
@@ -57,19 +61,34 @@ function readCategoryFromUrl(menu: readonly Category[]): number | null {
     return menu.find((category) => category.slug === slug)?.id ?? null;
 }
 
-export default function Menu({
-    orderType,
-    orderTypeLabel,
-    categories,
-}: MenuProps) {
+/**
+ * The cart lives above the page so the strip, the checkout bar and the sheet
+ * all read one basket — and so it survives a reload, which is the provider's
+ * job rather than this page's.
+ */
+export default function Menu(props: MenuProps) {
+    return (
+        <CartProvider>
+            <MenuView {...props} />
+        </CartProvider>
+    );
+}
+
+function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
     // Delivery is the menu you order from; dine-in is the same menu to read.
     const canOrder = orderType === 'delivery';
+
+    const { items, count, addItem, setOpen } = useCart();
 
     // Null shows the category boxes; an id shows that category's products.
     const [activeCategoryId, setActiveCategoryId] = useState(() =>
         readCategoryFromUrl(categories),
     );
-    const [cart, setCart] = useState<CartLine[]>([]);
+
+    // The product whose sheet is open. It is kept after closing so the sheet
+    // has something to draw while it animates out.
+    const [openProduct, setOpenProduct] = useState<Product | null>(null);
+    const [productOpen, setProductOpen] = useState(false);
 
     const activeCategory =
         categories.find((category) => category.id === activeCategoryId) ?? null;
@@ -94,27 +113,7 @@ export default function Menu({
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    /** Flattened once, for resolving the cart's product ids. */
-    const allProducts = useMemo(
-        () => categories.flatMap((category) => category.products),
-        [categories],
-    );
-
-    // The cart is kept as a list rather than keyed by id so the strip shows
-    // items in the order they were added instead of in id order.
-    const cartLines = useMemo(
-        () =>
-            cart.flatMap((line) => {
-                const product = allProducts.find(
-                    (candidate) => candidate.id === line.productId,
-                );
-
-                return product ? [{ product, quantity: line.quantity }] : [];
-            }),
-        [cart, allProducts],
-    );
-
-    const hasCart = cartLines.length > 0;
+    const hasCart = count > 0;
 
     /**
      * The bar is the foot of an open category on the delivery menu, and only
@@ -124,20 +123,77 @@ export default function Menu({
      */
     const showsCheckoutBar = canOrder && activeCategory !== null && hasCart;
 
-    const addToCart = (product: Product): void => {
-        setCart((current) =>
-            current.some((line) => line.productId === product.id)
-                ? current.map((line) =>
-                      line.productId === product.id
-                          ? { ...line, quantity: line.quantity + 1 }
-                          : line,
-                  )
-                : [...current, { productId: product.id, quantity: 1 }],
-        );
+    /** How many of a product are in the cart, across all its variants. */
+    const quantityOf = (product: Product): number =>
+        items
+            .filter((item) => item.productId === product.id)
+            .reduce((total, item) => total + item.quantity, 0);
+
+    const openDialog = (product: Product): void => {
+        setOpenProduct(product);
+        setProductOpen(true);
     };
 
-    const quantityOf = (product: Product): number =>
-        cart.find((line) => line.productId === product.id)?.quantity ?? 0;
+    /**
+     * The corner button is a shortcut, not a substitute for the sheet. A
+     * product sold in sizes, or one whose category offers extras, has a choice
+     * to make first — adding blind would put a line in the cart the customer
+     * never chose, so those open the sheet instead.
+     */
+    const quickAdd = (product: Product): void => {
+        const addons = activeCategory?.addons ?? [];
+
+        if (product.variants.length > 0 || addons.length > 0) {
+            openDialog(product);
+
+            return;
+        }
+
+        addItem({
+            productId: product.id,
+            variantIndex: null,
+            name: product.name,
+            variantName: null,
+            unitUsd: product.discountPrice ?? product.price,
+            image: product.image,
+        });
+    };
+
+    const addFromDialog = ({
+        variantIndex,
+        addons,
+        quantity,
+    }: {
+        variantIndex: number | null;
+        addons: CartAddon[];
+        quantity: number;
+    }): void => {
+        if (openProduct === null) {
+            return;
+        }
+
+        const variant =
+            variantIndex === null ? null : openProduct.variants[variantIndex];
+
+        addItem({
+            productId: openProduct.id,
+            variantIndex,
+            name: openProduct.name,
+            variantName: variant?.name ?? null,
+            unitUsd:
+                variant === null
+                    ? (openProduct.discountPrice ?? openProduct.price)
+                    : (variant.discountPrice ?? variant.price),
+            image: openProduct.image,
+            addons,
+            quantity,
+        });
+
+        setProductOpen(false);
+        // Straight to the basket, so adding an item shows what it did without
+        // the customer having to go looking for the cart.
+        setOpen(true);
+    };
 
     return (
         <>
@@ -156,9 +212,6 @@ export default function Menu({
                 <div className="mx-auto flex w-full max-w-2xl flex-col">
                     <SiteHeader />
 
-                    {/* Which menu you are on, and the way across to the other one.
-                    Ligatures off, or StretchPro would widen the double E in
-                    Delivery of its own accord. */}
                     {/* The way across to the other menu. Which one you are on is
                     already said by the selected half, so it carries no title
                     of its own. */}
@@ -166,7 +219,7 @@ export default function Menu({
                         <OrderTypeSwitch current={orderType} />
                     </div>
 
-                    {hasCart && <CartStrip lines={cartLines} />}
+                    {canOrder && hasCart && <CartStrip />}
 
                     {/* The menu proper: one panel the stone runs alongside, sized
                     to its own contents so it closes on the last product rather
@@ -239,9 +292,10 @@ export default function Menu({
                                             <ProductCard
                                                 product={product}
                                                 quantity={quantityOf(product)}
+                                                onOpen={openDialog}
                                                 onAdd={
                                                     canOrder
-                                                        ? addToCart
+                                                        ? quickAdd
                                                         : undefined
                                                 }
                                             />
@@ -263,6 +317,16 @@ export default function Menu({
                     <SiteFooter />
                 </div>
             </div>
+
+            <ProductDialog
+                product={openProduct}
+                addons={activeCategory?.addons ?? []}
+                open={productOpen}
+                onOpenChange={setProductOpen}
+                onAdd={canOrder ? addFromDialog : undefined}
+            />
+
+            {canOrder && <CartSheet />}
         </>
     );
 }

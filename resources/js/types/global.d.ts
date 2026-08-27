@@ -1,5 +1,5 @@
 import type { Auth } from '@/types/auth';
-import type { Pricing } from '@/types/menu';
+import type { Checkout, Pricing } from '@/types/menu';
 
 declare module 'react' {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -14,6 +14,9 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             pricing: Pricing;
+            checkout: Checkout;
+            /** Null when orders have nowhere to go, which closes checkout. */
+            whatsappNumber: string | null;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

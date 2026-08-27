@@ -47,6 +47,18 @@ class HandleInertiaRequests extends Middleware
             'pricing' => [
                 'display' => $settings->resolvedPriceDisplay()->value,
                 'lbpRate' => $settings->usableLbpRate(),
+                'deliveryFeeUsd' => $settings->deliveryFeeUsd(),
+            ],
+            // Null closes checkout: an order with nowhere to go is worse than
+            // no checkout button at all.
+            'whatsappNumber' => $settings->canReceiveOrders()
+                ? $settings->whatsapp_number
+                : null,
+            // What the customer has to provide before an order can be sent.
+            'checkout' => [
+                'requireFullName' => $settings->require_full_name,
+                'requirePhoneNumber' => $settings->require_phone_number,
+                'getClientLocation' => $settings->get_client_location,
             ],
         ];
     }

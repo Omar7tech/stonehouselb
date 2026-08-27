@@ -1,5 +1,10 @@
 import { cn } from '@/lib/utils';
-import type { Product } from '@/types';
+
+/**
+ * Only the two fields this needs, so a cart line — which carries a name and a
+ * photo but not a whole product — can be drawn by the same component.
+ */
+type Pictured = { name: string; image: string | null };
 
 /**
  * A product's photo, or the Stone House mark while there isn't one.
@@ -12,7 +17,7 @@ export function ProductImage({
     product,
     className,
 }: {
-    product: Product;
+    product: Pictured;
     className?: string;
 }) {
     if (product.image === null) {

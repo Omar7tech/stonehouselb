@@ -8,12 +8,38 @@ export type Pricing = {
     display: PriceDisplay;
     /** LBP per 1 USD, or null when LBP pricing is unavailable. */
     lbpRate: number | null;
+    /** Delivery charge in USD added to an order, or null when none applies. */
+    deliveryFeeUsd: number | null;
+};
+
+/** What the customer must provide before an order can be sent. */
+export type Checkout = {
+    requireFullName: boolean;
+    requirePhoneNumber: boolean;
+    getClientLocation: boolean;
+};
+
+/** One size a product is sold in. Mirrors the `variants` JSON column. */
+export type Variant = {
+    name: string;
+    /** In USD. */
+    price: number;
+    /** Set only while this size is on offer; `price` stays the full one. */
+    discountPrice: number | null;
+};
+
+/** One optional extra offered across a category. Mirrors the `addons` column. */
+export type Addon = {
+    name: string;
+    /** Unit price in USD. */
+    price: number;
 };
 
 /** Mirrors `App\Http\Resources\ProductResource`. */
 export type Product = {
     id: number;
     name: string;
+    subtitle: string | null;
     description: string | null;
     /** In USD. LBP is derived from it at the configured rate, never stored. */
     price: number;
@@ -21,9 +47,16 @@ export type Product = {
     discountPrice: number | null;
     /**
      * Photo for the card. Products without one fall back to `ProductImage`'s
-     * placeholder rather than leaving a hole in the row.
+     * house mark rather than leaving a hole in the row.
      */
     image: string | null;
+    /** Roughly how long the item takes, in minutes. */
+    preparationTime: number | null;
+    isFeatured: boolean;
+    isSpicy: boolean;
+    isVegan: boolean;
+    /** Empty when the product is sold in one size only. */
+    variants: Variant[];
 };
 
 /** Mirrors `App\Http\Resources\CategoryResource`. */
@@ -34,15 +67,11 @@ export type Category = {
     name: string;
     /** Art for the category box, or null while none has been uploaded. */
     image: string | null;
+    /** Extras offered on every product in this category. */
+    addons: Addon[];
     /**
      * Products hang off their category rather than sitting in one flat list,
      * so opening a category is a lookup instead of a scan.
      */
     products: Product[];
-};
-
-/** One line of the cart: a product and how many of it were added. */
-export type CartLine = {
-    productId: number;
-    quantity: number;
 };

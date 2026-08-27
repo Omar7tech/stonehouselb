@@ -25,10 +25,29 @@ class CategoryResource extends JsonResource
             'slug' => $this->slug,
             'name' => $this->title,
             'image' => $this->getFirstMediaUrl('image', 'webp') ?: null,
+            'addons' => $this->addonsPayload(),
             'products' => $this->whenLoaded(
                 'products',
                 fn (): array => ProductResource::collection($this->products)->resolve(),
             ),
         ];
+    }
+
+    /**
+     * The extras offered on every product in this category, with their prices
+     * cast to numbers — the JSON column stores what the admin form put in it,
+     * which for a price is a string.
+     *
+     * @return list<array{name: string, price: float}>
+     */
+    private function addonsPayload(): array
+    {
+        return array_values(array_map(
+            fn (array $addon): array => [
+                'name' => (string) ($addon['name'] ?? ''),
+                'price' => (float) ($addon['price'] ?? 0),
+            ],
+            $this->addons ?? [],
+        ));
     }
 }

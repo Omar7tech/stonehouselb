@@ -1,5 +1,6 @@
 <?php
 
+use App\Settings\GeneralSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,7 +45,20 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Apply the given values to the general settings and persist them.
+ *
+ * @param  array<string, mixed>  $values
+ */
+function settings(array $values): GeneralSettings
 {
-    // ..
+    $settings = app(GeneralSettings::class);
+
+    foreach ($values as $key => $value) {
+        $settings->{$key} = $value;
+    }
+
+    $settings->save();
+
+    return $settings;
 }

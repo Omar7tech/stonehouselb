@@ -7,6 +7,8 @@ export type PriceParts = {
     showUsd: boolean;
     /** Whether the LBP price should be shown. */
     showLbp: boolean;
+    /** Delivery charge in USD added to an order, or null when none applies. */
+    deliveryFeeUsd: number | null;
     usd: (usd: number) => string;
     lbp: (usd: number) => string;
     /** Formats an amount in whichever single currency leads the display. */
@@ -35,6 +37,7 @@ export function usePricing(): PriceParts {
     return {
         showUsd,
         showLbp,
+        deliveryFeeUsd: pricing?.deliveryFeeUsd ?? null,
         usd,
         lbp,
         primary: (value: number) => (showUsd ? usd(value) : lbp(value)),

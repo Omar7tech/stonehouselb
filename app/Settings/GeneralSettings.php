@@ -24,6 +24,43 @@ class GeneralSettings extends Settings
      */
     public PriceDisplay $price_display;
 
+    /**
+     * Whether the delivery menu is available. When off the storefront is
+     * dine-in only and `/menu/delivery` redirects back to the dine-in menu.
+     */
+    public bool $online_ordering_active;
+
+    /**
+     * The WhatsApp number finished orders are sent to. Without one there is
+     * nowhere for an order to go, so checkout is closed.
+     */
+    public ?string $whatsapp_number;
+
+    /**
+     * Whether a delivery charge is added to the order total.
+     */
+    public bool $charge_delivery;
+
+    /**
+     * The delivery charge in USD, applied when {@see self::$charge_delivery} is on.
+     */
+    public ?float $delivery_fee;
+
+    /**
+     * Whether the customer must give a name before the order can be sent.
+     */
+    public bool $require_full_name;
+
+    /**
+     * Whether the customer must give a phone number before the order can be sent.
+     */
+    public bool $require_phone_number;
+
+    /**
+     * Whether the customer's coordinates are asked for and attached to the order.
+     */
+    public bool $get_client_location;
+
     public static function group(): string
     {
         return 'general';
@@ -61,5 +98,25 @@ class GeneralSettings extends Settings
         }
 
         return $this->price_display;
+    }
+
+    /**
+     * The delivery charge to add to an order, or null when none applies —
+     * either the charge is off or no positive fee is configured.
+     */
+    public function deliveryFeeUsd(): ?float
+    {
+        $fee = (float) $this->delivery_fee;
+
+        return $this->charge_delivery && $fee > 0 ? $fee : null;
+    }
+
+    /**
+     * Whether a finished order has somewhere to go. Without a WhatsApp number
+     * the storefront shows the menu but closes checkout.
+     */
+    public function canReceiveOrders(): bool
+    {
+        return $this->online_ordering_active && filled($this->whatsapp_number);
     }
 }

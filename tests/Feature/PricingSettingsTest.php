@@ -1,26 +1,7 @@
 <?php
 
 use App\Enums\PriceDisplay;
-use App\Settings\GeneralSettings;
 use Inertia\Testing\AssertableInertia;
-
-/**
- * Apply the given values to the general settings and persist them.
- *
- * @param  array<string, mixed>  $values
- */
-function settings(array $values): GeneralSettings
-{
-    $settings = app(GeneralSettings::class);
-
-    foreach ($values as $key => $value) {
-        $settings->{$key} = $value;
-    }
-
-    $settings->save();
-
-    return $settings;
-}
 
 it('falls back to USD when LBP pricing has no usable rate', function (): void {
     $settings = settings([

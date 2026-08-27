@@ -1,3 +1,6 @@
+import { useCart } from '@/contexts/cart-context';
+import { usePricing } from '@/lib/use-pricing';
+
 /**
  * The checkout call-to-action, riding along the bottom of the menu.
  *
@@ -12,13 +15,28 @@
  * has something in it, so there is never a checkout to offer that leads nowhere.
  */
 export function CheckoutBar() {
+    const { count, subtotalUsd, setOpen } = useCart();
+    const pricing = usePricing();
+
     return (
         <div className="pointer-events-none sticky bottom-0 pt-2 pb-4">
             <button
                 type="button"
-                className="pointer-events-auto h-16 w-full rounded-full bg-primary font-display text-2xl text-primary-foreground uppercase shadow-lg transition-all duration-300 ease-out hover:shadow-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:translate-y-px sm:text-3xl"
+                onClick={() => setOpen(true)}
+                className="pointer-events-auto flex h-16 w-full items-center justify-between gap-3 rounded-full bg-primary px-6 text-primary-foreground shadow-lg transition-all duration-300 ease-out hover:shadow-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:translate-y-px"
             >
-                Check out
+                <span className="font-display text-2xl uppercase sm:text-3xl">
+                    Check out
+                </span>
+
+                {/* The count and the running total, so the button says what is
+                    waiting rather than only where it leads. */}
+                <span className="flex shrink-0 items-baseline gap-2 text-sm tabular-nums">
+                    <span className="rounded-full bg-primary-foreground/20 px-2 py-0.5">
+                        {count}
+                    </span>
+                    {pricing.primary(subtotalUsd)}
+                </span>
             </button>
         </div>
     );
