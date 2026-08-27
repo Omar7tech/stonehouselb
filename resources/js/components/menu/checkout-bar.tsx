@@ -21,7 +21,11 @@ export function CheckoutBar() {
     const { setOpen } = useCart();
 
     return (
-        <div className="pointer-events-none sticky bottom-0 pt-2 pb-4">
+        // `z-20` to clear the cards passing beneath it: a card with sizes
+        // raises its picker to `z-10` so the options sit above the card's own
+        // tap target, and without an order of its own the sticky button would
+        // be painted under every one of them on the way past.
+        <div className="pointer-events-none sticky bottom-0 z-20 pt-2 pb-4">
             <button
                 type="button"
                 onClick={() => setOpen(true)}
