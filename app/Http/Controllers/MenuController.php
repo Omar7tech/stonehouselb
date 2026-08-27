@@ -34,7 +34,10 @@ class MenuController extends Controller
     {
         $categories = Category::query()
             ->where('is_active', true)
-            ->with(['products' => $this->productsConstraint($orderType)])
+            ->with([
+                'media',
+                'products' => $this->productsConstraint($orderType),
+            ])
             ->orderBy('sort_order')
             ->get()
             ->filter(fn (Category $category): bool => $category->products->isNotEmpty())

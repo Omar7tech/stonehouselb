@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { CartStrip } from '@/components/menu/cart-strip';
+import { CategoryGrid } from '@/components/menu/category-grid';
 import { CategoryPills } from '@/components/menu/category-pills';
 import { CheckoutBar } from '@/components/menu/checkout-bar';
 import { OrderTypeSwitch } from '@/components/menu/order-type-switch';
@@ -64,31 +65,31 @@ export default function Menu({
     // Delivery is the menu you order from; dine-in is the same menu to read.
     const canOrder = orderType === 'delivery';
 
+    // Null shows the category boxes; an id shows that category's products.
     const [activeCategoryId, setActiveCategoryId] = useState(() =>
         readCategoryFromUrl(categories),
     );
     const [cart, setCart] = useState<CartLine[]>([]);
 
-    // Null until a pill is pressed, so the first category leads by default and
-    // an admin reordering the menu is followed rather than pinned to an id.
     const activeCategory =
-        categories.find((category) => category.id === activeCategoryId) ??
-        categories[0];
+        categories.find((category) => category.id === activeCategoryId) ?? null;
     const products = activeCategory?.products ?? [];
 
     // Mirror the open category into the URL so the view survives a refresh and
     // can be shared, without a server round-trip.
     useEffect(() => {
-        if (activeCategory === undefined) {
-            return;
+        const url = new URL(window.location.href);
+
+        if (activeCategory === null) {
+            url.searchParams.delete('category');
+        } else {
+            url.searchParams.set('category', activeCategory.slug);
         }
 
-        const url = new URL(window.location.href);
-        url.searchParams.set('category', activeCategory.slug);
         window.history.replaceState(window.history.state, '', url);
     }, [activeCategory]);
 
-    const selectCategory = (id: number): void => {
+    const selectCategory = (id: number | null): void => {
         setActiveCategoryId(id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -209,20 +210,22 @@ export default function Menu({
                             C<Stretch level={2}>H</Stretch>OOSE YOUR CRAVING.
                         </StretchText>
 
-                        {activeCategory === undefined ? (
-                            /* Nothing published yet. The panel still draws, so
-                               the page reads as a menu waiting on its dishes
-                               rather than as something broken. */
-                            <p className="py-10 text-center text-sm text-muted-foreground">
-                                The menu is being written. Please check back
-                                soon.
-                            </p>
+                        {activeCategory === null ? (
+                            /* The landing view. `CategoryGrid` also carries the
+                               empty state, so a menu with nothing published
+                               reads as one waiting on its dishes rather than as
+                               something broken. */
+                            <CategoryGrid
+                                categories={categories}
+                                onSelect={selectCategory}
+                            />
                         ) : (
                             <>
                                 <CategoryPills
                                     categories={categories}
                                     activeId={activeCategory.id}
                                     onSelect={selectCategory}
+                                    onClear={() => selectCategory(null)}
                                 />
 
                                 <ul className="flex flex-col gap-3">

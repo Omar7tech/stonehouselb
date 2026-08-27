@@ -32,6 +32,8 @@ export type Category = {
     /** Used in `?category=` so an open category survives a refresh. */
     slug: string;
     name: string;
+    /** Art for the category box, or null while none has been uploaded. */
+    image: string | null;
     /**
      * Products hang off their category rather than sitting in one flat list,
      * so opening a category is a lookup instead of a scan.

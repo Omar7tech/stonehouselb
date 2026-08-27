@@ -22,6 +22,8 @@ it('sends the active categories with their products in display order', function 
             ->where('categories.0.products.0.name', 'Kafta')
             ->where('categories.0.products.1.name', 'Taouk')
             ->where('categories.0.products.1.price', 8.5)
+            // The box falls back to the house mark when this is null.
+            ->where('categories.0.image', null)
             ->count('categories', 2)
         );
 });
