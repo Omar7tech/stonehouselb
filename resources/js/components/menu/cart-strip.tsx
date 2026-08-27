@@ -2,6 +2,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 
 import { ProductImage } from '@/components/menu/product-image';
 import { useCart } from '@/contexts/cart-context';
+import { usePricing } from '@/lib/use-pricing';
 import { cn } from '@/lib/utils';
 
 /**
@@ -22,7 +23,8 @@ import { cn } from '@/lib/utils';
 const SHEET_BLEED = '-12rem';
 
 export function CartStrip() {
-    const { items, setOpen } = useCart();
+    const { items, count, subtotalUsd, setOpen } = useCart();
+    const pricing = usePricing();
 
     const [emblaRef] = useEmblaCarousel({
         dragFree: true,
@@ -41,11 +43,11 @@ export function CartStrip() {
                 className="absolute inset-x-0 top-0 rounded-3xl bg-card shadow-lg"
             />
 
-            {/* The vertical padding is what keeps the corner badges out of the
-                viewport's clipping. */}
+            {/* The top padding is what keeps the corner badges out of the
+                carousel's clipping; the foot only has to clear the rule below. */}
             <div
                 ref={emblaRef}
-                className="relative overflow-hidden py-4 select-none"
+                className="relative overflow-hidden pt-4 pb-3 select-none"
             >
                 <ul className="flex pl-4">
                     {items.map((item, index) => (
@@ -88,6 +90,35 @@ export function CartStrip() {
                         </li>
                     ))}
                 </ul>
+            </div>
+
+            {/* What the tiles come to, ruled off from them. The rule is inset
+                by the same gutter the tiles start at, so it reads as the foot
+                of this card rather than as a line drawn across the page.
+
+                It sits above the panel's overlap, in the band of the card that
+                is actually on show — anything lower would be hidden behind the
+                menu. */}
+            <div className="relative mx-4 flex items-baseline justify-between gap-3 border-t border-foreground/10 pt-2.5 pb-4">
+                <span className="text-[0.7rem] tracking-wide text-muted-foreground uppercase">
+                    {count === 1 ? '1 item' : `${count} items`}
+                </span>
+
+                {/* Both currencies stack when the shop shows both, the way the
+                    product cards set their prices. In a single-currency shop
+                    `primary` is already the one to lead with, so the second
+                    line only appears when there really is a second currency. */}
+                <span className="flex flex-col items-end leading-tight">
+                    <span className="text-base font-semibold text-primary tabular-nums">
+                        {pricing.primary(subtotalUsd)}
+                    </span>
+
+                    {pricing.showUsd && pricing.showLbp && (
+                        <span className="text-[0.7rem] text-primary/60 tabular-nums">
+                            {pricing.lbp(subtotalUsd)}
+                        </span>
+                    )}
+                </span>
             </div>
         </section>
     );
