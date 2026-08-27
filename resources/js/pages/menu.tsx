@@ -219,7 +219,10 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
                         <OrderTypeSwitch current={orderType} />
                     </div>
 
-                    {canOrder && hasCart && <CartStrip />}
+                    {/* Always on the delivery menu, empty or not — it holds the
+                        space the order lives in, so the first item added
+                        doesn't shove the page down as you reach for it. */}
+                    {canOrder && <CartStrip />}
 
                     {/* The menu proper: one panel the stone runs alongside, sized
                     to its own contents so it closes on the last product rather
