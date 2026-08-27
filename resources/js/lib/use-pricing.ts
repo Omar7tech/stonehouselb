@@ -1,16 +1,6 @@
+import { usePage } from '@inertiajs/react';
 import { convertUsdToLbp, formatLbp, formatUsd } from '@/lib/currency';
-import type { PriceDisplay, Pricing } from '@/types';
-
-/**
- * TEMPORARY. In pinelb this comes from settings, shared on every Inertia
- * response and read with `usePage().props.pricing`. There is no settings table
- * here yet, so it is pinned — swapping to shared props later is a change to
- * this constant alone, since the shape below already matches.
- */
-const PRICING: Pricing = {
-    display: 'both',
-    lbpRate: 89000,
-};
+import type { PriceDisplay } from '@/types';
 
 export type PriceParts = {
     /** Whether the USD price should be shown. */
@@ -24,13 +14,16 @@ export type PriceParts = {
 };
 
 /**
- * Helpers that format a USD amount for the active display mode. Falls back to
+ * Reads the pricing settings shared on every Inertia response and exposes
+ * helpers that format a USD amount for the active display mode. Falls back to
  * USD-only when no LBP rate is configured, so a missing rate quietly shows one
  * currency rather than an empty price.
  */
 export function usePricing(): PriceParts {
-    const rate = PRICING.lbpRate;
-    const display: PriceDisplay = rate === null ? 'usd' : PRICING.display;
+    const { pricing } = usePage().props;
+    const rate = pricing?.lbpRate ?? null;
+    const display: PriceDisplay =
+        rate === null ? 'usd' : (pricing?.display ?? 'usd');
 
     const showUsd = display === 'usd' || display === 'both';
     const showLbp = (display === 'lbp' || display === 'both') && rate !== null;

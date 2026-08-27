@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Products\Tables;
 use App\Enums\OrderType;
 use App\Filament\Tables\Columns\PriceColumn;
 use App\Models\Product;
+use App\Settings\GeneralSettings;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -21,6 +22,9 @@ class ProductsTable
 {
     public static function configure(Table $table): Table
     {
+        // Null hides the LBP line, matching the storefront's fallback to USD.
+        $lbpRate = app(GeneralSettings::class)->usableLbpRate();
+
         return $table
             ->reorderable('sort_order')
             ->defaultSort('sort_order')
@@ -40,10 +44,10 @@ class ProductsTable
                     ->badge()
                     ->color('info')
                     ->sortable(),
-                // No LBP rate is configured yet, so prices show in USD only.
                 PriceColumn::make('price')
                     ->label('Price')
-                    ->sortable(),
+                    ->sortable()
+                    ->lbpRate($lbpRate),
                 TextColumn::make('order_type')
                     ->label('Order type')
                     ->badge()
