@@ -75,6 +75,13 @@ export default function Menu({
         categories.find((category) => category.id === activeCategoryId) ?? null;
     const products = activeCategory?.products ?? [];
 
+    /**
+     * The bar is the foot of an open category on the delivery menu only — the
+     * boxes have nothing to check out from yet. The panel reads this to know
+     * whether its own bottom padding is still needed.
+     */
+    const showsCheckoutBar = canOrder && activeCategory !== null;
+
     // Mirror the open category into the URL so the view survives a refresh and
     // can be shared, without a server round-trip.
     useEffect(() => {
@@ -184,9 +191,11 @@ export default function Menu({
                             // overlaps. The stock shadows all fall downwards,
                             // where there is nothing to catch them.
                             'shadow-[0_-6px_20px_rgb(0_0_0/0.11)]',
-                            // Delivery closes on the checkout bar, which brings its
-                            // own spacing; dine-in ends on the last product.
-                            canOrder || 'pb-6',
+                            // The checkout bar brings its own spacing, so the
+                            // panel only pads its own foot when the bar isn't
+                            // there to do it — dine-in either way, and the
+                            // delivery menu while it is still on the boxes.
+                            showsCheckoutBar || 'pb-6',
                         )}
                     >
                         {/* Texture at the foot of the section, so the panel closes
@@ -244,7 +253,7 @@ export default function Menu({
                                     ))}
                                 </ul>
 
-                                {canOrder && (
+                                {showsCheckoutBar && (
                                     <CheckoutBar itemCount={itemCount} />
                                 )}
                             </>
