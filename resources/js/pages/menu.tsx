@@ -75,13 +75,6 @@ export default function Menu({
         categories.find((category) => category.id === activeCategoryId) ?? null;
     const products = activeCategory?.products ?? [];
 
-    /**
-     * The bar is the foot of an open category on the delivery menu only — the
-     * boxes have nothing to check out from yet. The panel reads this to know
-     * whether its own bottom padding is still needed.
-     */
-    const showsCheckoutBar = canOrder && activeCategory !== null;
-
     // Mirror the open category into the URL so the view survives a refresh and
     // can be shared, without a server round-trip.
     useEffect(() => {
@@ -121,12 +114,15 @@ export default function Menu({
         [cart, allProducts],
     );
 
-    const itemCount = useMemo(
-        () => cart.reduce((total, line) => total + line.quantity, 0),
-        [cart],
-    );
-
     const hasCart = cartLines.length > 0;
+
+    /**
+     * The bar is the foot of an open category on the delivery menu, and only
+     * once there is something in the cart to check out — an empty menu, the
+     * boxes, or an empty cart each have nothing for it to do. The panel reads
+     * this to know whether its own bottom padding is still needed.
+     */
+    const showsCheckoutBar = canOrder && activeCategory !== null && hasCart;
 
     const addToCart = (product: Product): void => {
         setCart((current) =>
@@ -253,9 +249,7 @@ export default function Menu({
                                     ))}
                                 </ul>
 
-                                {showsCheckoutBar && (
-                                    <CheckoutBar itemCount={itemCount} />
-                                )}
+                                {showsCheckoutBar && <CheckoutBar />}
                             </>
                         )}
                     </main>

@@ -7,14 +7,16 @@
  * Nothing is painted behind it: only the button itself covers the list, so the
  * cards stay whole right up to its edge and simply pass behind it. A backdrop
  * here would swallow a band of the list before it ever reached the button.
+ *
+ * It carries no empty state of its own — the menu only mounts it once the cart
+ * has something in it, so there is never a checkout to offer that leads nowhere.
  */
-export function CheckoutBar({ itemCount }: { itemCount: number }) {
+export function CheckoutBar() {
     return (
         <div className="pointer-events-none sticky bottom-0 pt-2 pb-4">
             <button
                 type="button"
-                disabled={itemCount === 0}
-                className="pointer-events-auto h-16 w-full rounded-full bg-primary font-display text-2xl text-primary-foreground uppercase shadow-lg transition-all duration-300 ease-out hover:shadow-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:translate-y-px disabled:opacity-50 sm:text-3xl"
+                className="pointer-events-auto h-16 w-full rounded-full bg-primary font-display text-2xl text-primary-foreground uppercase shadow-lg transition-all duration-300 ease-out hover:shadow-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:translate-y-px sm:text-3xl"
             >
                 Check out
             </button>
