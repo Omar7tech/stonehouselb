@@ -1,4 +1,5 @@
 import useEmblaCarousel from 'embla-carousel-react';
+import { ArrowRight } from 'lucide-react';
 
 import { ProductImage } from '@/components/menu/product-image';
 import { useCart } from '@/contexts/cart-context';
@@ -107,26 +108,42 @@ export function CartStrip() {
                 It sits above the panel's overlap, in the band of the card that
                 is actually on show — anything lower would be hidden behind the
                 menu. */}
-            <div className="relative mx-4 flex items-baseline justify-between gap-3 border-t border-foreground/10 pt-2.5 pb-4">
-                <span className="text-[0.7rem] tracking-wide text-muted-foreground uppercase">
-                    {count === 1 ? '1 item' : `${count} items`}
-                </span>
+            <div className="relative mx-4 border-t border-foreground/10 pt-2.5 pb-4">
+                <div className="flex items-center justify-between gap-3">
+                    {/* The count is the way in, rather than a label with a
+                        button under it — the row already says how much is in
+                        there, so it only needed somewhere to go. The arrow is
+                        what makes it read as a way through.
 
-                {/* Both currencies stack when the shop shows both, the way the
-                    product cards set their prices. In a single-currency shop
-                    `primary` is already the one to lead with, so the second
-                    line only appears when there really is a second currency. */}
-                <span className="flex flex-col items-end leading-tight">
-                    <span className="text-base font-semibold text-primary tabular-nums">
-                        {pricing.primary(subtotalUsd)}
-                    </span>
+                        Held back to a tint: it goes to the same place as the
+                        checkout button below, and two solid orange calls to
+                        action on one screen would both be shouting. */}
+                    <button
+                        type="button"
+                        onClick={() => setOpen(true)}
+                        aria-label="View your order"
+                        className="flex shrink-0 items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-[0.7rem] font-semibold tracking-wide text-primary uppercase transition-colors duration-200 ease-out hover:bg-primary/20 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                    >
+                        {count === 1 ? '1 item' : `${count} items`}
+                        <ArrowRight className="size-3.5" />
+                    </button>
 
-                    {pricing.showUsd && pricing.showLbp && (
-                        <span className="text-[0.7rem] text-primary/60 tabular-nums">
-                            {pricing.lbp(subtotalUsd)}
+                    {/* Both currencies stack when the shop shows both, the way
+                        the product cards set their prices. In a single-currency
+                        shop `primary` is already the one to lead with, so the
+                        second line only appears when there really is one. */}
+                    <span className="flex flex-col items-end leading-tight">
+                        <span className="text-base font-semibold text-primary tabular-nums">
+                            {pricing.primary(subtotalUsd)}
                         </span>
-                    )}
-                </span>
+
+                        {pricing.showUsd && pricing.showLbp && (
+                            <span className="text-[0.7rem] text-primary/60 tabular-nums">
+                                {pricing.lbp(subtotalUsd)}
+                            </span>
+                        )}
+                    </span>
+                </div>
             </div>
         </Sheet>
     );
