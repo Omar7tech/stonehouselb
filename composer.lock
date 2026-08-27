@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0ca98df7cea4503ba46db61b1e0f268f",
+    "content-hash": "8a0cedeceb67fb2be6ebc0ff96af498a",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -1564,6 +1564,50 @@
                 "source": "https://github.com/filamentphp/filament"
             },
             "time": "2026-07-17T11:47:27+00:00"
+        },
+        {
+            "name": "filament/spatie-laravel-settings-plugin",
+            "version": "v5.7.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/filamentphp/spatie-laravel-settings-plugin.git",
+                "reference": "82ffb2fdc26747ca103e789e3d56252612ffad6a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/filamentphp/spatie-laravel-settings-plugin/zipball/82ffb2fdc26747ca103e789e3d56252612ffad6a",
+                "reference": "82ffb2fdc26747ca103e789e3d56252612ffad6a",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "self.version",
+                "php": "^8.2",
+                "spatie/laravel-settings": "^3.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Filament\\SpatieLaravelSettingsPluginServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Filament\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Filament support for `spatie/laravel-settings`.",
+            "homepage": "https://github.com/filamentphp/filament",
+            "support": {
+                "issues": "https://github.com/filamentphp/filament/issues",
+                "source": "https://github.com/filamentphp/filament"
+            },
+            "time": "2026-08-05T20:48:23+00:00"
         },
         {
             "name": "filament/support",
@@ -8916,16 +8960,16 @@
         },
         {
             "name": "ueberdosis/tiptap-php",
-            "version": "2.1.1",
+            "version": "2.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ueberdosis/tiptap-php.git",
-                "reference": "74bfb7be1c8c6102b240f3879b7f984a6ab87b97"
+                "reference": "0561e2146edbcdc622b5d4008d0ee02582f8642b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ueberdosis/tiptap-php/zipball/74bfb7be1c8c6102b240f3879b7f984a6ab87b97",
-                "reference": "74bfb7be1c8c6102b240f3879b7f984a6ab87b97",
+                "url": "https://api.github.com/repos/ueberdosis/tiptap-php/zipball/0561e2146edbcdc622b5d4008d0ee02582f8642b",
+                "reference": "0561e2146edbcdc622b5d4008d0ee02582f8642b",
                 "shasum": ""
             },
             "require": {
@@ -8965,7 +9009,7 @@
             ],
             "support": {
                 "issues": "https://github.com/ueberdosis/tiptap-php/issues",
-                "source": "https://github.com/ueberdosis/tiptap-php/tree/2.1.1"
+                "source": "https://github.com/ueberdosis/tiptap-php/tree/2.1.2"
             },
             "funding": [
                 {
@@ -8981,7 +9025,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2026-06-12T18:19:46+00:00"
+            "time": "2026-08-11T08:47:45+00:00"
         },
         {
             "name": "vlucas/phpdotenv",
