@@ -10,13 +10,17 @@ import { SiteFooter } from '@/components/menu/site-footer';
 import { SiteHeader } from '@/components/menu/site-header';
 import { StoneWallBackdrop } from '@/components/stone-wall-backdrop';
 import { Stretch, StretchText } from '@/components/stretch';
-import { ALL_PRODUCTS, CATEGORIES, INITIAL_CART } from '@/lib/menu-placeholder';
 import { cn } from '@/lib/utils';
 import type { Category, CartLine, OrderType, Product } from '@/types';
 
 interface MenuProps {
     orderType: OrderType;
     orderTypeLabel: string;
+    /**
+     * Only the categories with something in them for this order type — the
+     * controller drops the empty ones, so a pill always opens onto products.
+     */
+    categories: Category[];
 }
 
 /**
@@ -37,13 +41,8 @@ const HEADING_EM = 20.565;
  */
 const HEADING_SIZE = `clamp(0.8rem, calc((100vw - 3rem) / ${HEADING_EM}), 1.85rem)`;
 
-/** Categories worth showing: one with nothing in it opens onto an empty list. */
-const MENU: readonly Category[] = CATEGORIES.filter(
-    (category) => category.products.length > 0,
-);
-
 /** The category named in `?category=`, or null when it names nothing known. */
-function readCategoryFromUrl(): number | null {
+function readCategoryFromUrl(menu: readonly Category[]): number | null {
     if (typeof window === 'undefined') {
         return null;
     }
@@ -54,27 +53,36 @@ function readCategoryFromUrl(): number | null {
         return null;
     }
 
-    return MENU.find((category) => category.slug === slug)?.id ?? null;
+    return menu.find((category) => category.slug === slug)?.id ?? null;
 }
 
-export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
+export default function Menu({
+    orderType,
+    orderTypeLabel,
+    categories,
+}: MenuProps) {
     // Delivery is the menu you order from; dine-in is the same menu to read.
     const canOrder = orderType === 'delivery';
 
-    const [activeCategoryId, setActiveCategoryId] = useState(
-        () => readCategoryFromUrl() ?? MENU[0].id,
+    const [activeCategoryId, setActiveCategoryId] = useState(() =>
+        readCategoryFromUrl(categories),
     );
-    const [cart, setCart] = useState<CartLine[]>(
-        canOrder ? [...INITIAL_CART] : [],
-    );
+    const [cart, setCart] = useState<CartLine[]>([]);
 
+    // Null until a pill is pressed, so the first category leads by default and
+    // an admin reordering the menu is followed rather than pinned to an id.
     const activeCategory =
-        MENU.find((category) => category.id === activeCategoryId) ?? MENU[0];
-    const products = activeCategory.products;
+        categories.find((category) => category.id === activeCategoryId) ??
+        categories[0];
+    const products = activeCategory?.products ?? [];
 
     // Mirror the open category into the URL so the view survives a refresh and
     // can be shared, without a server round-trip.
     useEffect(() => {
+        if (activeCategory === undefined) {
+            return;
+        }
+
         const url = new URL(window.location.href);
         url.searchParams.set('category', activeCategory.slug);
         window.history.replaceState(window.history.state, '', url);
@@ -85,18 +93,24 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    /** Flattened once, for resolving the cart's product ids. */
+    const allProducts = useMemo(
+        () => categories.flatMap((category) => category.products),
+        [categories],
+    );
+
     // The cart is kept as a list rather than keyed by id so the strip shows
     // items in the order they were added instead of in id order.
     const cartLines = useMemo(
         () =>
             cart.flatMap((line) => {
-                const product = ALL_PRODUCTS.find(
+                const product = allProducts.find(
                     (candidate) => candidate.id === line.productId,
                 );
 
                 return product ? [{ product, quantity: line.quantity }] : [];
             }),
-        [cart],
+        [cart, allProducts],
     );
 
     const itemCount = useMemo(
@@ -195,25 +209,43 @@ export default function Menu({ orderType, orderTypeLabel }: MenuProps) {
                             C<Stretch level={2}>H</Stretch>OOSE YOUR CRAVING.
                         </StretchText>
 
-                        <CategoryPills
-                            categories={MENU}
-                            activeId={activeCategory.id}
-                            onSelect={selectCategory}
-                        />
+                        {activeCategory === undefined ? (
+                            /* Nothing published yet. The panel still draws, so
+                               the page reads as a menu waiting on its dishes
+                               rather than as something broken. */
+                            <p className="py-10 text-center text-sm text-muted-foreground">
+                                The menu is being written. Please check back
+                                soon.
+                            </p>
+                        ) : (
+                            <>
+                                <CategoryPills
+                                    categories={categories}
+                                    activeId={activeCategory.id}
+                                    onSelect={selectCategory}
+                                />
 
-                        <ul className="flex flex-col gap-3">
-                            {products.map((product) => (
-                                <li key={product.id}>
-                                    <ProductCard
-                                        product={product}
-                                        quantity={quantityOf(product)}
-                                        onAdd={canOrder ? addToCart : undefined}
-                                    />
-                                </li>
-                            ))}
-                        </ul>
+                                <ul className="flex flex-col gap-3">
+                                    {products.map((product) => (
+                                        <li key={product.id}>
+                                            <ProductCard
+                                                product={product}
+                                                quantity={quantityOf(product)}
+                                                onAdd={
+                                                    canOrder
+                                                        ? addToCart
+                                                        : undefined
+                                                }
+                                            />
+                                        </li>
+                                    ))}
+                                </ul>
 
-                        {canOrder && <CheckoutBar itemCount={itemCount} />}
+                                {canOrder && (
+                                    <CheckoutBar itemCount={itemCount} />
+                                )}
+                            </>
+                        )}
                     </main>
                 </div>
 

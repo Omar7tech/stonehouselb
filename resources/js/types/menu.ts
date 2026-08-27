@@ -10,21 +10,23 @@ export type Pricing = {
     lbpRate: number | null;
 };
 
+/** Mirrors `App\Http\Resources\ProductResource`. */
 export type Product = {
     id: number;
     name: string;
-    description?: string;
+    description: string | null;
     /** In USD. LBP is derived from it at the configured rate, never stored. */
     price: number;
     /** Set only while the product is on offer; `price` stays the full one. */
-    discountPrice?: number | null;
+    discountPrice: number | null;
     /**
      * Photo for the card. Products without one fall back to `ProductImage`'s
      * placeholder rather than leaving a hole in the row.
      */
-    image?: string;
+    image: string | null;
 };
 
+/** Mirrors `App\Http\Resources\CategoryResource`. */
 export type Category = {
     id: number;
     /** Used in `?category=` so an open category survives a refresh. */

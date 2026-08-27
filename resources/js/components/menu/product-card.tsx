@@ -42,7 +42,7 @@ export function ProductCard({
                     {product.name}
                 </h3>
 
-                {product.description === undefined ? (
+                {product.description === null ? (
                     /* Nothing written for this one yet. */
                     <div aria-hidden className="mt-2 flex gap-1.5">
                         <span className="h-2 w-20 rounded-full bg-muted" />

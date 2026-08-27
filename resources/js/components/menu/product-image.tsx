@@ -17,7 +17,7 @@ export function ProductImage({
     product: Product;
     className?: string;
 }) {
-    if (product.image === undefined) {
+    if (product.image === null) {
         return (
             <div
                 aria-hidden
