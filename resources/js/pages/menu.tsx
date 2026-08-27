@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { CartSheet } from '@/components/menu/cart-sheet';
 import { CartStrip } from '@/components/menu/cart-strip';
+import { CartToast } from '@/components/menu/cart-toast';
 import { CategoryGrid } from '@/components/menu/category-grid';
 import { CategoryPills } from '@/components/menu/category-pills';
 import { CheckoutBar } from '@/components/menu/checkout-bar';
@@ -78,7 +79,7 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
     // Delivery is the menu you order from; dine-in is the same menu to read.
     const canOrder = orderType === 'delivery';
 
-    const { items, count, addItem, setOpen } = useCart();
+    const { items, count, addItem } = useCart();
 
     // Null shows the category boxes; an id shows that category's products.
     const [activeCategoryId, setActiveCategoryId] = useState(() =>
@@ -189,10 +190,9 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
             quantity,
         });
 
+        // The toast is the confirmation, here as well as on the card's quick
+        // add — one answer to "did that work?" wherever the add came from.
         setProductOpen(false);
-        // Straight to the basket, so adding an item shows what it did without
-        // the customer having to go looking for the cart.
-        setOpen(true);
     };
 
     return (
@@ -329,6 +329,7 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
                 onAdd={canOrder ? addFromDialog : undefined}
             />
 
+            {canOrder && <CartToast />}
             {canOrder && <CartSheet />}
         </>
     );

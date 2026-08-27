@@ -4,6 +4,7 @@ import {
     useContext,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react';
 import type { ReactNode } from 'react';
@@ -65,6 +66,11 @@ type CartState = {
     subtotalUsd: number;
     /** Whether the checkout sheet is showing. */
     open: boolean;
+    /**
+     * The most recently added item. The `nonce` changes on every add — even
+     * when the same product is re-added — so a toast can react to each one.
+     */
+    lastAdded: { nonce: number; name: string } | null;
 };
 
 type CartActions = {
@@ -113,6 +119,12 @@ function readStoredItems(): CartItem[] {
 export function CartProvider({ children }: { children: ReactNode }) {
     const [items, setItems] = useState<CartItem[]>(readStoredItems);
     const [open, setOpen] = useState(false);
+    const [lastAdded, setLastAdded] = useState<{
+        nonce: number;
+        name: string;
+    } | null>(null);
+    // Monotonic counter, so re-adding the same product still fires the toast.
+    const addNonceRef = useRef(0);
 
     // Persist the cart so it survives navigations and reloads.
     useEffect(() => {
@@ -158,6 +170,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 },
             ];
         });
+
+        // Signal a toast rather than opening the whole cart, so adding several
+        // things in a row doesn't keep interrupting the customer.
+        addNonceRef.current += 1;
+        setLastAdded({ nonce: addNonceRef.current, name: input.name });
     }, []);
 
     const increment = useCallback((key: string): void => {
@@ -219,8 +236,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 0,
             ),
             open,
+            lastAdded,
         }),
-        [items, open],
+        [items, open, lastAdded],
     );
 
     return (
