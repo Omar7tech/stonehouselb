@@ -14,6 +14,7 @@ use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Pages\SettingsPage;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
@@ -81,47 +82,84 @@ class ManageGeneral extends SettingsPage
                                     }),
                             ]),
 
+                        /**
+                         * Three pickers, each with three or four options and a
+                         * paragraph under every one — laid out flat that is a
+                         * wall of prose to scroll before reaching the one
+                         * choice you came to change.
+                         *
+                         * So each is a section of its own, folded shut by
+                         * default and remembering what you left open. The
+                         * headings alone are then the whole tab: three lines
+                         * naming what can be changed, and the reading only
+                         * appears once you have asked for it.
+                         */
                         Tab::make('Appearance')
                             ->icon(Heroicon::OutlinedSwatch)
                             ->schema([
-                                Radio::make('category_layout')
-                                    ->label('Category layout')
-                                    ->helperText('How the menu\'s opening screen lists its categories. Every layout shows the same categories in the same order.')
-                                    ->options(CategoryLayout::class)
-                                    ->descriptions(collect(CategoryLayout::cases())
-                                        ->mapWithKeys(fn (CategoryLayout $layout): array => [
-                                            $layout->value => $layout->getDescription(),
-                                        ])
-                                        ->all())
-                                    ->default(CategoryLayout::Grid->value)
-                                    ->required()
-                                    ->columnSpanFull(),
+                                Section::make('Category layout')
+                                    ->description('How the menu\'s opening screen lists its categories. Every layout shows the same categories in the same order.')
+                                    ->icon(Heroicon::OutlinedSquares2x2)
+                                    ->collapsible()
+                                    ->collapsed()
+                                    ->persistCollapsed()
+                                    ->id('appearance-category-layout')
+                                    ->schema([
+                                        Radio::make('category_layout')
+                                            // The section heading names it, and
+                                            // a label repeating that under it
+                                            // is the crowding this was meant to
+                                            // undo.
+                                            ->hiddenLabel()
+                                            ->options(CategoryLayout::class)
+                                            ->descriptions(collect(CategoryLayout::cases())
+                                                ->mapWithKeys(fn (CategoryLayout $layout): array => [
+                                                    $layout->value => $layout->getDescription(),
+                                                ])
+                                                ->all())
+                                            ->default(CategoryLayout::Grid->value)
+                                            ->required(),
+                                    ]),
 
-                                Radio::make('product_card_style')
-                                    ->label('Product card')
-                                    ->helperText('How one dish is drawn once a category is open. Every style opens the same details sheet.')
-                                    ->options(ProductCardStyle::class)
-                                    ->descriptions(collect(ProductCardStyle::cases())
-                                        ->mapWithKeys(fn (ProductCardStyle $style): array => [
-                                            $style->value => $style->getDescription(),
-                                        ])
-                                        ->all())
-                                    ->default(ProductCardStyle::Row->value)
-                                    ->required()
-                                    ->columnSpanFull(),
+                                Section::make('Product card')
+                                    ->description('How one dish is drawn once a category is open. Every style opens the same details sheet.')
+                                    ->icon(Heroicon::OutlinedRectangleStack)
+                                    ->collapsible()
+                                    ->collapsed()
+                                    ->persistCollapsed()
+                                    ->id('appearance-product-card')
+                                    ->schema([
+                                        Radio::make('product_card_style')
+                                            ->hiddenLabel()
+                                            ->options(ProductCardStyle::class)
+                                            ->descriptions(collect(ProductCardStyle::cases())
+                                                ->mapWithKeys(fn (ProductCardStyle $style): array => [
+                                                    $style->value => $style->getDescription(),
+                                                ])
+                                                ->all())
+                                            ->default(ProductCardStyle::Row->value)
+                                            ->required(),
+                                    ]),
 
-                                Radio::make('variant_style')
-                                    ->label('Size picker')
-                                    ->helperText('How a product\'s sizes are offered, on the card and in the sheet. Products sold in one size only never show it.')
-                                    ->options(VariantStyle::class)
-                                    ->descriptions(collect(VariantStyle::cases())
-                                        ->mapWithKeys(fn (VariantStyle $style): array => [
-                                            $style->value => $style->getDescription(),
-                                        ])
-                                        ->all())
-                                    ->default(VariantStyle::Cards->value)
-                                    ->required()
-                                    ->columnSpanFull(),
+                                Section::make('Size picker')
+                                    ->description('How a product\'s sizes are offered, on the card and in the sheet. Products sold in one size only never show it.')
+                                    ->icon(Heroicon::OutlinedTag)
+                                    ->collapsible()
+                                    ->collapsed()
+                                    ->persistCollapsed()
+                                    ->id('appearance-size-picker')
+                                    ->schema([
+                                        Radio::make('variant_style')
+                                            ->hiddenLabel()
+                                            ->options(VariantStyle::class)
+                                            ->descriptions(collect(VariantStyle::cases())
+                                                ->mapWithKeys(fn (VariantStyle $style): array => [
+                                                    $style->value => $style->getDescription(),
+                                                ])
+                                                ->all())
+                                            ->default(VariantStyle::Cards->value)
+                                            ->required(),
+                                    ]),
                             ]),
 
                         Tab::make('Delivery')
