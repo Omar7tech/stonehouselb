@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Enums\CategoryLayout;
 use App\Enums\PriceDisplay;
+use App\Enums\ProductCardStyle;
 use App\Enums\VariantStyle;
 use App\Settings\GeneralSettings;
 use BackedEnum;
@@ -93,6 +94,19 @@ class ManageGeneral extends SettingsPage
                                         ])
                                         ->all())
                                     ->default(CategoryLayout::Grid->value)
+                                    ->required()
+                                    ->columnSpanFull(),
+
+                                Radio::make('product_card_style')
+                                    ->label('Product card')
+                                    ->helperText('How one dish is drawn once a category is open. Every style opens the same details sheet.')
+                                    ->options(ProductCardStyle::class)
+                                    ->descriptions(collect(ProductCardStyle::cases())
+                                        ->mapWithKeys(fn (ProductCardStyle $style): array => [
+                                            $style->value => $style->getDescription(),
+                                        ])
+                                        ->all())
+                                    ->default(ProductCardStyle::Row->value)
                                     ->required()
                                     ->columnSpanFull(),
 

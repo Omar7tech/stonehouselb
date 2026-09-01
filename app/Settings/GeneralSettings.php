@@ -4,6 +4,7 @@ namespace App\Settings;
 
 use App\Enums\CategoryLayout;
 use App\Enums\PriceDisplay;
+use App\Enums\ProductCardStyle;
 use App\Enums\VariantStyle;
 use Spatie\LaravelSettings\Settings;
 use Spatie\LaravelSettings\SettingsCasts\EnumCast;
@@ -37,6 +38,12 @@ class GeneralSettings extends Settings
      * only — the same sizes at the same prices, whichever is picked.
      */
     public VariantStyle $variant_style;
+
+    /**
+     * How one product is drawn in an open category. A look only — the same
+     * products at the same prices, whichever is picked.
+     */
+    public ProductCardStyle $product_card_style;
 
     /**
      * Whether the delivery menu is available. When off the storefront is
@@ -102,6 +109,7 @@ class GeneralSettings extends Settings
         return [
             'category_layout' => new EnumCast(CategoryLayout::class),
             'price_display' => new EnumCast(PriceDisplay::class),
+            'product_card_style' => new EnumCast(ProductCardStyle::class),
             'variant_style' => new EnumCast(VariantStyle::class),
         ];
     }

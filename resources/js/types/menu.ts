@@ -7,6 +7,9 @@ export type PriceDisplay = 'usd' | 'lbp' | 'both';
 /** Mirrors `App\Enums\CategoryLayout` — how the landing view draws categories. */
 export type CategoryLayout = 'grid' | 'rows' | 'mosaic' | 'tickets';
 
+/** Mirrors `App\Enums\ProductCardStyle` — how one product is drawn. */
+export type ProductCardStyle = 'row' | 'card';
+
 /** Mirrors `App\Enums\VariantStyle` — how a product's sizes are offered. */
 export type VariantStyle = 'cards' | 'chips' | 'rows';
 

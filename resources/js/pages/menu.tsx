@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 import { CartSheet } from '@/components/menu/cart-sheet';
@@ -10,6 +10,7 @@ import { CheckoutBar } from '@/components/menu/checkout-bar';
 import { OrderTypeSwitch } from '@/components/menu/order-type-switch';
 import { ProductCard } from '@/components/menu/product-card';
 import { ProductDialog } from '@/components/menu/product-dialog';
+import { ProductShowcase } from '@/components/menu/product-showcase';
 import { SiteFooter } from '@/components/menu/site-footer';
 import { SiteHeader } from '@/components/menu/site-header';
 import { StoneWallBackdrop } from '@/components/stone-wall-backdrop';
@@ -17,7 +18,7 @@ import { Stretch, StretchText } from '@/components/stretch';
 import { CartProvider, useCart } from '@/contexts/cart-context';
 import type { CartAddon } from '@/contexts/cart-context';
 import { cn } from '@/lib/utils';
-import type { Category, OrderType, Product } from '@/types';
+import type { Category, OrderType, Product, ProductCardStyle } from '@/types';
 
 interface MenuProps {
     orderType: OrderType;
@@ -53,6 +54,38 @@ const HEADING_EM = 20.565;
  */
 const HEADING_SIZE = `clamp(0.8rem, calc((100vw - 3rem) / ${HEADING_EM}), var(--heading-max))`;
 
+/**
+ * How the product list is laid out, per card style.
+ *
+ * Both run one to a line on a phone and become columns on a monitor, where a
+ * single card at that width is a stripe of photo with an acre of nothing beside
+ * it. Rows go to three across because a row is a short shape; cards stop at two,
+ * since their photograph is the point and a third column would shrink it back
+ * to the size the row already gives it.
+ */
+const PRODUCT_LIST: Record<ProductCardStyle, string> = {
+    row: 'flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-4 xl:grid-cols-3',
+    card: 'flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-4',
+};
+
+/** One product, drawn in whichever style the shop has chosen. */
+function ProductInStyle({
+    style,
+    ...props
+}: {
+    style: ProductCardStyle;
+    product: Product;
+    quantity: number;
+    onOpen: (product: Product, variantIndex: number | null) => void;
+    onAdd?: (product: Product, variantIndex: number | null) => void;
+}) {
+    if (style === 'card') {
+        return <ProductShowcase {...props} />;
+    }
+
+    return <ProductCard {...props} />;
+}
+
 /** The category named in `?category=`, or null when it names nothing known. */
 function readCategoryFromUrl(menu: readonly Category[]): number | null {
     if (typeof window === 'undefined') {
@@ -86,6 +119,8 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
     const canOrder = orderType === 'delivery';
 
     const { items, count, addItem } = useCart();
+    const cardStyle: ProductCardStyle =
+        usePage().props.productCardStyle ?? ('row' as const);
 
     // Null shows the category boxes; an id shows that category's products.
     const [activeCategoryId, setActiveCategoryId] = useState(() =>
@@ -324,16 +359,11 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
                                     onClear={() => selectCategory(null)}
                                 />
 
-                                {/* One per row on a phone, where a card already
-                                    fills the width. On a monitor the same card
-                                    at that width is a stripe of photo with an
-                                    acre of nothing beside it, so the list
-                                    becomes columns — two, then three once there
-                                    is room for a readable name in each. */}
-                                <ul className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-4 xl:grid-cols-3">
+                                <ul className={PRODUCT_LIST[cardStyle]}>
                                     {products.map((product) => (
                                         <li key={product.id}>
-                                            <ProductCard
+                                            <ProductInStyle
+                                                style={cardStyle}
                                                 product={product}
                                                 quantity={quantityOf(product)}
                                                 onOpen={openDialog}

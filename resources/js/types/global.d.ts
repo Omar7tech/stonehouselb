@@ -3,6 +3,7 @@ import type {
     CategoryLayout,
     Checkout,
     Pricing,
+    ProductCardStyle,
     SocialLink,
     VariantStyle,
 } from '@/types/menu';
@@ -25,6 +26,8 @@ declare module '@inertiajs/core' {
             categoryLayout: CategoryLayout;
             /** How a product's sizes are offered on the card and in the sheet. */
             variantStyle: VariantStyle;
+            /** How one product is drawn in an open category. */
+            productCardStyle: ProductCardStyle;
             /** The footer's links. Empty leaves the list out entirely. */
             socialLinks: SocialLink[];
             /** Null when orders have nowhere to go, which closes checkout. */
