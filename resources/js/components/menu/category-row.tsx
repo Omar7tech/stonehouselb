@@ -75,12 +75,19 @@ export function CategoryRow({
                 colour read as one printed pattern. It is the shape that says
                 which category this is anyway, not the colour.
 
+                The knock-out is one filter on the group rather than eight on
+                the copies. The result is identical — a filter reads the pixels
+                already drawn, so the group and its parts come out the same — but
+                the browser runs one pass instead of one per copy, and this band
+                repaints its whole subtree on every frame of the shadow it
+                animates on hover.
+
                 First in the band, so the name and the art proper paint over it
                 without either needing a stacking order to say so. */}
             {art !== null && (
                 <span
                     aria-hidden
-                    className="pointer-events-none absolute inset-0 opacity-[0.13]"
+                    className="pointer-events-none absolute inset-0 opacity-[0.13] brightness-0 invert"
                 >
                     {WATERMARK.map((tile) => (
                         <img
@@ -96,7 +103,7 @@ export function CategoryRow({
                                 width: tile.size,
                                 rotate: `${tile.angle}deg`,
                             }}
-                            className="absolute aspect-square object-contain brightness-0 invert"
+                            className="absolute aspect-square object-contain"
                         />
                     ))}
                 </span>
