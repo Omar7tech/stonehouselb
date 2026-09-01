@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { ProductImage } from '@/components/menu/product-image';
 import { ProductPrice } from '@/components/menu/product-price';
 import { VariantSelector } from '@/components/menu/variant-selector';
+import { StretchText } from '@/components/stretch';
 import {
     Dialog,
     DialogContent,
@@ -249,7 +250,9 @@ export function ProductDialog({
                             className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-5 py-3 font-display text-sm text-primary-foreground uppercase transition-transform duration-200 ease-out hover:scale-[1.03] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:scale-95 motion-reduce:transform-none"
                         >
                             <ShoppingBag className="size-4" />
-                            Add
+                            {/* Ligatures off, or Stretch Pro reads the `DD` of
+                                "ADD" as one double-width D. */}
+                            <StretchText>Add</StretchText>
                             {extrasUsd > 0 && (
                                 <span className="text-primary-foreground/70">
                                     +{pricing.primary(extrasUsd)}
