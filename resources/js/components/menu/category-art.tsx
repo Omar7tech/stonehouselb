@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 
+import { SmartImage } from '@/components/smart-image';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/types';
 
@@ -75,20 +76,26 @@ export function CategoryArt({
     }
 
     /* Category art is cut out on a transparent background, so it sits whole
-       inside its box rather than being cropped. */
+       inside its box rather than being cropped.
+
+       The swell rides on the wrapper and the shadow stays on the picture: the
+       shadow traces the cut-out's own outline, and moving it out here would
+       draw it around the wrapper's square instead. */
     return (
-        <img
+        <SmartImage
             src={src}
             alt=""
-            loading="lazy"
-            decoding="async"
             draggable={false}
-            className={cn(
-                'object-contain drop-shadow-[0_3px_6px_rgb(0_0_0/0.14)]',
-                swell,
-                className,
-                imageClassName,
-            )}
+            // `overflow-visible` undoes the wrapper's own clip, which is there
+            // for the rounded corners on a product photo. This art is a cut-out
+            // throwing a shadow past its own edges, and a clip would shear that
+            // shadow off wherever the picture meets the box.
+            className={cn('overflow-visible', swell, className, imageClassName)}
+            imgClassName="object-contain drop-shadow-[0_3px_6px_rgb(0_0_0/0.14)]"
+            // Standing on the brand orange, so the default's orange-on-orange
+            // mark would be invisible. No panel behind it either — a tinted
+            // box on the slab would read as a hole where the art goes.
+            spinnerClassName="bg-transparent text-primary-foreground/50"
         />
     );
 }

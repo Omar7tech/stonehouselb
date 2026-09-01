@@ -1,3 +1,4 @@
+import { SmartImage } from '@/components/smart-image';
 import { cn } from '@/lib/utils';
 
 /**
@@ -59,12 +60,11 @@ export function ProductImage({
     }
 
     return (
-        <img
+        <SmartImage
             src={src}
             alt={product.name}
-            loading="lazy"
-            decoding="async"
-            className={cn('rounded-2xl object-cover', className)}
+            className={cn('rounded-2xl', className)}
+            imgClassName="object-cover"
         />
     );
 }
