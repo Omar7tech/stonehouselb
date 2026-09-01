@@ -86,7 +86,7 @@ export function CartStrip() {
                                 type="button"
                                 onClick={() => setOpen(true)}
                                 aria-label={`${item.name}, ${item.quantity} in your order. Open checkout.`}
-                                className="relative w-24 rounded-lg bg-muted/60 px-2 pt-3 pb-2 text-left transition-transform duration-200 ease-out hover:-translate-y-0.5 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none motion-reduce:transform-none"
+                                className="relative w-24 rounded-lg bg-card px-2 pt-3 pb-2 text-left transition-[translate] duration-200 ease-out hover:-translate-y-0.5 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none motion-reduce:translate-none"
                             >
                                 {/* Centred on the corner itself — half on the
                                     tile, half off it — not tucked inside. */}
@@ -170,7 +170,7 @@ function Sheet({ children }: { children: React.ReactNode }) {
             <div
                 aria-hidden
                 style={{ bottom: SHEET_BLEED }}
-                className="absolute inset-x-0 top-0 rounded-3xl bg-card shadow-lg"
+                className="absolute inset-x-0 top-0 rounded-3xl bg-cart-surface shadow-lg"
             />
 
             {children}
