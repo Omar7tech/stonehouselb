@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { ProductImage } from '@/components/menu/product-image';
 import { ProductPrice } from '@/components/menu/product-price';
 import { VariantSelector } from '@/components/menu/variant-selector';
-import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
 
 /**
@@ -17,7 +16,7 @@ import type { Product } from '@/types';
  * top of it instead of buttons nested inside one.
  *
  * `onAdd` is what separates the two menus: delivery passes a handler and gets
- * the quick-add button in the corner, dine-in passes nothing and the card is
+ * the quick-add button beside the name, dine-in passes nothing and the card is
  * there to read.
  */
 export function ProductCard({
@@ -64,18 +63,45 @@ export function ProductCard({
                     className="size-20 shrink-0 sm:size-22"
                 />
 
-                {/* The gutter is only kept clear when there is an add button to
-                    keep clear of; on dine-in the name uses the full width. */}
-                <div className={cn('min-w-0 flex-1', onAdd && 'pr-8')}>
+                <div className="min-w-0 flex-1">
                     {/* Body face, not the display one: product names are read,
                         not admired, and StretchPro is too wide to hold a full
                         name on one line. It also takes the ligature problem
                         with it — no doubled letter can widen itself here. */}
                     {/* `leading-tight`, or the line's own leading sits under the
                         name as a gap no margin below it can take back. */}
-                    <h3 className="truncate text-base leading-tight font-semibold uppercase sm:text-lg">
-                        {product.name}
-                    </h3>
+                    {/* The add button shares the name's line rather than being
+                        pinned to the card's corner: hung off the card it sits
+                        above the name and reaches down into the copy, since the
+                        text block is centred against the taller photo. In the
+                        row it takes the line's own height, and everything below
+                        starts cleanly under it. */}
+                    <div className="flex items-center gap-2">
+                        {/* `min-w-0`, or the flex item refuses to shrink and
+                            `truncate` never gets a narrower box to clip in. */}
+                        <h3 className="min-w-0 flex-1 truncate text-base leading-tight font-semibold uppercase sm:text-lg">
+                            {product.name}
+                        </h3>
+
+                        {/* The row it sits in is inert so the card's own tap
+                            target shows through the copy; the button has to
+                            take its clicks back. */}
+                        {onAdd && (
+                            <button
+                                type="button"
+                                onClick={() => onAdd(product, chosen)}
+                                aria-label={`Add ${product.name} to your order`}
+                                className="pointer-events-auto relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-[scale] duration-200 ease-out hover:scale-110 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:scale-95 motion-reduce:scale-100"
+                            >
+                                <Plus className="size-3.5" strokeWidth={3} />
+                                {quantity > 0 && (
+                                    <span className="sr-only">
+                                        {quantity} already in your order
+                                    </span>
+                                )}
+                            </button>
+                        )}
+                    </div>
 
                     {product.description === null ? (
                         /* Nothing written for this one yet. */
@@ -141,22 +167,6 @@ export function ProductCard({
                         onSelect={setVariantIndex}
                     />
                 </div>
-            )}
-
-            {onAdd && (
-                <button
-                    type="button"
-                    onClick={() => onAdd(product, chosen)}
-                    aria-label={`Add ${product.name} to your order`}
-                    className="absolute top-2.5 right-2.5 z-10 flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform duration-200 ease-out hover:scale-110 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:scale-95 motion-reduce:transform-none"
-                >
-                    <Plus className="size-3.5" strokeWidth={3} />
-                    {quantity > 0 && (
-                        <span className="sr-only">
-                            {quantity} already in your order
-                        </span>
-                    )}
-                </button>
             )}
         </article>
     );
