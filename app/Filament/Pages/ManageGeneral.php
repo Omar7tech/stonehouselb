@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Enums\CategoryLayout;
 use App\Enums\PriceDisplay;
+use App\Enums\VariantStyle;
 use App\Settings\GeneralSettings;
 use BackedEnum;
 use Filament\Forms\Components\Radio;
@@ -92,6 +93,19 @@ class ManageGeneral extends SettingsPage
                                         ])
                                         ->all())
                                     ->default(CategoryLayout::Grid->value)
+                                    ->required()
+                                    ->columnSpanFull(),
+
+                                Radio::make('variant_style')
+                                    ->label('Size picker')
+                                    ->helperText('How a product\'s sizes are offered, on the card and in the sheet. Products sold in one size only never show it.')
+                                    ->options(VariantStyle::class)
+                                    ->descriptions(collect(VariantStyle::cases())
+                                        ->mapWithKeys(fn (VariantStyle $style): array => [
+                                            $style->value => $style->getDescription(),
+                                        ])
+                                        ->all())
+                                    ->default(VariantStyle::Cards->value)
                                     ->required()
                                     ->columnSpanFull(),
                             ]),

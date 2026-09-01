@@ -4,6 +4,7 @@ namespace App\Settings;
 
 use App\Enums\CategoryLayout;
 use App\Enums\PriceDisplay;
+use App\Enums\VariantStyle;
 use Spatie\LaravelSettings\Settings;
 use Spatie\LaravelSettings\SettingsCasts\EnumCast;
 
@@ -30,6 +31,12 @@ class GeneralSettings extends Settings
      * categories in the same order, whichever is picked.
      */
     public CategoryLayout $category_layout;
+
+    /**
+     * How a product's sizes are offered on the card and in the sheet. A look
+     * only — the same sizes at the same prices, whichever is picked.
+     */
+    public VariantStyle $variant_style;
 
     /**
      * Whether the delivery menu is available. When off the storefront is
@@ -95,6 +102,7 @@ class GeneralSettings extends Settings
         return [
             'category_layout' => new EnumCast(CategoryLayout::class),
             'price_display' => new EnumCast(PriceDisplay::class),
+            'variant_style' => new EnumCast(VariantStyle::class),
         ];
     }
 

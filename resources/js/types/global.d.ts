@@ -4,6 +4,7 @@ import type {
     Checkout,
     Pricing,
     SocialLink,
+    VariantStyle,
 } from '@/types/menu';
 
 declare module 'react' {
@@ -22,6 +23,8 @@ declare module '@inertiajs/core' {
             checkout: Checkout;
             /** How the landing view draws its category boxes. */
             categoryLayout: CategoryLayout;
+            /** How a product's sizes are offered on the card and in the sheet. */
+            variantStyle: VariantStyle;
             /** The footer's links. Empty leaves the list out entirely. */
             socialLinks: SocialLink[];
             /** Null when orders have nowhere to go, which closes checkout. */

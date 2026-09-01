@@ -52,6 +52,8 @@ class HandleInertiaRequests extends Middleware
             // How the landing view draws its category boxes. A look only, but
             // shared everywhere so the menu never has to ask for it.
             'categoryLayout' => $settings->category_layout->value,
+            // How a product's sizes are offered, wherever the picker appears.
+            'variantStyle' => $settings->variant_style->value,
             // Null closes checkout: an order with nowhere to go is worse than
             // no checkout button at all.
             'whatsappNumber' => $settings->canReceiveOrders()

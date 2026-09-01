@@ -7,6 +7,9 @@ export type PriceDisplay = 'usd' | 'lbp' | 'both';
 /** Mirrors `App\Enums\CategoryLayout` — how the landing view draws categories. */
 export type CategoryLayout = 'grid' | 'rows' | 'mosaic' | 'tickets';
 
+/** Mirrors `App\Enums\VariantStyle` — how a product's sizes are offered. */
+export type VariantStyle = 'cards' | 'chips' | 'rows';
+
 export type Pricing = {
     display: PriceDisplay;
     /** LBP per 1 USD, or null when LBP pricing is unavailable. */
