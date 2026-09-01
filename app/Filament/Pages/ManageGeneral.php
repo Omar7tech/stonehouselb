@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\CategoryLayout;
 use App\Enums\PriceDisplay;
 use App\Settings\GeneralSettings;
 use BackedEnum;
@@ -76,6 +77,23 @@ class ManageGeneral extends SettingsPage
 
                                         return $value !== PriceDisplay::Usd->value && ! $lbpReady;
                                     }),
+                            ]),
+
+                        Tab::make('Appearance')
+                            ->icon(Heroicon::OutlinedSwatch)
+                            ->schema([
+                                Radio::make('category_layout')
+                                    ->label('Category layout')
+                                    ->helperText('How the menu\'s opening screen lists its categories. Every layout shows the same categories in the same order.')
+                                    ->options(CategoryLayout::class)
+                                    ->descriptions(collect(CategoryLayout::cases())
+                                        ->mapWithKeys(fn (CategoryLayout $layout): array => [
+                                            $layout->value => $layout->getDescription(),
+                                        ])
+                                        ->all())
+                                    ->default(CategoryLayout::Grid->value)
+                                    ->required()
+                                    ->columnSpanFull(),
                             ]),
 
                         Tab::make('Delivery')

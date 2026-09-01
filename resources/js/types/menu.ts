@@ -4,6 +4,9 @@ export type OrderType = 'dine_in' | 'delivery';
 /** Which currency the menu prices are rendered in. */
 export type PriceDisplay = 'usd' | 'lbp' | 'both';
 
+/** Mirrors `App\Enums\CategoryLayout` — how the landing view draws categories. */
+export type CategoryLayout = 'grid' | 'rows' | 'mosaic';
+
 export type Pricing = {
     display: PriceDisplay;
     /** LBP per 1 USD, or null when LBP pricing is unavailable. */

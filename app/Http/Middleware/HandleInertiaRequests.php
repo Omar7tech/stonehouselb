@@ -49,6 +49,9 @@ class HandleInertiaRequests extends Middleware
                 'lbpRate' => $settings->usableLbpRate(),
                 'deliveryFeeUsd' => $settings->deliveryFeeUsd(),
             ],
+            // How the landing view draws its category boxes. A look only, but
+            // shared everywhere so the menu never has to ask for it.
+            'categoryLayout' => $settings->category_layout->value,
             // Null closes checkout: an order with nowhere to go is worse than
             // no checkout button at all.
             'whatsappNumber' => $settings->canReceiveOrders()

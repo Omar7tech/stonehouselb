@@ -2,6 +2,7 @@
 
 namespace App\Settings;
 
+use App\Enums\CategoryLayout;
 use App\Enums\PriceDisplay;
 use Spatie\LaravelSettings\Settings;
 use Spatie\LaravelSettings\SettingsCasts\EnumCast;
@@ -23,6 +24,12 @@ class GeneralSettings extends Settings
      * Which currency the storefront menu prices are rendered in.
      */
     public PriceDisplay $price_display;
+
+    /**
+     * How the menu's landing view draws its categories. A look only — the same
+     * categories in the same order, whichever is picked.
+     */
+    public CategoryLayout $category_layout;
 
     /**
      * Whether the delivery menu is available. When off the storefront is
@@ -86,6 +93,7 @@ class GeneralSettings extends Settings
     public static function casts(): array
     {
         return [
+            'category_layout' => new EnumCast(CategoryLayout::class),
             'price_display' => new EnumCast(PriceDisplay::class),
         ];
     }
