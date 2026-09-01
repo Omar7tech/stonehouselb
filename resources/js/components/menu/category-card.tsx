@@ -64,7 +64,10 @@ export function CategoryCard({
                 // shadow under a warm colour on a near-white panel reads as
                 // grime, where the colour's own shadow reads as light.
                 'shadow-[0_2px_8px_rgb(249_159_62/0.3)] hover:shadow-[0_12px_24px_rgb(249_159_62/0.42)]',
-                'transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1 active:translate-y-0 active:scale-[0.97] motion-reduce:transform-none',
+                // Tailwind v4 lifts and scales with the standalone `translate`
+                // and `scale` properties, not `transform`, so those are what
+                // has to be named here or the movement lands in one frame.
+                'transition-[translate,scale,box-shadow] duration-300 ease-out hover:-translate-y-1 active:translate-y-0 active:scale-[0.97] motion-reduce:translate-none motion-reduce:scale-100',
                 // Offset, or the ring is drawn on the orange it is meant to be
                 // distinguishable from.
                 'focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:outline-none',
@@ -76,7 +79,7 @@ export function CategoryCard({
                 footer's arrows travel. */}
             <ArrowUpRight
                 aria-hidden
-                className="absolute top-2.5 right-2.5 size-4 text-primary-foreground/55 transition-[transform,color] duration-300 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary-foreground motion-reduce:transform-none"
+                className="absolute top-2.5 right-2.5 size-4 text-primary-foreground/55 transition-[translate,color] duration-300 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary-foreground motion-reduce:translate-none"
                 strokeWidth={2.5}
             />
 
@@ -91,7 +94,7 @@ export function CategoryCard({
                     <span
                         aria-hidden
                         style={{ ...LOGO_MASK, aspectRatio: LOGO_ASPECT }}
-                        className="max-h-full w-3/4 bg-primary-foreground transition-transform duration-300 ease-out group-hover:scale-105 motion-reduce:transform-none"
+                        className="max-h-full w-3/4 bg-primary-foreground transition-[scale] duration-300 ease-out group-hover:scale-105 motion-reduce:scale-100"
                     />
                 ) : (
                     /* Category art is cut out on a transparent background, so it
@@ -102,7 +105,7 @@ export function CategoryCard({
                         loading="lazy"
                         decoding="async"
                         draggable={false}
-                        className="aspect-square max-h-full w-[68%] max-w-32 object-contain drop-shadow-[0_3px_6px_rgb(0_0_0/0.14)] transition-transform duration-300 ease-out group-hover:scale-105 motion-reduce:transform-none"
+                        className="aspect-square max-h-full w-[68%] max-w-32 object-contain drop-shadow-[0_3px_6px_rgb(0_0_0/0.14)] transition-[scale] duration-300 ease-out group-hover:scale-105 motion-reduce:scale-100"
                     />
                 )}
             </span>
