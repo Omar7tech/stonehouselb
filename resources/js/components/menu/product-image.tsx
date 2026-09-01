@@ -27,10 +27,16 @@ type Pictured = {
 export function ProductImage({
     product,
     className,
+    markClassName,
     full = false,
 }: {
     product: Pictured;
     className?: string;
+    /**
+     * Sizing for the house mark in the placeholder, when the caller's box wants
+     * it smaller than the full width the rest are happy with.
+     */
+    markClassName?: string;
     /** Draw the photo at its own size rather than the 400px cut. */
     full?: boolean;
 }) {
@@ -53,7 +59,7 @@ export function ProductImage({
                     alt=""
                     loading="lazy"
                     decoding="async"
-                    className="w-full"
+                    className={cn('w-full', markClassName)}
                 />
             </div>
         );

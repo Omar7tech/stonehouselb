@@ -73,9 +73,21 @@ export function ProductMinimal({
             </button>
 
             <div className="pointer-events-none relative">
+                {/* White behind the mark rather than the grey the other styles
+                    use, and the mark held to half the width rather than the
+                    full one.
+
+                    The grey plate is there to read as a hole in a card — it
+                    works when there is a white card around it to be a hole in.
+                    This style has no card, so the same grey becomes a solid
+                    block sitting on the panel and is the heaviest thing on a
+                    page whose whole point is that nothing is. White keeps the
+                    square quiet and lets the mark alone say the photo is
+                    missing. */}
                 <ProductImage
                     product={product}
-                    className="aspect-square w-full rounded-xl"
+                    className="aspect-square w-full rounded-xl bg-card"
+                    markClassName="w-1/2"
                 />
 
                 {/* A tint of the card's white rather than solid orange. The
