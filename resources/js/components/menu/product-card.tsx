@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { Flame, Leaf, Plus, Star } from 'lucide-react';
 import { useState } from 'react';
 
 import { ProductImage } from '@/components/menu/product-image';
@@ -89,11 +89,45 @@ export function ProductCard({
                         </p>
                     )}
 
-                    <ProductPrice
-                        price={price}
-                        discountPrice={discountPrice}
-                        className="mt-1.5"
-                    />
+                    {/* The marks ride with the price rather than the name: the
+                        name is the one line on the card that has to hold a full
+                        product title, and anything beside it comes out of that
+                        width. The price row has slack to spare.
+
+                        Labelled rather than hidden — they carry the same
+                        meaning the sheet's marks do, and the copy above may not
+                        say it. */}
+                    <div className="mt-1.5 flex items-start justify-between gap-2">
+                        <ProductPrice
+                            price={price}
+                            discountPrice={discountPrice}
+                        />
+
+                        {/* Pushed to the far end and pinned to the top of the
+                            row, so they sit level with the leading price line
+                            rather than drifting down the middle of a two-row
+                            price. */}
+                        <div className="flex shrink-0 items-center gap-1.5 pt-0.5">
+                            {product.isFeatured && (
+                                <Star
+                                    aria-label="Featured"
+                                    className="size-3.5 fill-current text-primary"
+                                />
+                            )}
+                            {product.isSpicy && (
+                                <Flame
+                                    aria-label="Spicy"
+                                    className="size-3.5 text-primary"
+                                />
+                            )}
+                            {product.isVegan && (
+                                <Leaf
+                                    aria-label="Vegan"
+                                    className="size-3.5 text-primary"
+                                />
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 

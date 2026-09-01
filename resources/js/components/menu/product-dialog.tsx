@@ -1,4 +1,12 @@
-import { Clock, Flame, Leaf, Minus, Plus, ShoppingBag } from 'lucide-react';
+import {
+    Clock,
+    Flame,
+    Leaf,
+    Minus,
+    Plus,
+    ShoppingBag,
+    Star,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { ProductImage } from '@/components/menu/product-image';
@@ -123,6 +131,12 @@ export function ProductDialog({
                         <DialogTitle className="flex items-start gap-2 pr-8">
                             <span className="flex-1">{product.name}</span>
 
+                            {product.isFeatured && (
+                                <Star
+                                    aria-label="Featured"
+                                    className="mt-0.5 size-4 shrink-0 fill-current text-primary"
+                                />
+                            )}
                             {product.isSpicy && (
                                 <Flame
                                     aria-label="Spicy"
