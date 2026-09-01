@@ -141,13 +141,13 @@ class ManageGeneral extends SettingsPage
                                             ->required(),
                                     ]),
 
-                                Section::make('Size picker')
+                                Section::make('Variant selector')
                                     ->description('How a product\'s sizes are offered, on the card and in the sheet. Products sold in one size only never show it.')
                                     ->icon(Heroicon::OutlinedTag)
                                     ->collapsible()
                                     ->collapsed()
                                     ->persistCollapsed()
-                                    ->id('appearance-size-picker')
+                                    ->id('appearance-variant-selector')
                                     ->schema([
                                         Radio::make('variant_style')
                                             ->hiddenLabel()
