@@ -10,6 +10,7 @@ import { CheckoutBar } from '@/components/menu/checkout-bar';
 import { OrderTypeSwitch } from '@/components/menu/order-type-switch';
 import { ProductCard } from '@/components/menu/product-card';
 import { ProductDialog } from '@/components/menu/product-dialog';
+import { ProductMinimal } from '@/components/menu/product-minimal';
 import { ProductShowcase } from '@/components/menu/product-showcase';
 import { SiteFooter } from '@/components/menu/site-footer';
 import { SiteHeader } from '@/components/menu/site-header';
@@ -57,19 +58,25 @@ const HEADING_SIZE = `clamp(0.8rem, calc((100vw - 3rem) / ${HEADING_EM}), var(--
 /**
  * How the product list is laid out, per card style.
  *
- * Both run one to a line on a phone and become columns as the screen allows,
- * since a single item run the width of a monitor is a stripe of content with an
- * acre of nothing beside it.
+ * All three end up in columns as the screen allows, since a single item run the
+ * width of a monitor is a stripe of content with an acre of nothing beside it.
+ * Where they differ is how soon, and how far.
  *
- * Cards break into columns earlier and go further than rows, which is the
- * opposite of how it first reads: a card is a narrow upright shape that only
- * needs room for a photo and two lines under it, where a row sets its picture
- * and its copy side by side and wants the width to do it. So the card is the
- * one that tiles, and the row is the one that runs out of columns first.
+ * The order runs opposite to how it first reads. A row is the widest shape of
+ * the three — it sets its picture and its copy side by side — so it holds a
+ * single column the longest and stops at three. A card is upright and needs only
+ * a photo and two lines, so it tiles sooner. The minimal item has no padding, no
+ * edge and no rule to clear, so it starts at two on a phone and ends at five.
+ * The less each one is given to draw, the more of them fit.
  */
 const PRODUCT_LIST: Record<ProductCardStyle, string> = {
     row: 'flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-4 xl:grid-cols-3',
     card: 'grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4',
+    // The rows are given more air than the columns: with no card edge to mark
+    // where one dish ends, the space between them is the only thing separating
+    // a name from the photograph of the next dish under it.
+    minimal:
+        'grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
 };
 
 /** One product, drawn in whichever style the shop has chosen. */
@@ -85,6 +92,10 @@ function ProductInStyle({
 }) {
     if (style === 'card') {
         return <ProductShowcase {...props} />;
+    }
+
+    if (style === 'minimal') {
+        return <ProductMinimal {...props} />;
     }
 
     return <ProductCard {...props} />;

@@ -8,7 +8,7 @@ export type PriceDisplay = 'usd' | 'lbp' | 'both';
 export type CategoryLayout = 'grid' | 'rows' | 'mosaic' | 'tickets';
 
 /** Mirrors `App\Enums\ProductCardStyle` — how one product is drawn. */
-export type ProductCardStyle = 'row' | 'card';
+export type ProductCardStyle = 'row' | 'card' | 'minimal';
 
 /** Mirrors `App\Enums\VariantStyle` — how a product's sizes are offered. */
 export type VariantStyle = 'cards' | 'chips' | 'rows';
