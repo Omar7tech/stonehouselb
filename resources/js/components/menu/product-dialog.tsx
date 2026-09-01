@@ -2,6 +2,7 @@ import {
     Clock,
     Flame,
     Leaf,
+    type LucideIcon,
     Minus,
     Plus,
     ShoppingBag,
@@ -22,6 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import type { CartAddon } from '@/contexts/cart-context';
 import { usePricing } from '@/lib/use-pricing';
+import { cn } from '@/lib/utils';
 import type { Addon, Product } from '@/types';
 
 /**
@@ -128,27 +130,8 @@ export function ProductDialog({
 
                 <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
                     <DialogHeader className="shrink-0">
-                        <DialogTitle className="flex items-start gap-2 pr-8">
-                            <span className="flex-1">{product.name}</span>
-
-                            {product.isFeatured && (
-                                <Star
-                                    aria-label="Featured"
-                                    className="mt-0.5 size-4 shrink-0 fill-current text-primary"
-                                />
-                            )}
-                            {product.isSpicy && (
-                                <Flame
-                                    aria-label="Spicy"
-                                    className="mt-0.5 size-4 shrink-0 text-primary"
-                                />
-                            )}
-                            {product.isVegan && (
-                                <Leaf
-                                    aria-label="Vegan"
-                                    className="mt-0.5 size-4 shrink-0 text-primary"
-                                />
-                            )}
+                        <DialogTitle className="pr-8">
+                            {product.name}
                         </DialogTitle>
 
                         {product.subtitle !== null && (
@@ -157,13 +140,45 @@ export function ProductDialog({
                             </DialogDescription>
                         )}
 
-                        {product.preparationTime !== null &&
-                            product.preparationTime > 0 && (
-                                <span className="mt-1.5 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[0.65rem] tracking-wide text-primary uppercase">
-                                    <Clock className="size-3.5" />
-                                    Ready in ~{product.preparationTime} min
-                                </span>
+                        {/* Read before they are read: heat and diet are the two
+                            things a customer scans a dish for, so they are
+                            spelled out and coloured rather than left as three
+                            identical marks tucked beside the name.
+
+                            Wraps, so a dish that is all four doesn't push the
+                            last tag off the edge of the sheet. */}
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5 empty:hidden">
+                            {product.isFeatured && (
+                                <Tag
+                                    icon={Star}
+                                    label="Featured"
+                                    className="bg-primary/10 text-primary"
+                                    iconClassName="fill-current"
+                                />
                             )}
+                            {product.isSpicy && (
+                                <Tag
+                                    icon={Flame}
+                                    label="Spicy"
+                                    className="bg-spicy/10 text-spicy"
+                                />
+                            )}
+                            {product.isVegan && (
+                                <Tag
+                                    icon={Leaf}
+                                    label="Vegan"
+                                    className="bg-vegan/10 text-vegan"
+                                />
+                            )}
+                            {product.preparationTime !== null &&
+                                product.preparationTime > 0 && (
+                                    <Tag
+                                        icon={Clock}
+                                        label={`Ready in ~${product.preparationTime} min`}
+                                        className="bg-primary/10 text-primary"
+                                    />
+                                )}
+                        </div>
                     </DialogHeader>
 
                     {product.description !== null && (
@@ -277,6 +292,37 @@ export function ProductDialog({
                 </div>
             </DialogContent>
         </Dialog>
+    );
+}
+
+/**
+ * One fact about the dish, said in a word and a mark.
+ *
+ * The colour lives on the caller rather than in a variant map here: there are
+ * only ever a handful of these, and a `bg-x/10 text-x` pair at the call site is
+ * plainer to read than a lookup a name has to be resolved through.
+ */
+function Tag({
+    icon: Icon,
+    label,
+    className,
+    iconClassName,
+}: {
+    icon: LucideIcon;
+    label: string;
+    className: string;
+    iconClassName?: string;
+}) {
+    return (
+        <span
+            className={cn(
+                'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[0.65rem] font-medium tracking-wide uppercase',
+                className,
+            )}
+        >
+            <Icon aria-hidden className={cn('size-3.5', iconClassName)} />
+            {label}
+        </span>
     );
 }
 

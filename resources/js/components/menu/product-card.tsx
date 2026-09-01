@@ -143,13 +143,13 @@ export function ProductCard({
                             {product.isSpicy && (
                                 <Flame
                                     aria-label="Spicy"
-                                    className="size-3.5 text-primary"
+                                    className="size-3.5 text-spicy"
                                 />
                             )}
                             {product.isVegan && (
                                 <Leaf
                                     aria-label="Vegan"
-                                    className="size-3.5 text-primary"
+                                    className="size-3.5 text-vegan"
                                 />
                             )}
                         </div>
