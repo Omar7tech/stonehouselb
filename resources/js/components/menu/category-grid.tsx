@@ -83,7 +83,7 @@ export function CategoryGrid({
         // A little more air than the product list gets: each box now throws a
         // shadow of its own, and boxes packed tighter than that would light one
         // another rather than the panel.
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
             {categories.map((category) => (
                 <CategoryCard
                     key={category.id}
