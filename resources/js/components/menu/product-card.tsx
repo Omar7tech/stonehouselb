@@ -46,7 +46,12 @@ export function ProductCard({
         (hasVariants ? null : product.discountPrice);
 
     return (
-        <article className="relative flex flex-col rounded-2xl bg-card p-2.5 transition-transform duration-200 ease-out hover:-translate-y-0.5 motion-reduce:transform-none">
+        // `lg:h-full` is for the grid the list becomes on a desktop: the row's
+        // tallest card sets the height, and without it the shorter ones stop
+        // where their copy does and leave the row's bottom edge ragged. In the
+        // phone's single column there is no row to level against, so it does
+        // nothing there.
+        <article className="relative flex flex-col rounded-2xl bg-card p-2.5 transition-[translate] duration-200 ease-out hover:-translate-y-0.5 motion-reduce:translate-none lg:h-full">
             {/* Covers the card, under everything else, so the heading and copy
                 stay real block elements outside a button. */}
             <button

@@ -60,15 +60,20 @@ export function SiteFooter() {
 
             {/* The slab runs edge to edge; only its contents keep to the same
                 column the menu above them stands in. */}
-            <div className="relative mx-auto w-full max-w-2xl px-6 py-10">
+            <div className="relative mx-auto w-full max-w-2xl px-6 py-10 lg:max-w-5xl xl:max-w-6xl">
                 {/* The room the cut-out mark stands in. It is the wall showing
                     through the slab rather than any ink of its own, so there is
                     nothing here to draw — only its name, for readers. */}
+                {/* Pinned to 39rem once the column is wider than that, because
+                    that is exactly where the knockout's own `maskSize` stops
+                    growing. Let this widen past it and the space held open no
+                    longer matches the hole, so the links drop below the mark
+                    instead of sitting under it. */}
                 <div
                     role="img"
                     aria-label="Stone House — Crunch &amp; Grill"
                     style={{ aspectRatio: LOGO_ASPECT }}
-                    className="w-full"
+                    className="w-full lg:mx-auto lg:w-[39rem]"
                 />
 
                 {/* One line per account, ruled like a listing. Nothing changes

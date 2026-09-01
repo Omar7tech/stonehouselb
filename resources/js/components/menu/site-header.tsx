@@ -12,7 +12,7 @@ export function SiteHeader() {
     return (
         <header className="flex items-start justify-between gap-4 px-5 pt-5 pb-6">
             <Link href="/" aria-label="Stone House — home">
-                <StoneHouseLogo className="w-28 select-none sm:w-36" />
+                <StoneHouseLogo className="w-28 select-none sm:w-36 lg:w-44" />
             </Link>
 
             <button

@@ -43,9 +43,15 @@ const HEADING_EM = 20.565;
  *
  * `100vw` less the panel's own margins and padding is what the line actually
  * has, with a little taken off so a desktop scrollbar can't tip it into an
- * overflow. The ceiling is where the panel stops widening at `max-w-2xl`.
+ * overflow.
+ *
+ * The ceiling is where the panel stops widening, which is now a different
+ * number at each breakpoint — so it comes in as a variable the class list sets
+ * rather than being baked in here. Each value is the panel's inner width at
+ * that breakpoint divided by {@see HEADING_EM}, rounded down so the line always
+ * stops short of the edge rather than touching it.
  */
-const HEADING_SIZE = `clamp(0.8rem, calc((100vw - 3rem) / ${HEADING_EM}), 1.85rem)`;
+const HEADING_SIZE = `clamp(0.8rem, calc((100vw - 3rem) / ${HEADING_EM}), var(--heading-max))`;
 
 /** The category named in `?category=`, or null when it names nothing known. */
 function readCategoryFromUrl(menu: readonly Category[]): number | null {
@@ -220,15 +226,24 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
 
                 The page is a column so the footer can be pushed to the bottom
                 of a short one; the menu keeps to its own width inside it, while
-                the footer's slab runs the full width of the window. */}
+                the footer's slab runs the full width of the window.
+
+                That width is a phone's the whole way up to `lg`, where a desk
+                monitor gets a column wide enough to put products side by side.
+                Below that nothing changes: the layout a phone gets is the one
+                it had. */}
             <div className="flex min-h-screen flex-col">
-                <div className="mx-auto flex w-full max-w-2xl flex-col">
+                <div className="mx-auto flex w-full max-w-2xl flex-col lg:max-w-5xl xl:max-w-6xl">
                     <SiteHeader />
 
                     {/* The way across to the other menu. Which one you are on is
                     already said by the selected half, so it carries no title
-                    of its own. */}
-                    <div className="px-5 pb-5">
+                    of its own.
+
+                    Held to its own width on a wide screen: a two-option switch
+                    stretched across a monitor reads as a pair of banners, not
+                    as one control with two halves. */}
+                    <div className="px-5 pb-5 lg:mx-auto lg:w-full lg:max-w-md">
                         <OrderTypeSwitch current={orderType} />
                     </div>
 
@@ -252,6 +267,10 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
                             // but under the cards, without every card needing a
                             // stacking order of its own.
                             'relative isolate mx-2 mt-3 flex flex-col gap-5 rounded-[2rem] bg-surface px-3 pt-7',
+                            // More air once there is room for it: the phone's
+                            // margins on a monitor leave the panel looking like
+                            // a page that forgot to be laid out.
+                            'lg:mx-4 lg:gap-7 lg:px-8 lg:pt-10',
                             // Thrown upwards, onto the cart sheet this panel
                             // overlaps. The stock shadows all fall downwards,
                             // where there is nothing to catch them.
@@ -260,7 +279,7 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
                             // panel only pads its own foot when the bar isn't
                             // there to do it — dine-in either way, and the
                             // delivery menu while it is still on the boxes.
-                            showsCheckoutBar || 'pb-6',
+                            showsCheckoutBar || 'pb-6 lg:pb-10',
                         )}
                     >
                         {/* Texture at the foot of the section, so the panel closes
@@ -279,7 +298,7 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
                             as="h1"
                             aria-label="Choose your craving."
                             style={{ fontSize: HEADING_SIZE }}
-                            className="text-center font-display whitespace-nowrap uppercase"
+                            className="text-center font-display whitespace-nowrap uppercase [--heading-max:1.85rem] lg:[--heading-max:2.7rem] xl:[--heading-max:3.1rem]"
                         >
                             C<Stretch level={2}>H</Stretch>OOSE YOUR CRAVING.
                         </StretchText>
@@ -302,7 +321,13 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
                                     onClear={() => selectCategory(null)}
                                 />
 
-                                <ul className="flex flex-col gap-3">
+                                {/* One per row on a phone, where a card already
+                                    fills the width. On a monitor the same card
+                                    at that width is a stripe of photo with an
+                                    acre of nothing beside it, so the list
+                                    becomes columns — two, then three once there
+                                    is room for a readable name in each. */}
+                                <ul className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-4 xl:grid-cols-3">
                                     {products.map((product) => (
                                         <li key={product.id}>
                                             <ProductCard

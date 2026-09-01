@@ -25,7 +25,11 @@ export function CheckoutBar() {
         // raises its picker to `z-10` so the options sit above the card's own
         // tap target, and without an order of its own the sticky button would
         // be painted under every one of them on the way past.
-        <div className="pointer-events-none sticky bottom-0 z-20 pt-2 pb-4">
+        // Held to a button's width on a monitor rather than the panel's: a
+        // pill run edge to edge across a desk screen stops reading as a button
+        // at all. Centred, so it stays where a thumb — or a cursor — expects the
+        // one action on the page to be.
+        <div className="pointer-events-none sticky bottom-0 z-20 pt-2 pb-4 lg:mx-auto lg:w-full lg:max-w-md">
             <button
                 type="button"
                 onClick={() => setOpen(true)}
