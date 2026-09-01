@@ -41,7 +41,7 @@ enum ProductCardStyle: string implements HasIcon, HasLabel
     {
         return match ($this) {
             self::Row => 'Photo on the left, name and description beside it. Fits the most on a screen and reads fastest on a phone.',
-            self::Card => 'One card to a row on a phone, with the photo across the top and the name and price beneath — the shape an online shop uses. The most appetising, and the slowest to scroll, so it wants a good picture on every dish.',
+            self::Card => 'One card to a row on a phone, with the photo across the top and the name and price beneath — the shape an online shop uses. Tiles into a grid on wider screens. The most appetising, so it wants a good picture on every dish.',
         };
     }
 }

@@ -57,15 +57,19 @@ const HEADING_SIZE = `clamp(0.8rem, calc((100vw - 3rem) / ${HEADING_EM}), var(--
 /**
  * How the product list is laid out, per card style.
  *
- * Both run one to a line on a phone and become columns on a monitor, where a
- * single card at that width is a stripe of photo with an acre of nothing beside
- * it. Rows go to three across because a row is a short shape; cards stop at two,
- * since their photograph is the point and a third column would shrink it back
- * to the size the row already gives it.
+ * Both run one to a line on a phone and become columns as the screen allows,
+ * since a single item run the width of a monitor is a stripe of content with an
+ * acre of nothing beside it.
+ *
+ * Cards break into columns earlier and go further than rows, which is the
+ * opposite of how it first reads: a card is a narrow upright shape that only
+ * needs room for a photo and two lines under it, where a row sets its picture
+ * and its copy side by side and wants the width to do it. So the card is the
+ * one that tiles, and the row is the one that runs out of columns first.
  */
 const PRODUCT_LIST: Record<ProductCardStyle, string> = {
     row: 'flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-4 xl:grid-cols-3',
-    card: 'flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-4',
+    card: 'grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4',
 };
 
 /** One product, drawn in whichever style the shop has chosen. */
