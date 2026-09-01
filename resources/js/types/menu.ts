@@ -5,7 +5,7 @@ export type OrderType = 'dine_in' | 'delivery';
 export type PriceDisplay = 'usd' | 'lbp' | 'both';
 
 /** Mirrors `App\Enums\CategoryLayout` — how the landing view draws categories. */
-export type CategoryLayout = 'grid' | 'rows' | 'mosaic';
+export type CategoryLayout = 'grid' | 'rows' | 'mosaic' | 'tickets';
 
 export type Pricing = {
     display: PriceDisplay;

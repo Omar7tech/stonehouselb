@@ -2,6 +2,7 @@ import { usePage } from '@inertiajs/react';
 
 import { CategoryCard } from '@/components/menu/category-card';
 import { CategoryRow } from '@/components/menu/category-row';
+import { CategoryTicket } from '@/components/menu/category-ticket';
 import { CategoryTile } from '@/components/menu/category-tile';
 import type { Category, CategoryLayout } from '@/types';
 
@@ -49,6 +50,22 @@ export function CategoryGrid({
             <div className="flex flex-col gap-3 sm:gap-4 lg:grid lg:grid-cols-2">
                 {categories.map((category) => (
                     <CategoryRow
+                        key={category.id}
+                        category={category}
+                        onSelect={onSelect}
+                    />
+                ))}
+            </div>
+        );
+    }
+
+    if (layout === 'tickets') {
+        return (
+            // The same count as the grid: a ticket is only a little taller than
+            // a square, so it wants the same share of the row.
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
+                {categories.map((category) => (
+                    <CategoryTicket
                         key={category.id}
                         category={category}
                         onSelect={onSelect}

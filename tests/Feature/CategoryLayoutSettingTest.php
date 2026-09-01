@@ -21,11 +21,9 @@ it('shares whichever layout the shop has chosen', function (CategoryLayout $layo
         ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
             ->where('categoryLayout', $layout->value)
         );
-})->with([
-    CategoryLayout::Grid,
-    CategoryLayout::Rows,
-    CategoryLayout::Mosaic,
-]);
+    // Driven off the enum rather than a list written out here, so a layout
+    // added later is covered without anyone remembering to come back.
+})->with(CategoryLayout::cases());
 
 it('leaves the categories themselves untouched whichever layout is chosen', function (): void {
     $grills = Category::factory()->create(['title' => 'Grills', 'sort_order' => 1]);
