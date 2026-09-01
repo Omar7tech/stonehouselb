@@ -1,6 +1,6 @@
 import { ArrowUpRight } from 'lucide-react';
 
-import { CategoryArt, SLAB_SHEEN } from '@/components/menu/category-art';
+import { CategoryArt } from '@/components/menu/category-art';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/types';
 
@@ -41,8 +41,6 @@ export function CategoryCard({
                 'focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:outline-none',
             )}
         >
-            <span aria-hidden className={cn('absolute inset-0', SLAB_SHEEN)} />
-
             {/* Leans out of the corner as the box lifts, the same direction the
                 footer's arrows travel. */}
             <ArrowUpRight

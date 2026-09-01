@@ -1,6 +1,6 @@
 import { ArrowUpRight } from 'lucide-react';
 
-import { CategoryArt, SLAB_SHEEN } from '@/components/menu/category-art';
+import { CategoryArt } from '@/components/menu/category-art';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/types';
 
@@ -61,8 +61,6 @@ export function CategoryTile({
                     : 'flex aspect-square flex-col',
             )}
         >
-            <span aria-hidden className={cn('absolute inset-0', SLAB_SHEEN)} />
-
             {/* Cropped by the tile on two sides, so it reads as set into the
                 slab rather than printed on it. `tabular-nums` keeps 01 and 11
                 the same width, or the wall's numerals wander. */}

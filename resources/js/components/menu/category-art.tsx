@@ -26,16 +26,6 @@ const LOGO_MASK = {
 } satisfies CSSProperties;
 
 /**
- * A dome of light over the top of a slab, so the orange reads as a lit object
- * standing on the panel rather than as a flat swatch cut out of it.
- *
- * Kept faint on purpose: the brand orange is the whole point of these boxes, and
- * a gradient strong enough to notice would be a second colour.
- */
-export const SLAB_SHEEN =
-    'bg-[radial-gradient(120%_85%_at_50%_-15%,rgb(255_255_255/0.3),transparent_62%)]';
-
-/**
  * A category's picture, or the house mark when it has none.
  *
  * Shared by all three layouts: the fallback is the same decision every time —

@@ -1,6 +1,6 @@
 import { ArrowUpRight } from 'lucide-react';
 
-import { CategoryArt, SLAB_SHEEN } from '@/components/menu/category-art';
+import { CategoryArt } from '@/components/menu/category-art';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/types';
 
@@ -39,8 +39,6 @@ export function CategoryRow({
                 'focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:outline-none',
             )}
         >
-            <span aria-hidden className={cn('absolute inset-0', SLAB_SHEEN)} />
-
             {/* `min-w-0` so the name clips inside its own column rather than
                 shoving the art off the end of the band. */}
             <span className="relative z-10 flex min-w-0 flex-1 flex-col gap-1 py-4">
