@@ -33,7 +33,7 @@ export function CheckoutBar() {
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className="pointer-events-auto h-16 w-full rounded-full bg-primary font-display text-2xl text-primary-foreground uppercase shadow-lg transition-all duration-300 ease-out hover:shadow-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:translate-y-px sm:text-3xl"
+                className="pointer-events-auto h-16 w-full rounded-full bg-primary font-display text-2xl text-primary-foreground uppercase shadow-lg transition-[box-shadow] duration-300 ease-out hover:shadow-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:translate-y-px sm:text-3xl"
             >
                 Check out
             </button>

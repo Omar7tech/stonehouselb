@@ -53,7 +53,11 @@ export function CategoryArt({
     const swell =
         'transition-[scale] duration-300 ease-out group-hover:scale-105 motion-reduce:scale-100';
 
-    if (category.image === null) {
+    // The 600px cut, never the original: no layout draws this art larger than
+    // a box on a wide screen, so the whole photo is bytes nobody sees.
+    const src = category.thumbnail ?? category.image;
+
+    if (src === null) {
         /* It keeps the logo's own ratio rather than the square the photos get —
            stretched, the wordmark stops being it. */
         return (
@@ -74,7 +78,7 @@ export function CategoryArt({
        inside its box rather than being cropped. */
     return (
         <img
-            src={category.image}
+            src={src}
             alt=""
             loading="lazy"
             decoding="async"

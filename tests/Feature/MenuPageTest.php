@@ -114,3 +114,19 @@ it('keeps a zero calorie count, which is a real figure for a black coffee', func
             ->where('categories.0.products.0.calories', 0)
         );
 });
+
+it('sends a small cut of every photo alongside the full one', function (): void {
+    $category = Category::factory()->create();
+    Product::factory()->for($category)->create();
+
+    $this->get(route('menu.dine-in'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            // Both keys are always present, so the client never has to guess
+            // which shape of payload it is holding.
+            ->has('categories.0.image')
+            ->has('categories.0.thumbnail')
+            ->has('categories.0.products.0.image')
+            ->has('categories.0.products.0.thumbnail')
+        );
+});

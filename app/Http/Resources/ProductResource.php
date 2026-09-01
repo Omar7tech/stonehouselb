@@ -30,6 +30,11 @@ class ProductResource extends JsonResource
             'price' => (float) $this->price,
             'discountPrice' => $this->discount_price !== null ? (float) $this->discount_price : null,
             'image' => $this->getFirstMediaUrl('image', 'webp') ?: null,
+            // The same photo cut to 400px. Everywhere but the sheet draws this
+            // at 88px or less, and `webp` is the untouched original in a new
+            // format — so without this a menu of forty dishes downloads forty
+            // full-size photographs to render them the size of a stamp.
+            'thumbnail' => $this->getFirstMediaUrl('image', 'thumb') ?: null,
             'preparationTime' => $this->preparation_time,
             'calories' => $this->calories,
             'isFeatured' => $this->is_featured,

@@ -58,7 +58,12 @@ export function CartToast() {
             aria-live="polite"
             className={cn(
                 'pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center px-4',
-                'transition-all duration-300 ease-out motion-reduce:transition-none',
+                // Named rather than `all`: these two are the only properties
+                // that change, and both are ones the compositor can animate on
+                // its own without the page being painted again. `all` would
+                // have the browser watch every property for a change it is
+                // never going to see.
+                'transition-[translate,opacity] duration-300 ease-out motion-reduce:transition-none',
                 visible
                     ? 'translate-y-0 opacity-100'
                     : 'translate-y-3 opacity-0',

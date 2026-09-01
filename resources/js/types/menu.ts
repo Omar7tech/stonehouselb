@@ -60,6 +60,11 @@ export type Product = {
      * house mark rather than leaving a hole in the row.
      */
     image: string | null;
+    /**
+     * The same photo at 400px. What the card, the cart and the toast draw —
+     * only the sheet is large enough to want `image`.
+     */
+    thumbnail: string | null;
     /** Roughly how long the item takes, in minutes. */
     preparationTime: number | null;
     /** Energy in kcal, or null when the kitchen has not counted this one. */
@@ -79,6 +84,8 @@ export type Category = {
     name: string;
     /** Art for the category box, or null while none has been uploaded. */
     image: string | null;
+    /** The same art at 600px, which is every size the storefront draws it at. */
+    thumbnail: string | null;
     /** Extras offered on every product in this category. */
     addons: Addon[];
     /**

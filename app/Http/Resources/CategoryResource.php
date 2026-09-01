@@ -24,7 +24,12 @@ class CategoryResource extends JsonResource
             'id' => $this->id,
             'slug' => $this->slug,
             'name' => $this->title,
+            // The 600px cut is the only one the storefront draws — a category
+            // box tops out at 236px, and the rows layout repeats the art at
+            // 48px as a watermark. `image` stays for anything that wants the
+            // photo whole.
             'image' => $this->getFirstMediaUrl('image', 'webp') ?: null,
+            'thumbnail' => $this->getFirstMediaUrl('image', 'thumb') ?: null,
             'addons' => $this->addonsPayload(),
             'products' => $this->whenLoaded(
                 'products',

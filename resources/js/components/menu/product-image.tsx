@@ -1,13 +1,23 @@
 import { cn } from '@/lib/utils';
 
 /**
- * Only the two fields this needs, so a cart line — which carries a name and a
- * photo but not a whole product — can be drawn by the same component.
+ * Only the fields this needs, so a cart line — which carries a name and a photo
+ * but not a whole product — can be drawn by the same component. A cart line has
+ * no `thumbnail` because the small photo is the only one it ever stored.
  */
-type Pictured = { name: string; image: string | null };
+type Pictured = {
+    name: string;
+    image: string | null;
+    thumbnail?: string | null;
+};
 
 /**
  * A product's photo, or the Stone House mark while there isn't one.
+ *
+ * The small cut is the default, since almost everywhere this appears is 88px
+ * across or less; `full` is for the one place that is bigger than the cut — the
+ * product sheet — and is opt-in so a new caller gets the cheap photo by
+ * accident rather than the expensive one.
  *
  * The file is used rather than `StoneHouseLogo`: that one is the animated
  * wordmark built for the header, and a menu full of products would set every
@@ -16,11 +26,16 @@ type Pictured = { name: string; image: string | null };
 export function ProductImage({
     product,
     className,
+    full = false,
 }: {
     product: Pictured;
     className?: string;
+    /** Draw the photo at its own size rather than the 400px cut. */
+    full?: boolean;
 }) {
-    if (product.image === null) {
+    const src = full ? product.image : (product.thumbnail ?? product.image);
+
+    if (src === null) {
         return (
             <div
                 aria-hidden
@@ -45,7 +60,7 @@ export function ProductImage({
 
     return (
         <img
-            src={product.image}
+            src={src}
             alt={product.name}
             loading="lazy"
             decoding="async"

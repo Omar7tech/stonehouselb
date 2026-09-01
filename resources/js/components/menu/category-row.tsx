@@ -48,8 +48,9 @@ export function CategoryRow({
 }) {
     const count = category.products.length;
     // Held in a local so the null check narrows inside the map below, which a
-    // property read on `category` would not survive.
-    const art = category.image;
+    // property read on `category` would not survive. The small cut: these are
+    // drawn at 48px, eight to a band.
+    const art = category.thumbnail ?? category.image;
 
     return (
         <button

@@ -175,7 +175,10 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
                 variant === null
                     ? (product.discountPrice ?? product.price)
                     : (variant.discountPrice ?? variant.price),
-            image: product.image,
+            // The small cut, since the cart never draws a photo bigger than a
+            // tile — and this one is written to storage, so the cheap URL is
+            // what a returning basket loads too.
+            image: product.thumbnail ?? product.image,
         });
     };
 
@@ -204,7 +207,7 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
                 variant === null
                     ? (openProduct.discountPrice ?? openProduct.price)
                     : (variant.discountPrice ?? variant.price),
-            image: openProduct.image,
+            image: openProduct.thumbnail ?? openProduct.image,
             addons,
             quantity,
         });

@@ -2,14 +2,13 @@ import {
     Clock,
     Flame,
     Leaf,
-    
     Minus,
     Plus,
     ShoppingBag,
     Star,
-    Zap
+    Zap,
 } from 'lucide-react';
-import type {LucideIcon} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { ProductImage } from '@/components/menu/product-image';
@@ -124,8 +123,12 @@ export function ProductDialog({
                 stay put, and only the middle column travels. */}
             <DialogContent className="gap-0 overflow-y-hidden p-0">
                 <div className="shrink-0 p-3 pt-1 sm:pt-3">
+                    {/* The one place worth the whole photo: this runs the width
+                        of the sheet, where the 400px cut would show its
+                        pixels. */}
                     <ProductImage
                         product={product}
+                        full
                         className="aspect-video w-full"
                     />
                 </div>
