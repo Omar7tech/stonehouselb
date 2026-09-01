@@ -59,6 +59,8 @@ export type Product = {
     image: string | null;
     /** Roughly how long the item takes, in minutes. */
     preparationTime: number | null;
+    /** Energy in kcal, or null when the kitchen has not counted this one. */
+    calories: number | null;
     isFeatured: boolean;
     isSpicy: boolean;
     isVegan: boolean;

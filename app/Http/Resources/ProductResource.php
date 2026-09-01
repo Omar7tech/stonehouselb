@@ -31,6 +31,7 @@ class ProductResource extends JsonResource
             'discountPrice' => $this->discount_price !== null ? (float) $this->discount_price : null,
             'image' => $this->getFirstMediaUrl('image', 'webp') ?: null,
             'preparationTime' => $this->preparation_time,
+            'calories' => $this->calories,
             'isFeatured' => $this->is_featured,
             'isSpicy' => $this->is_spicy,
             'isVegan' => $this->is_vegan,

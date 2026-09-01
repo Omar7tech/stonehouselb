@@ -52,6 +52,14 @@ class ProductForm
                                     ->numeric()
                                     ->minValue(0)
                                     ->suffix('min'),
+                                TextInput::make('calories')
+                                    ->label('Calories')
+                                    ->helperText('Leave empty if uncounted — the menu then shows nothing rather than a zero.')
+                                    ->numeric()
+                                    ->integer()
+                                    ->minValue(0)
+                                    ->maxValue(65535)
+                                    ->suffix('kcal'),
                                 SpatieMediaLibraryFileUpload::make('image')
                                     ->collection('image')
                                     ->disk('public')

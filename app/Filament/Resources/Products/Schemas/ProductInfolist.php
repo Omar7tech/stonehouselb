@@ -29,6 +29,14 @@ class ProductInfolist
                         TextEntry::make('title'),
                         TextEntry::make('subtitle')->placeholder('-'),
                         TextEntry::make('category.title')->label('Category'),
+                        TextEntry::make('preparation_time')
+                            ->label('Preparation time')
+                            ->suffix(' min')
+                            ->placeholder('-'),
+                        TextEntry::make('calories')
+                            ->label('Calories')
+                            ->suffix(' kcal')
+                            ->placeholder('-'),
                         TextEntry::make('order_type')
                             ->label('Order type')
                             ->badge(),

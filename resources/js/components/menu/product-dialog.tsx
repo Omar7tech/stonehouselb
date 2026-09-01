@@ -7,6 +7,7 @@ import {
     Plus,
     ShoppingBag,
     Star,
+    Zap,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -178,6 +179,19 @@ export function ProductDialog({
                                         className="bg-primary/10 text-primary"
                                     />
                                 )}
+                            {/* Only ever on the sheet, never the card: it is a
+                                figure you look up once you are already reading
+                                the dish, not one you scan a row of them by.
+
+                                Zero is a real count for a black coffee, so this
+                                asks only whether the kitchen filled it in. */}
+                            {product.calories !== null && (
+                                <Tag
+                                    icon={Zap}
+                                    label={`${product.calories} kcal`}
+                                    className="bg-primary/10 text-primary"
+                                />
+                            )}
                         </div>
                     </DialogHeader>
 

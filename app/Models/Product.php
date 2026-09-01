@@ -61,6 +61,7 @@ class Product extends Model implements HasMedia
     protected function casts(): array
     {
         return [
+            'calories' => 'integer',
             'discount_price' => 'decimal:2',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',

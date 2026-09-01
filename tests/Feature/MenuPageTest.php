@@ -88,3 +88,29 @@ it('renders a menu with no categories at all', function (): void {
             ->count('categories', 0)
         );
 });
+
+it('sends the calorie count through to the menu, and null when it is uncounted', function (): void {
+    $category = Category::factory()->create();
+
+    Product::factory()->for($category)->create(['title' => 'Counted', 'sort_order' => 1, 'calories' => 540]);
+    Product::factory()->for($category)->create(['title' => 'Uncounted', 'sort_order' => 2]);
+
+    $this->get(route('menu.dine-in'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('categories.0.products.0.calories', 540)
+            // Null rather than 0: the sheet hides the chip entirely for this one.
+            ->where('categories.0.products.1.calories', null)
+        );
+});
+
+it('keeps a zero calorie count, which is a real figure for a black coffee', function (): void {
+    $category = Category::factory()->create();
+    Product::factory()->for($category)->create(['calories' => 0]);
+
+    $this->get(route('menu.dine-in'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('categories.0.products.0.calories', 0)
+        );
+});

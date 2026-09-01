@@ -24,6 +24,7 @@ class ProductFactory extends Factory
             'subtitle' => null,
             'description' => fake()->sentence(),
             'preparation_time' => null,
+            'calories' => null,
             'is_active' => true,
             'is_featured' => false,
             'is_spicy' => false,
