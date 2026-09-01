@@ -5,6 +5,29 @@ import { cn } from '@/lib/utils';
 import type { Category } from '@/types';
 
 /**
+ * Where the watermark copies sit, as a share of the band, with the angle each
+ * one is turned to.
+ *
+ * Fixed rather than random: a band that reshuffled its own pattern on every
+ * render would flicker on any state change, and a category would look different
+ * each time you came back to it. The numbers are irregular by hand — an even
+ * spread reads as wallpaper, where an uneven one reads as scattered.
+ *
+ * Several sit past the top or bottom edge on purpose. The slab clips them, so
+ * the pattern carries on past the band rather than stopping politely inside it.
+ */
+const WATERMARK = [
+    { top: '-18%', left: '1%', size: '3.2rem', angle: -24 },
+    { top: '40%', left: '13%', size: '2.4rem', angle: 12 },
+    { top: '-8%', left: '27%', size: '2.9rem', angle: 34 },
+    { top: '54%', left: '38%', size: '2.6rem', angle: -11 },
+    { top: '2%', left: '52%', size: '3.1rem', angle: 21 },
+    { top: '48%', left: '63%', size: '2.5rem', angle: -32 },
+    { top: '-14%', left: '76%', size: '2.8rem', angle: 7 },
+    { top: '46%', left: '88%', size: '3rem', angle: -19 },
+] as const;
+
+/**
  * One category as a full-width band: the name large on the left, the art on the
  * right, both sitting whole inside the slab.
  *
@@ -24,6 +47,9 @@ export function CategoryRow({
     onSelect: (id: number) => void;
 }) {
     const count = category.products.length;
+    // Held in a local so the null check narrows inside the map below, which a
+    // property read on `category` would not survive.
+    const art = category.image;
 
     return (
         <button
@@ -39,6 +65,43 @@ export function CategoryRow({
                 'focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:outline-none',
             )}
         >
+            {/* The category's own art, scattered across the slab as a pattern.
+                Only where there is art to scatter — a category still waiting on
+                its picture gets the plain band rather than a wall of wordmarks.
+
+                Knocked to a white silhouette rather than laid down as the photo
+                it is: eight tinted pictures at low opacity over orange come out
+                as muck, where the same shapes in the slab's own foreground
+                colour read as one printed pattern. It is the shape that says
+                which category this is anyway, not the colour.
+
+                First in the band, so the name and the art proper paint over it
+                without either needing a stacking order to say so. */}
+            {art !== null && (
+                <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 opacity-[0.13]"
+                >
+                    {WATERMARK.map((tile) => (
+                        <img
+                            key={`${tile.top}-${tile.left}`}
+                            src={art}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            draggable={false}
+                            style={{
+                                top: tile.top,
+                                left: tile.left,
+                                width: tile.size,
+                                rotate: `${tile.angle}deg`,
+                            }}
+                            className="absolute aspect-square object-contain brightness-0 invert"
+                        />
+                    ))}
+                </span>
+            )}
+
             {/* `min-w-0` so the name clips inside its own column rather than
                 shoving the art off the end of the band. */}
             <span className="relative z-10 flex min-w-0 flex-1 flex-col gap-1 py-4">
