@@ -41,7 +41,23 @@ export function CategoryTile({
                 'transition-[translate,scale,box-shadow] duration-300 ease-out hover:-translate-y-1 active:translate-y-0 active:scale-[0.97] motion-reduce:translate-none motion-reduce:scale-100',
                 'focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:outline-none',
                 wide
-                    ? 'col-span-2 flex aspect-[2/1] flex-row-reverse items-center gap-4 sm:aspect-[3/1]'
+                    ? cn(
+                          'col-span-2 flex aspect-[2/1] flex-row-reverse items-center gap-4 sm:aspect-[3/1]',
+                          // At `lg` a wide tile no longer owns its row — it sits
+                          // beside two squares, and those squares are what set
+                          // the row's height. Holding an aspect ratio here would
+                          // draw the tile shorter than the row it is in and leave
+                          // the slab hanging with a band of nothing under it, so
+                          // the ratio is dropped and the grid's own stretch fills
+                          // the height instead.
+                          //
+                          // The floor is for the one case that stretch cannot
+                          // size: a wide tile that falls last, with no square
+                          // beside it to take the height from. Then the row is
+                          // only as tall as its contents, and this keeps it a
+                          // band rather than a strip.
+                          'lg:aspect-auto lg:min-h-40',
+                      )
                     : 'flex aspect-square flex-col',
             )}
         >
