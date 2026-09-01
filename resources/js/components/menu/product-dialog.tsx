@@ -2,13 +2,14 @@ import {
     Clock,
     Flame,
     Leaf,
-    type LucideIcon,
+    
     Minus,
     Plus,
     ShoppingBag,
     Star,
-    Zap,
+    Zap
 } from 'lucide-react';
+import type {LucideIcon} from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { ProductImage } from '@/components/menu/product-image';
