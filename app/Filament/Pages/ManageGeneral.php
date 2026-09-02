@@ -223,6 +223,14 @@ class ManageGeneral extends SettingsPage
                         Tab::make('Footer')
                             ->icon(Heroicon::OutlinedLink)
                             ->schema([
+                                TextInput::make('location_url')
+                                    ->label('Location link')
+                                    ->helperText('Where the shop is on a map, e.g. a Google Maps link. Leave empty to hide the footer\'s location button.')
+                                    ->placeholder('https://maps.app.goo.gl/...')
+                                    ->url()
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
+
                                 Repeater::make('social_links')
                                     ->label('Footer links')
                                     ->helperText('Listed at the foot of the menu, in this order. Rows missing a name or an address are not shown.')

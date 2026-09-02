@@ -30,6 +30,8 @@ declare module '@inertiajs/core' {
             productCardStyle: ProductCardStyle;
             /** The footer's links. Empty leaves the list out entirely. */
             socialLinks: SocialLink[];
+            /** Map link for the footer's location button. Null leaves it out. */
+            locationUrl: string | null;
             /** Null when orders have nowhere to go, which closes checkout. */
             whatsappNumber: string | null;
             sidebarOpen: boolean;

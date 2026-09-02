@@ -1,8 +1,9 @@
 import { usePage } from '@inertiajs/react';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, MapPin } from 'lucide-react';
 import type { CSSProperties } from 'react';
 
 import { StretchText } from '@/components/stretch';
+import { cn } from '@/lib/utils';
 
 /** The mark's own proportions, taken from the artwork's viewBox. */
 const LOGO_ASPECT = '291.18 / 118.35';
@@ -43,9 +44,12 @@ const LOGO_KNOCKOUT = {
  * The rows are whatever the owner has listed in the dashboard. Named rather
  * than drawn: the logo is the only mark on this slab, so a row of borrowed
  * glyphs underneath it would be the second brand on the page.
+ *
+ * Above them, when an address is configured, one filled button to the shop's
+ * place on a map — the one link here worth more than a line of its own.
  */
 export function SiteFooter() {
-    const { socialLinks } = usePage().props;
+    const { socialLinks, locationUrl } = usePage().props;
 
     return (
         <footer className="relative overflow-hidden rounded-t-[2rem] text-primary-foreground shadow-[0_-6px_20px_rgb(0_0_0/0.11)]">
@@ -76,6 +80,29 @@ export function SiteFooter() {
                     className="w-full lg:mx-auto lg:w-[39rem]"
                 />
 
+                {/* The one thing a menu's foot is actually asked for, so it is
+                    a filled block rather than another line in the list: the
+                    slab's colours swapped, which on hover swap back and leave
+                    the button outlined. Left out entirely when the owner has
+                    set no address. */}
+                {locationUrl && (
+                    <a
+                        href={locationUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group relative mt-9 flex items-center justify-center gap-3 rounded-full border border-primary-foreground bg-primary-foreground px-6 py-4 text-primary transition-colors duration-300 ease-out hover:bg-transparent hover:text-primary-foreground focus-visible:bg-transparent focus-visible:text-primary-foreground focus-visible:outline-none motion-reduce:transition-none"
+                    >
+                        <MapPin
+                            className="size-5 shrink-0 transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-focus-visible:-translate-y-0.5 motion-reduce:transform-none"
+                            strokeWidth={2.5}
+                        />
+
+                        <StretchText className="font-display text-lg uppercase sm:text-xl">
+                            Find us
+                        </StretchText>
+                    </a>
+                )}
+
                 {/* One line per account, ruled like a listing. Nothing changes
                     colour on hover — the row's own rule simply draws itself in
                     under the name, which is all the pointing it needs.
@@ -84,7 +111,14 @@ export function SiteFooter() {
                     leaving an empty box under the mark. Keyed by position: two
                     rows may well share a name, and the order is the owner's. */}
                 {socialLinks.length > 0 && (
-                    <ul className="relative mt-9 border-t border-primary-foreground/20">
+                    <ul
+                        className={cn(
+                            'relative border-t border-primary-foreground/20',
+                            // Closer under the button than under the mark: the
+                            // two belong to the same block of business.
+                            locationUrl ? 'mt-6' : 'mt-9',
+                        )}
+                    >
                         {socialLinks.map(({ label, url }, index) => (
                             <li
                                 key={index}

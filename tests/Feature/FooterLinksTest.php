@@ -45,3 +45,27 @@ it('shares an empty list when no footer links are configured', function (): void
             ->where('socialLinks', [])
         );
 });
+
+it('shares the location link with the storefront', function (): void {
+    settings(['location_url' => 'https://maps.app.goo.gl/stonehouse']);
+
+    $this->get(route('menu.dine-in'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('locationUrl', 'https://maps.app.goo.gl/stonehouse')
+        );
+});
+
+it('shares no location link when none is configured', function (?string $configured): void {
+    settings(['location_url' => $configured]);
+
+    $this->get(route('menu.dine-in'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('locationUrl', null)
+        );
+})->with([
+    'unset' => null,
+    'blank' => '',
+    'whitespace' => '   ',
+]);

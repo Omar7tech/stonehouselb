@@ -64,6 +64,9 @@ class HandleInertiaRequests extends Middleware
             // Where to find the shop once you are off the menu. Empty simply
             // leaves the footer's list out.
             'socialLinks' => $settings->usableSocialLinks(),
+            // The map link behind the footer's location button. Null leaves
+            // the button out.
+            'locationUrl' => $settings->usableLocationUrl(),
             // What the customer has to provide before an order can be sent.
             'checkout' => [
                 'requireFullName' => $settings->require_full_name,

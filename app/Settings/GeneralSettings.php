@@ -96,6 +96,12 @@ class GeneralSettings extends Settings
      */
     public array $social_links;
 
+    /**
+     * Where the shop is, as a map link. Null leaves the footer's location
+     * button out rather than sending anyone to an address nobody set.
+     */
+    public ?string $location_url;
+
     public static function group(): string
     {
         return 'general';
@@ -174,5 +180,14 @@ class GeneralSettings extends Settings
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * The map link worth rendering, or null when none is set. A blank address
+     * is dropped rather than shown as a button that goes nowhere.
+     */
+    public function usableLocationUrl(): ?string
+    {
+        return filled($this->location_url) ? trim((string) $this->location_url) : null;
     }
 }
