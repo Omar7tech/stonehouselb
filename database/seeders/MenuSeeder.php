@@ -49,6 +49,7 @@ class MenuSeeder extends Seeder
                 ->count(random_int(5, 20))
                 ->for($category)
                 ->orderType(OrderType::Both)
+                ->randomlyWithVariants()
                 ->sequence(fn (Sequence $sequence): array => ['sort_order' => $sequence->index])
                 ->create();
         }

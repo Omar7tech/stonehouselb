@@ -13,6 +13,13 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class ProductFactory extends Factory
 {
     /**
+     * The sizes a product can be sold in, from smallest to largest.
+     *
+     * @var list<string>
+     */
+    private const VARIANT_NAMES = ['Small', 'Medium', 'Large', 'Family'];
+
+    /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
@@ -65,5 +72,38 @@ class ProductFactory extends Factory
                 ['name' => 'Large', 'price' => 6, 'discount_price' => 5],
             ],
         ]);
+    }
+
+    /**
+     * A product that has a `$chanceInPercent` chance of being sold in 2 to 4
+     * sizes, priced up from its own base price. The rest keep a single price,
+     * so a seeded menu ends up with a realistic mix of both kinds.
+     */
+    public function randomlyWithVariants(int $chanceInPercent = 40): static
+    {
+        return $this->state(function (array $attributes) use ($chanceInPercent): array {
+            if (random_int(1, 100) > $chanceInPercent) {
+                return ['variants' => null];
+            }
+
+            $basePrice = (float) $attributes['price'];
+            $names = array_slice(self::VARIANT_NAMES, 0, random_int(2, 4));
+
+            $variants = [];
+
+            foreach ($names as $index => $name) {
+                $price = round($basePrice * (1 + ($index * 0.35)), 2);
+
+                $variants[] = [
+                    'name' => $name,
+                    'price' => $price,
+                    'discount_price' => random_int(1, 4) === 1
+                        ? round($price * 0.85, 2)
+                        : null,
+                ];
+            }
+
+            return ['variants' => $variants];
+        });
     }
 }
