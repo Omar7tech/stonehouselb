@@ -1,12 +1,14 @@
 import { Link } from '@inertiajs/react';
 import { Menu } from 'lucide-react';
 
+import { ThemeToggle } from '@/components/menu/theme-toggle';
 import { StoneHouseLogo } from '@/components/stone-house-logo';
 
 /**
- * Wordmark and the nav trigger, sitting straight on the stone wall. Nothing is
- * behind it: the backdrop's light pools in the middle of the page, so the wall
- * is already at its darkest up here and the orange reads cleanly against it.
+ * Wordmark, the theme switch and the nav trigger, sitting straight on the stone
+ * wall. Nothing is behind it: the backdrop's light pools in the middle of the
+ * page, so the wall is already at its darkest up here and the orange reads
+ * cleanly against it.
  */
 export function SiteHeader() {
     return (
@@ -15,13 +17,20 @@ export function SiteHeader() {
                 <StoneHouseLogo className="w-28 select-none sm:w-36 lg:w-44" />
             </Link>
 
-            <button
-                type="button"
-                aria-label="Open menu"
-                className="-mr-1 rounded-lg p-1 text-primary transition-opacity hover:opacity-70 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-            >
-                <Menu className="size-9" strokeWidth={3} />
-            </button>
+            {/* The two controls the header carries, kept together at the same
+                end. The switch is the smaller mark of the pair — it is a
+                preference, not a way through the site. */}
+            <div className="-mr-1 flex items-center gap-1">
+                <ThemeToggle />
+
+                <button
+                    type="button"
+                    aria-label="Open menu"
+                    className="rounded-lg p-1 text-primary transition-opacity hover:opacity-70 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                >
+                    <Menu className="size-9" strokeWidth={3} />
+                </button>
+            </div>
         </header>
     );
 }

@@ -6,18 +6,24 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
 /*
- * This app is light-only. Tailwind's default `dark:` variant follows the OS
- * `prefers-color-scheme`, so it is redefined here to key off a `.dark` class
- * that is never applied — any stray `dark:` utility stays inert instead of
- * firing on a visitor's dark OS.
+ * The dark sheet is the visitor's own choice, taken with the switch in the
+ * header and kept on their device — not the operating system's guess. So the
+ * `dark:` variant keys off a `.dark` class rather than `prefers-color-scheme`:
+ * a dark phone does not decide for someone who never asked.
  */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
     html {
-        /* Keeps native scrollbars, form controls and autofill light too. */
+        /* Keeps native scrollbars, form controls and autofill in step with the
+           sheet the page is drawn on. Replaced inline the moment the visitor
+           picks the other one. */
         color-scheme: light;
         @apply font-sans;
+    }
+
+    html.dark {
+        color-scheme: dark;
     }
 
     * {
@@ -173,6 +179,19 @@
        should not have to read three identically coloured chips to find out. */
     --spicy: oklch(0.55 0.19 27);
     --vegan: oklch(0.52 0.12 152);
+    /* The wallpaper behind everything: six greys close enough together to read
+       as one wall, the mortar they are set in, and the light pooled in the
+       middle of it. Held here rather than in the drawing, because the wall is
+       the one thing on the page not made of the tokens below. */
+    --stone-1: #e3e1de;
+    --stone-2: #dad8d5;
+    --stone-3: #e8e6e3;
+    --stone-4: #d0cdc9;
+    --stone-5: #dfddda;
+    --stone-6: #e1dfdc;
+    --stone-mortar: #c4c1bb;
+    --stone-wash: #fff;
+    --stone-grain-blend: multiply;
     --primary-foreground: oklch(1 0 0);
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
@@ -198,4 +217,76 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
+}
+
+/*
+ * The dark sheet. Only the tokens change: every component is already painted in
+ * them, so nothing else has to know which sheet it is being drawn on.
+ *
+ * Every grey here is dead neutral — zero chroma, no hue at all. Warmth in them
+ * reads as brown rather than as black, and beside the brand orange it reads as
+ * a wash of the orange itself. The orange is meant to be the only colour on the
+ * page, which is the whole point of this sheet.
+ *
+ * The panel is lighter than the page behind it, which is the light sheet's
+ * stacking order kept the same way up: what you read is nearer than what it
+ * stands on.
+ */
+.dark {
+    --background: oklch(0.11 0 0);
+    --foreground: oklch(0.97 0 0);
+    --card: oklch(0.19 0 0);
+    --card-foreground: oklch(0.97 0 0);
+    --popover: oklch(0.19 0 0);
+    --popover-foreground: oklch(0.97 0 0);
+    --surface: oklch(0.145 0 0);
+    --cart-surface: oklch(0.13 0 0);
+    --primary: #f99f3e;
+    /* White stays: the footer's slab is the same orange on both sheets, and
+       what reads on it does not change with the page behind it. */
+    --primary-foreground: oklch(1 0 0);
+    /* Lifted well clear of their light values. The same marks at the same hues,
+       but read against black rather than white — the darker pair would sink
+       into the card they sit on. */
+    --spicy: oklch(0.72 0.16 27);
+    --vegan: oklch(0.74 0.13 152);
+    --secondary: oklch(0.24 0 0);
+    --secondary-foreground: oklch(0.97 0 0);
+    --muted: oklch(0.23 0 0);
+    --muted-foreground: oklch(0.71 0 0);
+    --accent: oklch(0.27 0 0);
+    --accent-foreground: oklch(0.97 0 0);
+    --destructive: oklch(0.66 0.2 25);
+    /* Borders are light laid over the panel rather than a colour of their own,
+       so one value holds up on every surface here. */
+    --border: oklch(1 0 0 / 12%);
+    --input: oklch(1 0 0 / 16%);
+    --ring: oklch(0.6 0 0);
+    --chart-1: oklch(0.32 0 0);
+    --chart-2: oklch(0.45 0 0);
+    --chart-3: oklch(0.58 0 0);
+    --chart-4: oklch(0.7 0 0);
+    --chart-5: oklch(0.82 0 0);
+    /* The same wall in black granite: neutral greys a few points apart, so the
+       courses still read as stones rather than as one flat sheet, and the pool
+       of light in the middle of it turned to shadow. */
+    --stone-1: #232323;
+    --stone-2: #1f1f1f;
+    --stone-3: #272727;
+    --stone-4: #1b1b1b;
+    --stone-5: #212121;
+    --stone-6: #252525;
+    --stone-mortar: #131313;
+    --stone-wash: #000;
+    /* Grain darkens the light wall and lightens the dark one — multiply over
+       black granite would be lost entirely. */
+    --stone-grain-blend: screen;
+    --sidebar: oklch(0.145 0 0);
+    --sidebar-foreground: oklch(0.97 0 0);
+    --sidebar-primary: #f99f3e;
+    --sidebar-primary-foreground: oklch(1 0 0);
+    --sidebar-accent: oklch(0.27 0 0);
+    --sidebar-accent-foreground: oklch(0.97 0 0);
+    --sidebar-border: oklch(1 0 0 / 12%);
+    --sidebar-ring: oklch(0.6 0 0);
 }

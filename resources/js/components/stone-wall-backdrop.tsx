@@ -1,14 +1,20 @@
 import { useId } from 'react';
+import type { CSSProperties } from 'react';
 
 import { cn } from '@/lib/utils';
 
 /**
- * Light stone wall used as the page wallpaper.
+ * The stone wall used as the page wallpaper.
  *
  * The wall is one tile repeated with an SVG `<pattern>`, so it costs a single
  * small drawing no matter how large the viewport gets. The tile is measured in
  * CSS pixels rather than a viewBox, which keeps the stones the same physical
  * size on a phone and on a desk monitor.
+ *
+ * Its colours are the `--stone-*` tokens rather than fixed hexes, so the dark
+ * sheet re-quarries the same wall by swapping variables. They are set through
+ * `style` rather than `fill`, because a presentation attribute is not a CSS
+ * declaration and would not resolve a `var()`.
  */
 
 const TILE_WIDTH = 240;
@@ -34,17 +40,20 @@ const COURSE_JOINTS: readonly (readonly number[])[] = [
     [8, 80, 136, 186, 248],
 ];
 
-/** Cool greys, close enough together to read as one wall. */
+/** Six greys, close enough together to read as one wall, per sheet. */
 const STONE_FILLS = [
-    '#e3e1de',
-    '#dad8d5',
-    '#e8e6e3',
-    '#d0cdc9',
-    '#dfddda',
-    '#e1dfdc',
+    'var(--stone-1)',
+    'var(--stone-2)',
+    'var(--stone-3)',
+    'var(--stone-4)',
+    'var(--stone-5)',
+    'var(--stone-6)',
 ] as const;
 
-const MORTAR = '#c4c1bb';
+const MORTAR = 'var(--stone-mortar)';
+
+/** The light pooled in the middle of the wall — white on it, black under it. */
+const WASH = 'var(--stone-wash)';
 
 type Stone = {
     x: number;
@@ -103,7 +112,7 @@ export function StoneWallBackdrop({ className }: { className?: string }) {
                     <rect
                         width={TILE_WIDTH}
                         height={TILE_HEIGHT}
-                        fill={MORTAR}
+                        style={{ fill: MORTAR }}
                     />
 
                     {WRAP_OFFSETS.map((offset) =>
@@ -115,7 +124,7 @@ export function StoneWallBackdrop({ className }: { className?: string }) {
                                 width={stone.width}
                                 height={COURSE_HEIGHT}
                                 rx="3"
-                                fill={stone.fill}
+                                style={{ fill: stone.fill }}
                                 stroke="#000"
                                 strokeOpacity="0.05"
                                 strokeWidth="1"
@@ -123,21 +132,40 @@ export function StoneWallBackdrop({ className }: { className?: string }) {
                         )),
                     )}
 
+                    {/* Grain darkens the light wall and lightens the dark one,
+                        so the blend mode is a token like the colours are. */}
                     <rect
                         width={TILE_WIDTH}
                         height={TILE_HEIGHT}
                         filter={`url(#${grainId})`}
                         opacity="0.06"
-                        style={{ mixBlendMode: 'multiply' }}
+                        style={{
+                            mixBlendMode:
+                                'var(--stone-grain-blend)' as CSSProperties['mixBlendMode'],
+                        }}
                     />
                 </pattern>
 
                 {/* Light pooled in the middle: the wall stays a wall at the
-                    edges and gets out of the way behind the content. */}
+                    edges and gets out of the way behind the content. On the
+                    dark sheet the same pool is black, which sinks the middle
+                    rather than lifting it — either way the content wins. */}
                 <radialGradient id={washId} cx="50%" cy="45%" r="75%">
-                    <stop offset="0%" stopColor="#fff" stopOpacity="0.62" />
-                    <stop offset="55%" stopColor="#fff" stopOpacity="0.28" />
-                    <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+                    <stop
+                        offset="0%"
+                        style={{ stopColor: WASH }}
+                        stopOpacity="0.62"
+                    />
+                    <stop
+                        offset="55%"
+                        style={{ stopColor: WASH }}
+                        stopOpacity="0.28"
+                    />
+                    <stop
+                        offset="100%"
+                        style={{ stopColor: WASH }}
+                        stopOpacity="0"
+                    />
                 </radialGradient>
             </defs>
 
