@@ -3,9 +3,9 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { SmartImage } from '@/components/smart-image';
-import { StretchText } from '@/components/stretch';
+import { usePricing } from '@/lib/use-pricing';
 import { cn } from '@/lib/utils';
-import type { Slide } from '@/types';
+import type { Product, Slide } from '@/types';
 
 /** How long a slide holds before the row moves itself on. */
 const ADVANCE_AFTER_MS = 5000;
@@ -216,43 +216,68 @@ function SlideCard({
             />
         );
 
+    // Everything is drawn against the photograph, so the wash under it is what
+    // makes any of it legible. The lettered card has no photograph to fight and
+    // reads in the page's own ink instead.
+    const onPhoto = slide.image !== null;
+
     const caption =
         slide.product !== null || slide.text !== null ? (
             <span
                 className={cn(
-                    'pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-start gap-1.5 p-3',
-                    // The wash is only needed over a photograph; the lettered
-                    // card is already a flat colour chosen to read against.
-                    slide.image !== null &&
-                        'bg-gradient-to-t from-black/75 via-black/30 to-transparent pt-10',
+                    'pointer-events-none absolute inset-x-0 bottom-0 flex items-end gap-3 p-3.5 sm:p-4',
+                    onPhoto &&
+                        'bg-gradient-to-t from-black/85 via-black/45 to-transparent pt-14',
                 )}
             >
-                {slide.product !== null && (
-                    // The dish's name on the brand orange, with the chevron
-                    // that says this one goes somewhere. It is the same shape
-                    // as the pills above the products, so a customer who has
-                    // used the menu already knows what it does.
-                    <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-primary px-3 py-1 font-display text-[0.7rem] text-primary-foreground uppercase shadow-sm">
-                        <StretchText className="truncate">
-                            {slide.product.name}
-                        </StretchText>
-                        <ChevronRight
-                            aria-hidden
-                            className="size-3.5 shrink-0"
-                        />
-                    </span>
-                )}
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    {/* The shop's own line leads, above the dish it is about:
+                        "Two for one on Tuesdays" is the offer, and the name
+                        under it is what the offer is on. */}
+                    {slide.text !== null && (
+                        <span
+                            className={cn(
+                                'line-clamp-2 text-xs font-medium',
+                                onPhoto ? 'text-white/80' : 'text-primary',
+                            )}
+                        >
+                            {slide.text}
+                        </span>
+                    )}
 
-                {slide.text !== null && (
+                    {slide.product !== null && (
+                        <>
+                            {/* Body face, as on the product cards, and for the
+                                same reason: a dish's name is read, not
+                                admired, and the display face is far too wide
+                                to hold one at a size anybody can read. */}
+                            <span
+                                className={cn(
+                                    'truncate text-base leading-tight font-semibold uppercase sm:text-lg',
+                                    onPhoto ? 'text-white' : 'text-foreground',
+                                )}
+                            >
+                                {slide.product.name}
+                            </span>
+
+                            <SlidePrice
+                                product={slide.product}
+                                onPhoto={onPhoto}
+                            />
+                        </>
+                    )}
+                </span>
+
+                {/* What says the card goes somewhere, now that the name is
+                    plain text rather than a pill. It is the quick add's shape
+                    and colour turned into an arrow, so it reads as a way in
+                    rather than as a button that adds something unseen. */}
+                {slide.product !== null && (
                     <span
-                        className={cn(
-                            'text-sm font-semibold',
-                            slide.image === null
-                                ? 'text-foreground'
-                                : 'text-white drop-shadow-[0_1px_3px_rgb(0_0_0/0.7)]',
-                        )}
+                        aria-hidden
+                        className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition-[scale] duration-200 ease-out group-hover:scale-110 motion-reduce:scale-100"
                     >
-                        {slide.text}
+                        <ChevronRight className="size-4.5" strokeWidth={2.5} />
                     </span>
                 )}
             </span>
@@ -280,6 +305,76 @@ function SlideCard({
             {picture}
             {caption}
         </button>
+    );
+}
+
+/**
+ * What the dish costs, under its name on the slide.
+ *
+ * A promotion that doesn't say the price is asking the customer to open the
+ * sheet to find out, which is a tap spent on something the card could have
+ * told them. Sizes are quoted from the cheapest and marked as such — a slide is
+ * a poster, not a price list, and "from" is the honest way to put one figure on
+ * a dish that has four.
+ */
+function SlidePrice({
+    product,
+    onPhoto,
+}: {
+    product: Product;
+    /** Drawn over a photograph, so the ink is white rather than the page's. */
+    onPhoto: boolean;
+}) {
+    const pricing = usePricing();
+    const hasVariants = product.variants.length > 0;
+
+    const price = hasVariants
+        ? Math.min(
+              ...product.variants.map(
+                  (variant) => variant.discountPrice ?? variant.price,
+              ),
+          )
+        : (product.discountPrice ?? product.price);
+
+    // Only for a dish sold at one price: struck through beside a "from" figure,
+    // the old price would read as the old price of the cheapest size, which is
+    // not what it is.
+    const wasPrice =
+        !hasVariants && product.discountPrice !== null ? product.price : null;
+
+    return (
+        <span className="mt-0.5 flex min-w-0 items-baseline gap-2">
+            {hasVariants && (
+                <span
+                    className={cn(
+                        'shrink-0 text-[0.65rem] tracking-wide uppercase',
+                        onPhoto ? 'text-white/60' : 'text-muted-foreground',
+                    )}
+                >
+                    From
+                </span>
+            )}
+
+            <span
+                className={cn(
+                    'truncate text-sm font-semibold tabular-nums',
+                    onPhoto ? 'text-white' : 'text-primary',
+                )}
+            >
+                {pricing.primary(price)}
+            </span>
+
+            {wasPrice !== null && (
+                <span
+                    className={cn(
+                        'shrink-0 text-xs tabular-nums line-through',
+                        onPhoto ? 'text-white/60' : 'text-muted-foreground',
+                    )}
+                >
+                    {pricing.primary(wasPrice)}
+                </span>
+            )}
+        </span>
     );
 }
 
