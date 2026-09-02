@@ -189,10 +189,10 @@ function MenuView({
      */
     const [addonsOverride, setAddonsOverride] = useState<Addon[] | null>(null);
 
-    /** The pills row, so switching category can hold it where it stands. */
-    const pillsRef = useRef<HTMLDivElement>(null);
-    /** Where the row sat on screen just before a switch, in viewport pixels. */
-    const pillsTop = useRef<number | null>(null);
+    /** The menu panel, so changing what is in it can hold it where it stands. */
+    const panelRef = useRef<HTMLElement>(null);
+    /** Where it sat on screen just before the change, in viewport pixels. */
+    const panelTop = useRef<number | null>(null);
 
     /**
      * Every product on the menu by id, so a basket line can be traced back to
@@ -345,44 +345,35 @@ function MenuView({
     }, [activeCategory]);
 
     /**
-     * Opening a category from the boxes, or going back to them. Both swap one
-     * view for another, so the page is taken to the top of the new one — the
-     * boxes may run well past the fold, and landing halfway down a list of
-     * dishes you have not seen the start of reads as a page that lost its
-     * place.
+     * Open a category, switch to another one, or go back to the boxes.
+     *
+     * None of these move the page. Everything above the panel — the header, the
+     * order-type switch, the carousel, the heading — is the same in every view,
+     * so the customer is looking at the same place before and after and should
+     * still be looking at it: taking them to the top of the document instead
+     * throws away wherever they had got to, on every single tap.
+     *
+     * The exception is a view that is shorter than the one it replaced: the
+     * document loses height, the browser clamps the scroll to the new bottom,
+     * and the page slides up on its own. So the panel's position on screen is
+     * measured before the swap and put back after it, which holds it still in
+     * that case too.
      */
     const selectCategory = (id: number | null): void => {
-        setActiveCategoryId(id);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    /**
-     * Switching category from the pills, which is not a change of view: the
-     * customer is standing at the row of pills, and they should still be
-     * standing there when the dishes under it change. Everything above the row
-     * is the same on both categories, so its place on the page is unchanged and
-     * simply not scrolling is enough.
-     *
-     * The exception is a shorter category: the document loses height, the
-     * browser clamps the scroll to the new bottom, and the row travels up the
-     * screen on its own. So the row's position is measured before the swap and
-     * put back after it, which holds it still in that case too.
-     */
-    const switchCategory = (id: number): void => {
-        pillsTop.current =
-            pillsRef.current?.getBoundingClientRect().top ?? null;
+        panelTop.current =
+            panelRef.current?.getBoundingClientRect().top ?? null;
         setActiveCategoryId(id);
     };
 
     useLayoutEffect(() => {
-        const before = pillsTop.current;
-        pillsTop.current = null;
+        const before = panelTop.current;
+        panelTop.current = null;
 
         if (before === null) {
             return;
         }
 
-        const after = pillsRef.current?.getBoundingClientRect().top;
+        const after = panelRef.current?.getBoundingClientRect().top;
 
         if (after === undefined || after === before) {
             return;
@@ -639,6 +630,7 @@ function MenuView({
                     cart's surplus white passes behind it rather than moving
                     it, so nothing here has to reach up to meet it. */}
                     <main
+                        ref={panelRef}
                         className={cn(
                             // `isolate` so the pattern below can sit on a negative
                             // layer: it puts it above the panel's own background
@@ -707,14 +699,12 @@ function MenuView({
                             />
                         ) : (
                             <>
-                                <div ref={pillsRef}>
-                                    <CategoryPills
-                                        categories={categories}
-                                        activeId={activeCategory.id}
-                                        onSelect={switchCategory}
-                                        onClear={() => selectCategory(null)}
-                                    />
-                                </div>
+                                <CategoryPills
+                                    categories={categories}
+                                    activeId={activeCategory.id}
+                                    onSelect={selectCategory}
+                                    onClear={() => selectCategory(null)}
+                                />
 
                                 <ul className={PRODUCT_LIST[cardStyle]}>
                                     {products.map((product) => (
