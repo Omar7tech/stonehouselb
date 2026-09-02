@@ -29,9 +29,6 @@ const COPIED = [
     'box-sizing',
     'display',
     'position',
-    'width',
-    'height',
-    'min-height',
     'max-width',
     'margin-top',
     'margin-right',
@@ -73,7 +70,24 @@ const COPIED = [
     'transform',
     'opacity',
     'vertical-align',
+    // The logo is flipped on a dark sheet, and a filter is the only thing
+    // holding that instruction.
+    'filter',
 ] as const;
+
+/**
+ * Sizes are copied onto pictures and nothing else.
+ *
+ * A computed style reports a used height in pixels for every element on the
+ * page, and writing those back on is what makes an export overlap itself: text
+ * re-flows a hair differently inside a `foreignObject`, a paragraph grows past
+ * the height it has been pinned to, and it lands on top of whatever follows.
+ * Left alone, the layout simply happens again and comes out right.
+ *
+ * A picture is the exception, because an image with no width has no layout to
+ * fall back on — it draws at whatever intrinsic size it happens to have.
+ */
+const SIZED = ['width', 'height'] as const;
 
 /**
  * Render an element to a PNG blob.
@@ -89,7 +103,11 @@ const COPIED = [
  */
 export async function elementToPng(
     element: HTMLElement,
-    { scale = 3, styles = '' }: { scale?: number; styles?: string } = {},
+    {
+        scale = 3,
+        styles = '',
+        background = '#ffffff',
+    }: { scale?: number; styles?: string; background?: string } = {},
 ): Promise<Blob> {
     const width = element.offsetWidth;
     const height = element.offsetHeight;
@@ -99,14 +117,25 @@ export async function elementToPng(
     copyStyles(element, clone);
     await inlineImages(clone);
 
-    // The clone is positioned by the foreignObject, so whatever the original
-    // was doing to place itself on the page has to go.
+    // The clone is placed by the foreignObject, so whatever the original was
+    // doing to position itself on the page has to go — but it keeps the one
+    // width everything inside it is laid out against, since that is the only
+    // size the export cannot work out for itself.
     clone.style.margin = '0';
     clone.style.position = 'static';
     clone.style.boxShadow = 'none';
+    clone.style.width = `${width}px`;
+    clone.style.minHeight = `${height}px`;
 
+    /**
+     * The SVG is declared at the size the picture will be, with a viewBox still
+     * in layout pixels. That is what makes it sharp: the browser lays the sheet
+     * out at CSS size and rasterises it into the larger frame, drawing the type
+     * at that resolution. Declare it at layout size and scale it up on the
+     * canvas instead and you enlarge a small bitmap — same pixels, softer.
+     */
     const svg = [
-        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`,
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${width * scale}" height="${height * scale}" viewBox="0 0 ${width} ${height}">`,
         `<foreignObject width="100%" height="100%">`,
         `<div xmlns="http://www.w3.org/1999/xhtml">`,
         styles === '' ? '' : `<style>${escapeForXml(styles)}</style>`,
@@ -128,11 +157,14 @@ export async function elementToPng(
         throw new Error('This browser cannot draw the sheet.');
     }
 
-    // White underneath, or every transparent pixel comes out black in a PNG
-    // that anybody then prints.
-    context.fillStyle = '#ffffff';
+    // Painted underneath in the sheet's own colour, or every pixel the layout
+    // did not cover comes out transparent — which is black once anybody prints
+    // it, and a hole in the middle of a dark menu.
+    context.fillStyle = background;
     context.fillRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    // One to one: the image already arrives at the canvas's size, so there is
+    // no resampling here at all.
+    context.drawImage(image, 0, 0);
 
     return await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((blob) => {
@@ -169,9 +201,24 @@ export function downloadBlob(blob: Blob, filename: string): void {
  */
 function copyStyles(source: HTMLElement, clone: HTMLElement): void {
     const computed = window.getComputedStyle(source);
-    let inline = '';
 
-    COPIED.forEach((property) => {
+    // Whatever the element already carried is kept and written first, so custom
+    // properties survive — the theme sets `--rule` and `--muted` there, and the
+    // pseudo-element rules injected alongside the clone read them. The computed
+    // values follow, so they win wherever the two say the same thing.
+    let inline = clone.getAttribute('style') ?? '';
+
+    if (inline !== '' && !inline.endsWith(';')) {
+        inline += ';';
+    }
+
+    const properties =
+        source instanceof HTMLImageElement ||
+        source instanceof HTMLCanvasElement
+            ? [...COPIED, ...SIZED]
+            : COPIED;
+
+    properties.forEach((property) => {
         const value = computed.getPropertyValue(property);
 
         if (value !== '') {
