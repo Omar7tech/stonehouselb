@@ -11,6 +11,10 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import {
+    IngredientPicker,
+    withoutLabel,
+} from '@/components/menu/ingredient-picker';
 import { ProductImage } from '@/components/menu/product-image';
 import { ProductPrice } from '@/components/menu/product-price';
 import { VariantSelector } from '@/components/menu/variant-selector';
@@ -53,6 +57,7 @@ export function ProductDialog({
     onAdd?: (input: {
         variantIndex: number | null;
         addons: CartAddon[];
+        excludedIngredients: string[];
         quantity: number;
     }) => void;
 }) {
@@ -62,6 +67,11 @@ export function ProductDialog({
     const [quantity, setQuantity] = useState(1);
     // Quantity chosen per add-on, indexed alongside `addons`.
     const [addonQuantities, setAddonQuantities] = useState<number[]>([]);
+    // Ingredients the customer has taken out. Held as what is *missing* rather
+    // than what is kept, so a dish whose recipe gains an ingredient later still
+    // opens with the new one in — the customer only ever said what they didn't
+    // want, and that is all this remembers.
+    const [excluded, setExcluded] = useState<string[]>([]);
 
     // Start clean each time the sheet opens. Tracked during render via the
     // previous open state, so no effect fires a synchronous update.
@@ -74,6 +84,7 @@ export function ProductDialog({
             setVariantIndex(initialVariantIndex ?? 0);
             setQuantity(1);
             setAddonQuantities(addons.map(() => 0));
+            setExcluded([]);
         }
     }
 
@@ -107,6 +118,19 @@ export function ProductDialog({
         (total, addon) => total + addon.price * addon.quantity,
         0,
     );
+
+    // Kept in the kitchen's order rather than the order they were tapped, so
+    // the cart line and the order message read the way the dish is written.
+    const toggleIngredient = (name: string): void => {
+        setExcluded((previous) =>
+            previous.includes(name)
+                ? previous.filter((excludedName) => excludedName !== name)
+                : product.ingredients.filter(
+                      (ingredient) =>
+                          ingredient === name || previous.includes(ingredient),
+                  ),
+        );
+    };
 
     const setAddonQuantity = (index: number, next: number): void => {
         setAddonQuantities((previous) => {
@@ -213,6 +237,15 @@ export function ProductDialog({
                         />
                     )}
 
+                    {product.ingredients.length > 0 && (
+                        <IngredientPicker
+                            ingredients={product.ingredients}
+                            excluded={excluded}
+                            onToggle={onAdd ? toggleIngredient : undefined}
+                            onReset={() => setExcluded([])}
+                        />
+                    )}
+
                     {addons.length > 0 && (
                         <div className="flex flex-col gap-2">
                             <span className="text-[0.65rem] tracking-[0.18em] text-muted-foreground uppercase">
@@ -265,48 +298,63 @@ export function ProductDialog({
 
                 {/* Fixed footer: the price and the action stay in view however
                     long the copy runs. */}
-                <div className="flex shrink-0 items-center justify-between gap-3 border-t border-foreground/10 bg-card px-4 py-3.5">
-                    <div className="flex min-w-0 flex-col gap-1.5">
-                        <ProductPrice
-                            price={basePrice}
-                            discountPrice={discountPrice}
-                        />
+                <div className="flex shrink-0 flex-col gap-2 border-t border-foreground/10 bg-card px-4 py-3.5">
+                    {/* What is about to be sent to the kitchen, said once more
+                        where the button is — the chips are scrolled away by the
+                        time a long dish reaches its add, and a customer should
+                        not have to go back up to check what they took out. */}
+                    {excluded.length > 0 && onAdd && (
+                        <p className="text-xs text-muted-foreground">
+                            <span className="font-medium text-foreground">
+                                {withoutLabel(excluded)}
+                            </span>
+                        </p>
+                    )}
+
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 flex-col gap-1.5">
+                            <ProductPrice
+                                price={basePrice}
+                                discountPrice={discountPrice}
+                            />
+
+                            {onAdd && (
+                                <Stepper
+                                    value={quantity}
+                                    min={1}
+                                    label={product.name}
+                                    onChange={setQuantity}
+                                />
+                            )}
+                        </div>
 
                         {onAdd && (
-                            <Stepper
-                                value={quantity}
-                                min={1}
-                                label={product.name}
-                                onChange={setQuantity}
-                            />
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    onAdd({
+                                        variantIndex: hasVariants
+                                            ? variantIndex
+                                            : null,
+                                        addons: selectedAddons,
+                                        excludedIngredients: excluded,
+                                        quantity,
+                                    })
+                                }
+                                className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-5 py-3 font-display text-sm text-primary-foreground uppercase transition-transform duration-200 ease-out hover:scale-[1.03] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:scale-95 motion-reduce:transform-none"
+                            >
+                                <ShoppingBag className="size-4" />
+                                {/* Ligatures off, or Stretch Pro reads the `DD` of
+                                "ADD" as one double-width D. */}
+                                <StretchText>Add</StretchText>
+                                {extrasUsd > 0 && (
+                                    <span className="text-primary-foreground/70">
+                                        +{pricing.primary(extrasUsd)}
+                                    </span>
+                                )}
+                            </button>
                         )}
                     </div>
-
-                    {onAdd && (
-                        <button
-                            type="button"
-                            onClick={() =>
-                                onAdd({
-                                    variantIndex: hasVariants
-                                        ? variantIndex
-                                        : null,
-                                    addons: selectedAddons,
-                                    quantity,
-                                })
-                            }
-                            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-5 py-3 font-display text-sm text-primary-foreground uppercase transition-transform duration-200 ease-out hover:scale-[1.03] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:scale-95 motion-reduce:transform-none"
-                        >
-                            <ShoppingBag className="size-4" />
-                            {/* Ligatures off, or Stretch Pro reads the `DD` of
-                                "ADD" as one double-width D. */}
-                            <StretchText>Add</StretchText>
-                            {extrasUsd > 0 && (
-                                <span className="text-primary-foreground/70">
-                                    +{pricing.primary(extrasUsd)}
-                                </span>
-                            )}
-                        </button>
-                    )}
                 </div>
             </DialogContent>
         </Dialog>

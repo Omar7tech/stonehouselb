@@ -7,6 +7,7 @@ import {
     Trash2,
 } from 'lucide-react';
 
+import { withoutLabel } from '@/components/menu/ingredient-picker';
 import { ProductImage } from '@/components/menu/product-image';
 import {
     Dialog,
@@ -199,6 +200,16 @@ function CartLines() {
                                     + {addon.quantity}× {addon.name}
                                 </span>
                             ))}
+
+                            {/* Said in full rather than truncated: this is the
+                                one line on the row the kitchen has to get
+                                right, and half of "no garlic, no onion" is
+                                worse than none of it. */}
+                            {item.excludedIngredients.length > 0 && (
+                                <span className="text-xs font-medium text-spicy">
+                                    {withoutLabel(item.excludedIngredients)}
+                                </span>
+                            )}
 
                             <span className="mt-1 text-sm font-semibold text-primary tabular-nums">
                                 {pricing.primary(

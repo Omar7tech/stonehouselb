@@ -1,3 +1,4 @@
+import { withoutLabel } from '@/components/menu/ingredient-picker';
 import { cartItemUnitUsd } from '@/contexts/cart-context';
 import type { CartItem } from '@/contexts/cart-context';
 import type { LocationResult } from '@/lib/geolocation';
@@ -113,6 +114,13 @@ export function buildOrderMessage({
         lines.push(
             `   ${item.quantity} × ${money(pricing, item.unitUsd)} = ${money(pricing, item.unitUsd * item.quantity)}`,
         );
+
+        // Before the extras, and marked with its own sign: what to leave out is
+        // the instruction most easily missed on a busy pass, and reading it
+        // after a list of things to add is exactly when it gets missed.
+        if (item.excludedIngredients.length > 0) {
+            lines.push(`   ❌ ${withoutLabel(item.excludedIngredients)}`);
+        }
 
         item.addons.forEach((addon) => {
             const addonTotalUsd = addon.price * addon.quantity * item.quantity;

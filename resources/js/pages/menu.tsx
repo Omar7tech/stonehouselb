@@ -235,10 +235,12 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
     const addFromDialog = ({
         variantIndex,
         addons,
+        excludedIngredients,
         quantity,
     }: {
         variantIndex: number | null;
         addons: CartAddon[];
+        excludedIngredients: string[];
         quantity: number;
     }): void => {
         if (openProduct === null) {
@@ -259,6 +261,7 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
                     : (variant.discountPrice ?? variant.price),
             image: openProduct.thumbnail ?? openProduct.image,
             addons,
+            excludedIngredients,
             quantity,
         });
 

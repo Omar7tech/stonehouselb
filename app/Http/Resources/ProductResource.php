@@ -41,7 +41,24 @@ class ProductResource extends JsonResource
             'isSpicy' => $this->is_spicy,
             'isVegan' => $this->is_vegan,
             'variants' => $this->variantsPayload(),
+            'ingredients' => $this->ingredientsPayload(),
         ];
+    }
+
+    /**
+     * What is in this dish, as plain names in the order the kitchen listed
+     * them. Flattened out of the `['name' => …]` rows the repeater writes,
+     * because a name is all there is to one — and rows left blank are dropped
+     * rather than offered to the customer as something to take out.
+     *
+     * @return list<string>
+     */
+    private function ingredientsPayload(): array
+    {
+        return array_values(array_filter(array_map(
+            fn (array $ingredient): string => trim((string) ($ingredient['name'] ?? '')),
+            $this->ingredients ?? [],
+        ), static fn (string $name): bool => $name !== ''));
     }
 
     /**

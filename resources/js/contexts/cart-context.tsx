@@ -17,7 +17,7 @@ export type CartAddon = {
 };
 
 export type CartItem = {
-    /** Unique per product + variant + add-ons combination. */
+    /** Unique per product + variant + add-ons + ingredients left out. */
     key: string;
     productId: number;
     name: string;
@@ -26,9 +26,15 @@ export type CartItem = {
     unitUsd: number;
     /** Chosen optional extras; their prices are added on top of `unitUsd`. */
     addons: CartAddon[];
+    /**
+     * Ingredients the customer asked to leave out, in the kitchen's own order.
+     * Taking something out never changes the price — it is the same dish, made
+     * without one thing — so this carries no money, only instructions.
+     */
+    excludedIngredients: string[];
     image: string | null;
     quantity: number;
-    /** Optional free-text note for this line, e.g. "no onions". */
+    /** Optional free-text note for this line, e.g. "extra crispy". */
     note?: string;
 };
 
@@ -40,6 +46,7 @@ export type AddToCartInput = {
     unitUsd: number;
     image: string | null;
     addons?: CartAddon[];
+    excludedIngredients?: string[];
     quantity?: number;
 };
 
@@ -58,6 +65,15 @@ function addonsSignature(addons: CartAddon[]): string {
         .map((addon) => `${addon.name}x${addon.quantity}`)
         .sort()
         .join(',');
+}
+
+/**
+ * The same, for what was left out. Sorted rather than kept in the kitchen's
+ * order so a burger without onion and one without onion are one line however
+ * the two were picked — the order only matters when it is read back.
+ */
+function exclusionsSignature(excluded: string[]): string {
+    return [...excluded].sort().join(',');
 }
 
 type CartState = {
@@ -107,9 +123,13 @@ function readStoredItems(): CartItem[] {
             return [];
         }
 
+        // Both lists are defaulted: a basket written before either existed is
+        // still a basket, and reading it back as one is cheaper than asking the
+        // customer to build it again.
         return (JSON.parse(raw) as CartItem[]).map((item) => ({
             ...item,
             addons: item.addons ?? [],
+            excludedIngredients: item.excludedIngredients ?? [],
         }));
     } catch {
         return [];
@@ -139,10 +159,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const addons = (input.addons ?? []).filter(
             (addon) => addon.quantity > 0,
         );
+        const excludedIngredients = input.excludedIngredients ?? [];
         const signature = addonsSignature(addons);
+        // Two of the same dish made differently are two lines, not one with a
+        // quantity of two — the kitchen has to make them apart.
+        const without = exclusionsSignature(excludedIngredients);
         const key = `${input.productId}:${input.variantIndex ?? 'base'}${
             signature ? `:${signature}` : ''
-        }`;
+        }${without ? `:no(${without})` : ''}`;
         const quantity = Math.max(1, input.quantity ?? 1);
 
         setItems((previous) => {
@@ -168,6 +192,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                     variantName: input.variantName,
                     unitUsd: input.unitUsd,
                     addons,
+                    excludedIngredients,
                     image: input.image,
                     quantity,
                 },

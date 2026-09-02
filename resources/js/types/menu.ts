@@ -80,6 +80,13 @@ export type Product = {
     isVegan: boolean;
     /** Empty when the product is sold in one size only. */
     variants: Variant[];
+    /**
+     * What is in the dish, in the kitchen's order. Every one is in by default;
+     * the customer takes out what they don't want, and what they took out
+     * travels with the cart line. Empty when the kitchen has listed nothing,
+     * which leaves the picker out entirely.
+     */
+    ingredients: string[];
 };
 
 /** Mirrors `App\Http\Resources\CategoryResource`. */
