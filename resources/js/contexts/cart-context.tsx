@@ -138,6 +138,12 @@ type CartActions = {
     removeItem: (key: string) => void;
     setNote: (key: string, note: string) => void;
     clear: () => void;
+    /**
+     * Put a basket back exactly as it was, which is what undoing a clear does.
+     * Whole rather than line by line: half a restored order is worse than none,
+     * and the customer asked for the basket they had.
+     */
+    restore: (items: CartItem[]) => void;
 };
 
 // State and actions live in separate contexts, so components that only fire
@@ -317,6 +323,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     const clear = useCallback((): void => setItems([]), []);
 
+    const restore = useCallback((restored: CartItem[]): void => {
+        // Anything added since the clear is kept and the restored lines are
+        // topped up into it, so an undo can never take something away.
+        setItems((previous) => {
+            if (previous.length === 0) {
+                return restored;
+            }
+
+            const merged = [...previous];
+
+            restored.forEach((item) => {
+                const index = merged.findIndex(
+                    (existing) => existing.key === item.key,
+                );
+
+                if (index === -1) {
+                    merged.push(item);
+
+                    return;
+                }
+
+                merged[index] = {
+                    ...merged[index],
+                    quantity: merged[index].quantity + item.quantity,
+                };
+            });
+
+            return merged;
+        });
+    }, []);
+
     const actions = useMemo<CartActions>(
         () => ({
             setOpen,
@@ -327,6 +364,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             removeItem,
             setNote,
             clear,
+            restore,
         }),
         [
             addItem,
@@ -336,6 +374,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             removeItem,
             setNote,
             clear,
+            restore,
         ],
     );
 
