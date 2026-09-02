@@ -497,10 +497,15 @@ function MenuView({
                         overlay there, and a row that has moved on by itself is
                         not the row the customer left. */}
                     {slides.length > 0 && (
-                        // Asked here as well as inside the slider, or a shop
-                        // with no slides would keep this row's padding as a
-                        // band of empty wall.
-                        <div className="px-5 pb-5">
+                        /* Asked here as well as inside the slider, or a shop
+                           with no slides would keep this row's padding as a
+                           band of empty wall.
+
+                           No side padding of its own: the carousel keeps its
+                           gutters inside its own viewport, so its cards run to
+                           the edge of the column as they travel rather than
+                           being clipped short of it. */
+                        <div className="pb-5">
                             <MenuSlider
                                 slides={slides}
                                 onOpen={openSlide}

@@ -125,16 +125,28 @@ export function MenuSlider({
             onFocusCapture={() => setHeld(true)}
             onBlurCapture={() => setHeld(false)}
         >
-            {/* The padding is for the lift the cards take on hover, which would
-                otherwise be clipped off by the viewport's own overflow. */}
+            {/* Nothing across the sides of this box, on purpose. Embla decides
+                when a slide has left the screen from the width it measures
+                here, and it measures the content box — so side padding leaves a
+                band that is visible but that Embla counts as off-screen, and a
+                looping row hides a card there and whips it round to the other
+                end while it is still being looked at.
+
+                So the gutters go inside each slide instead, where they are part
+                of the slot Embla is measuring and cannot lie to it. The row
+                still runs to the true edge of the column; the card simply sits
+                a few pixels inside its own slot.
+
+                The vertical padding is safe — it is the lift the cards take on
+                hover, which would otherwise be clipped off. */}
             <div ref={emblaRef} className="overflow-hidden py-1 select-none">
-                <ul className="-ml-3 flex">
+                <ul className="flex">
                     {slides.map((slide, index) => (
                         <li
                             key={slide.id}
                             aria-roledescription="slide"
                             aria-label={`${index + 1} of ${slides.length}`}
-                            className="min-w-0 flex-[0_0_100%] pl-3 sm:flex-[0_0_66%] lg:flex-[0_0_50%] xl:flex-[0_0_33.333%]"
+                            className="min-w-0 flex-[0_0_100%] px-2 sm:flex-[0_0_66%] lg:flex-[0_0_50%] xl:flex-[0_0_33.333%]"
                         >
                             <SlideCard slide={slide} onOpen={onOpen} />
                         </li>
@@ -293,6 +305,8 @@ function Arrow({
                 'absolute top-[calc(50%-1rem)] hidden size-9 -translate-y-1/2 items-center justify-center rounded-full',
                 'bg-surface/90 text-primary shadow-md backdrop-blur-sm transition-colors duration-200 ease-out',
                 'hover:bg-surface focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none lg:flex',
+                // On the slide's own gutter, so each one stands on the corner
+                // of the artwork rather than half off it on the bare wall.
                 side === 'left' ? 'left-2' : 'right-2',
             )}
         >
