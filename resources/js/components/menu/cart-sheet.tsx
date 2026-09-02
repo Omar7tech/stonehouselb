@@ -1,20 +1,23 @@
 import {
     ArrowLeft,
     Check,
+    ChevronRight,
     LoaderCircle,
     MapPin,
     Minus,
     Pencil,
     Plus,
+    QrCode,
     RotateCcw,
     Share2,
     Trash2,
     Users,
     X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { withoutLabel } from '@/components/menu/ingredient-picker';
+import { OrderQr } from '@/components/menu/order-qr';
 import { ProductImage } from '@/components/menu/product-image';
 import {
     Dialog,
@@ -67,11 +70,16 @@ export function CartSheet({
         totalUsd,
     });
 
+    // Whether the basket has been handed over to the share screen. Held here
+    // rather than inside the lines, because it takes the whole sheet.
+    const [sharing, setSharing] = useState(false);
+
     const handleOpenChange = (next: boolean): void => {
         setOpen(next);
 
         if (!next) {
             checkout.reset();
+            setSharing(false);
         }
     };
 
@@ -90,12 +98,19 @@ export function CartSheet({
                 </DialogHeader>
 
                 <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
-                    {checkout.step === 'cart' && notice && (
+                    {checkout.step === 'cart' && sharing && (
+                        <SharePanel onBack={() => setSharing(false)} />
+                    )}
+
+                    {checkout.step === 'cart' && !sharing && notice && (
                         <SharedNotice text={notice} />
                     )}
 
-                    {checkout.step === 'cart' && (
-                        <CartLines onEditItem={onEditItem} />
+                    {checkout.step === 'cart' && !sharing && (
+                        <CartLines
+                            onEditItem={onEditItem}
+                            onShare={() => setSharing(true)}
+                        />
                     )}
 
                     {checkout.step === 'details' && (
@@ -141,7 +156,7 @@ export function CartSheet({
                     )}
                 </div>
 
-                {checkout.step === 'cart' && items.length > 0 && (
+                {checkout.step === 'cart' && !sharing && items.length > 0 && (
                     <div className="shrink-0 border-t border-foreground/10 bg-card px-4 py-3.5">
                         <Totals
                             subtotalUsd={subtotalUsd}
@@ -192,7 +207,14 @@ const CONFIRM_HOLDS_MS = 8000;
 const UNDO_HOLDS_MS = 15000;
 
 /** Every line in the basket, with its own quantity and note. */
-function CartLines({ onEditItem }: { onEditItem?: (item: CartItem) => void }) {
+function CartLines({
+    onEditItem,
+    onShare,
+}: {
+    onEditItem?: (item: CartItem) => void;
+    /** Hand the basket over to the share screen. */
+    onShare: () => void;
+}) {
     const {
         items,
         count,
@@ -455,7 +477,14 @@ function CartLines({ onEditItem }: { onEditItem?: (item: CartItem) => void }) {
                         {/* Opposite ends of the row on purpose: the one that
                             sends the basket to a friend and the one that throws
                             it away should never be neighbours. */}
-                        <ShareBasket />
+                        <button
+                            type="button"
+                            onClick={onShare}
+                            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-primary transition-colors duration-200 ease-out hover:bg-primary/10 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                        >
+                            <Share2 aria-hidden className="size-3.5" />
+                            Share basket
+                        </button>
 
                         <button
                             type="button"
@@ -476,20 +505,30 @@ function CartLines({ onEditItem }: { onEditItem?: (item: CartItem) => void }) {
 const COPIED_HOLDS_MS = 2500;
 
 /**
- * Send this basket to somebody else.
+ * Handing this basket to somebody else, either way round.
  *
- * The whole basket travels in the link, so the person who opens it gets the
- * order already built and only has to add their own to it — which is how a
- * table of six orders lunch without six people each filling in a menu, and how
- * one of them ends up sending the lot.
+ * The whole basket travels in the link, so whoever opens it gets the order
+ * already built and only has to add their own — which is how a table of six
+ * orders lunch without six people each filling in a menu, and how one of them
+ * ends up sending the lot.
  *
- * The share sheet is offered first where the phone has one, since the link is
- * almost always going straight into a chat and that is one tap rather than
- * three. Everywhere else it goes to the clipboard and says so.
+ * Two ways, because they are two different situations. A link is for the person
+ * who is not here: it goes into the group chat. The code is for the person who
+ * is — the one across the table, who points their camera at your phone and has
+ * it, with nothing typed, nothing sent, and no chat app in the way.
+ *
+ * It takes the whole sheet rather than opening a second one over it. The code
+ * has to be big and bright to be read off a screen, and a dialog stacked on a
+ * dialog is a trap on a phone.
  */
-function ShareBasket() {
+function SharePanel({ onBack }: { onBack: () => void }) {
     const { items } = useCart();
+    const [showingCode, setShowingCode] = useState(false);
     const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle');
+
+    // Built once for this basket and held, so the code is already drawn by the
+    // time it is asked for — the tap reveals it rather than starting it.
+    const url = useMemo(() => shareOrderUrl(items), [items]);
 
     useEffect(() => {
         if (state === 'idle') {
@@ -504,14 +543,17 @@ function ShareBasket() {
         return () => window.clearTimeout(timer);
     }, [state]);
 
-    const share = async (): Promise<void> => {
-        const url = shareOrderUrl(items);
-
+    /**
+     * The phone's own share sheet where there is one, since the link is almost
+     * always going straight into a chat and that is one tap rather than three.
+     * Everywhere else it goes to the clipboard and says so.
+     */
+    const sendLink = async (): Promise<void> => {
         if (typeof navigator.share === 'function') {
             try {
                 await navigator.share({ title: 'My Stone House order', url });
             } catch {
-                // Cancelling the share sheet lands here, and a customer who
+                // Cancelling the share sheet lands here, and somebody who
                 // changed their mind does not need to be told they did.
             }
 
@@ -527,19 +569,128 @@ function ShareBasket() {
     };
 
     return (
+        <div className="flex flex-col gap-4 py-1">
+            <div className="flex items-center gap-2">
+                {/* One step back at a time: out of the code to the choice, out
+                    of the choice to the basket. */}
+                <button
+                    type="button"
+                    onClick={() =>
+                        showingCode ? setShowingCode(false) : onBack()
+                    }
+                    aria-label="Back"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors duration-200 ease-out hover:bg-primary/20 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                >
+                    <ArrowLeft className="size-4" />
+                </button>
+
+                <div className="min-w-0">
+                    <p className="text-sm font-semibold uppercase">
+                        Share your basket
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                        Whoever opens it gets these items, ready to add to.
+                    </p>
+                </div>
+            </div>
+
+            {showingCode ? (
+                <div className="flex flex-col items-center gap-3">
+                    {/* On its own white plate with room around it: a code
+                        crowded to the edges of a card is one a camera has to
+                        work for. */}
+                    <div className="rounded-2xl bg-white p-3 shadow-sm">
+                        <OrderQr value={url} className="max-w-56" />
+                    </div>
+
+                    <p className="max-w-64 text-center text-xs text-muted-foreground">
+                        Point their camera at this. It opens the menu with your
+                        basket already in it.
+                    </p>
+
+                    <button
+                        type="button"
+                        onClick={() => void sendLink()}
+                        className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-primary transition-colors duration-200 ease-out hover:bg-primary/10 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                    >
+                        {state === 'copied' ? (
+                            <Check aria-hidden className="size-3.5" />
+                        ) : (
+                            <Share2 aria-hidden className="size-3.5" />
+                        )}
+                        {state === 'copied'
+                            ? 'Link copied'
+                            : 'Send a link instead'}
+                    </button>
+                </div>
+            ) : (
+                <div className="flex flex-col gap-2">
+                    <ShareChoice
+                        icon={
+                            state === 'copied' ? (
+                                <Check className="size-4" />
+                            ) : (
+                                <Share2 className="size-4" />
+                            )
+                        }
+                        title={
+                            state === 'copied'
+                                ? 'Link copied'
+                                : state === 'failed'
+                                  ? 'Copy failed'
+                                  : 'Send a link'
+                        }
+                        body="Into a chat, for whoever isn't here."
+                        onClick={() => void sendLink()}
+                    />
+
+                    <ShareChoice
+                        icon={<QrCode className="size-4" />}
+                        title="Show a code"
+                        body="For the phone across the table."
+                        onClick={() => setShowingCode(true)}
+                    />
+                </div>
+            )}
+        </div>
+    );
+}
+
+/** One of the two ways to hand the basket over. */
+function ShareChoice({
+    icon,
+    title,
+    body,
+    onClick,
+}: {
+    icon: React.ReactNode;
+    title: string;
+    body: string;
+    onClick: () => void;
+}) {
+    return (
         <button
             type="button"
-            onClick={() => void share()}
-            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-primary transition-colors duration-200 ease-out hover:bg-primary/10 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            onClick={onClick}
+            className="flex items-center gap-3 rounded-2xl bg-card p-3 text-left transition-colors duration-200 ease-out hover:bg-card/70 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
-            {state === 'copied' ? (
-                <Check aria-hidden className="size-3.5" />
-            ) : (
-                <Share2 aria-hidden className="size-3.5" />
-            )}
-            {state === 'copied' && 'Link copied'}
-            {state === 'failed' && 'Copy failed'}
-            {state === 'idle' && 'Share basket'}
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                {icon}
+            </span>
+
+            <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold uppercase">
+                    {title}
+                </span>
+                <span className="block truncate text-xs text-muted-foreground">
+                    {body}
+                </span>
+            </span>
+
+            <ChevronRight
+                aria-hidden
+                className="size-4 shrink-0 text-primary"
+            />
         </button>
     );
 }
