@@ -2,6 +2,25 @@ import { toCartItem } from '@/contexts/cart-context';
 import type { CartAddon, CartItem } from '@/contexts/cart-context';
 import type { Addon, Product } from '@/types';
 
+/**
+ * A dish somebody chose, stripped to the choosing.
+ *
+ * What a basket line looks like once the menu's own facts — the name, the
+ * price, the photo — are taken back off it, leaving only what the customer
+ * decided. It is what a remembered order and a shared link both hold, and what
+ * {@see rebuildOrder} reads a live basket line back out of. A `CartItem` is one
+ * of these with the menu's facts still attached, so it can be passed wherever
+ * one is wanted.
+ */
+export type OrderLine = {
+    productId: number;
+    variantIndex: number | null;
+    addons: { name: string; quantity: number }[];
+    excludedIngredients: string[];
+    quantity: number;
+    note?: string;
+};
+
 /** One order the customer has sent, kept so it can be sent again. */
 export type PastOrder = {
     /** When it was handed to WhatsApp, in epoch milliseconds. */
@@ -89,11 +108,12 @@ export function isUsualOrder(
 }
 
 /**
- * A past order read against the menu as it stands today.
+ * Choices read against the menu as it stands today — a past order being sent
+ * again, or a basket that arrived in a link.
  *
- * A remembered order is a snapshot, and kitchens change: prices move, sizes are
- * dropped, dishes come off the menu entirely. Sending that snapshot back into
- * the basket would quietly order a dish at last month's price, so every line is
+ * Either is a snapshot, and kitchens change: prices move, sizes are dropped,
+ * dishes come off the menu entirely. Turning that snapshot straight into a
+ * basket would quietly order a dish at last month's price, so every line is
  * rebuilt from the live product instead — the customer's own choices (how many,
  * which extras, what to leave out, any note) are what carries over, and the
  * prices and names come from the menu.
@@ -103,7 +123,7 @@ export function isUsualOrder(
  * being sold a different size than the one ordered is not.
  */
 export function rebuildOrder(
-    items: readonly CartItem[],
+    items: readonly OrderLine[],
     menu: ReadonlyMap<number, { product: Product; addons: Addon[] }>,
 ): { items: CartItem[]; dropped: number } {
     const rebuilt: CartItem[] = [];

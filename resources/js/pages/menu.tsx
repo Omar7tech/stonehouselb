@@ -21,6 +21,7 @@ import { Stretch, StretchText } from '@/components/stretch';
 import { CartProvider, useCart } from '@/contexts/cart-context';
 import type { CartAddon, CartItem } from '@/contexts/cart-context';
 import { isUsualOrder, readOrders, rebuildOrder } from '@/lib/order-history';
+import { forgetSharedOrder, readSharedOrder } from '@/lib/share-order';
 import { cn } from '@/lib/utils';
 import type {
     Addon,
@@ -267,6 +268,63 @@ function MenuView({
         restore(lastOrder.items);
         setOpen(true);
     };
+
+    /**
+     * A basket that arrived in a link, decoded before the first paint so the
+     * page is only ever drawn once — with it, or without it.
+     */
+    const [sharedLines] = useState(readSharedOrder);
+
+    const sharedOrder = useMemo(
+        () =>
+            sharedLines === null
+                ? null
+                : rebuildOrder(sharedLines, productsById),
+        [sharedLines, productsById],
+    );
+
+    /**
+     * What the basket says about where it came from, in the sheet that opens
+     * with it. Somebody who taps a friend's link and finds food in their basket
+     * deserves a sentence explaining it, and the missing dishes have to be
+     * accounted for rather than quietly absent.
+     */
+    const sharedNotice = useMemo(() => {
+        if (sharedOrder === null) {
+            return null;
+        }
+
+        if (sharedOrder.items.length === 0) {
+            return 'Nothing from that shared order is still on the menu.';
+        }
+
+        if (sharedOrder.dropped > 0) {
+            return sharedOrder.dropped === 1
+                ? 'Added from a shared order. One dish in it is no longer on the menu.'
+                : `Added from a shared order. ${sharedOrder.dropped} dishes in it are no longer on the menu.`;
+        }
+
+        return 'Added from a shared order — add yours, then send it all together.';
+    }, [sharedOrder]);
+
+    // Once only, whatever else re-renders the page.
+    const sharedApplied = useRef(false);
+
+    useEffect(() => {
+        if (sharedOrder === null || sharedApplied.current) {
+            return;
+        }
+
+        sharedApplied.current = true;
+        // Out of the address bar the moment it is read, or a reload orders it
+        // again and a bookmark keeps somebody else's lunch in it forever.
+        forgetSharedOrder();
+
+        if (sharedOrder.items.length > 0) {
+            restore(sharedOrder.items);
+            setOpen(true);
+        }
+    }, [sharedOrder, restore, setOpen]);
 
     const activeCategory =
         categories.find((category) => category.id === activeCategoryId) ?? null;
@@ -724,7 +782,9 @@ function MenuView({
                     }
                 />
             )}
-            {canOrder && <CartSheet onEditItem={editCartItem} />}
+            {canOrder && (
+                <CartSheet onEditItem={editCartItem} notice={sharedNotice} />
+            )}
         </>
     );
 }

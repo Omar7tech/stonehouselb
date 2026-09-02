@@ -1,12 +1,16 @@
 import {
     ArrowLeft,
+    Check,
     LoaderCircle,
     MapPin,
     Minus,
     Pencil,
     Plus,
     RotateCcw,
+    Share2,
     Trash2,
+    Users,
+    X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -22,6 +26,7 @@ import {
 import { cartItemUnitUsd, useCart } from '@/contexts/cart-context';
 import type { CartItem } from '@/contexts/cart-context';
 
+import { shareOrderUrl } from '@/lib/share-order';
 import { nextOpeningLabel, useShop } from '@/lib/shop';
 import { useCheckout } from '@/lib/use-checkout';
 import { usePricing } from '@/lib/use-pricing';
@@ -36,12 +41,15 @@ import { cn } from '@/lib/utils';
  */
 export function CartSheet({
     onEditItem,
+    notice,
 }: {
     /**
      * Reopen a line in the product sheet. Absent for lines whose product has
      * since left the menu — there is nothing left to open them on.
      */
     onEditItem?: (item: CartItem) => void;
+    /** A line about where this basket came from, e.g. a shared link. */
+    notice?: string | null;
 }) {
     const { items, open, setOpen, subtotalUsd } = useCart();
     const pricing = usePricing();
@@ -82,6 +90,10 @@ export function CartSheet({
                 </DialogHeader>
 
                 <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
+                    {checkout.step === 'cart' && notice && (
+                        <SharedNotice text={notice} />
+                    )}
+
                     {checkout.step === 'cart' && (
                         <CartLines onEditItem={onEditItem} />
                     )}
@@ -408,9 +420,9 @@ function CartLines({ onEditItem }: { onEditItem?: (item: CartItem) => void }) {
                 It asks in place rather than opening a second sheet on top of
                 this one: a dialog over a dialog on a phone is a trap, and the
                 question is one line long. */}
-            <div className="flex justify-center pb-1">
+            <div className="flex items-center justify-between gap-3 pb-1">
                 {confirming ? (
-                    <div className="flex items-center gap-1.5 rounded-full bg-surface p-1 pl-3.5">
+                    <div className="mx-auto flex items-center gap-1.5 rounded-full bg-surface p-1 pl-3.5">
                         <span className="pr-1 text-xs text-muted-foreground">
                             Clear{' '}
                             {count === 1
@@ -439,17 +451,123 @@ function CartLines({ onEditItem }: { onEditItem?: (item: CartItem) => void }) {
                         </button>
                     </div>
                 ) : (
-                    <button
-                        type="button"
-                        onClick={() => setConfirming(true)}
-                        className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-muted-foreground transition-colors duration-200 ease-out hover:bg-surface hover:text-spicy focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-                    >
-                        <Trash2 aria-hidden className="size-3.5" />
-                        Clear basket
-                    </button>
+                    <>
+                        {/* Opposite ends of the row on purpose: the one that
+                            sends the basket to a friend and the one that throws
+                            it away should never be neighbours. */}
+                        <ShareBasket />
+
+                        <button
+                            type="button"
+                            onClick={() => setConfirming(true)}
+                            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-muted-foreground transition-colors duration-200 ease-out hover:bg-surface hover:text-spicy focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                        >
+                            <Trash2 aria-hidden className="size-3.5" />
+                            Clear basket
+                        </button>
+                    </>
                 )}
             </div>
         </>
+    );
+}
+
+/** How long "Link copied" stands before the button goes back to offering. */
+const COPIED_HOLDS_MS = 2500;
+
+/**
+ * Send this basket to somebody else.
+ *
+ * The whole basket travels in the link, so the person who opens it gets the
+ * order already built and only has to add their own to it — which is how a
+ * table of six orders lunch without six people each filling in a menu, and how
+ * one of them ends up sending the lot.
+ *
+ * The share sheet is offered first where the phone has one, since the link is
+ * almost always going straight into a chat and that is one tap rather than
+ * three. Everywhere else it goes to the clipboard and says so.
+ */
+function ShareBasket() {
+    const { items } = useCart();
+    const [state, setState] = useState<'idle' | 'copied' | 'failed'>('idle');
+
+    useEffect(() => {
+        if (state === 'idle') {
+            return;
+        }
+
+        const timer = window.setTimeout(
+            () => setState('idle'),
+            COPIED_HOLDS_MS,
+        );
+
+        return () => window.clearTimeout(timer);
+    }, [state]);
+
+    const share = async (): Promise<void> => {
+        const url = shareOrderUrl(items);
+
+        if (typeof navigator.share === 'function') {
+            try {
+                await navigator.share({ title: 'My Stone House order', url });
+            } catch {
+                // Cancelling the share sheet lands here, and a customer who
+                // changed their mind does not need to be told they did.
+            }
+
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(url);
+            setState('copied');
+        } catch {
+            setState('failed');
+        }
+    };
+
+    return (
+        <button
+            type="button"
+            onClick={() => void share()}
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-primary transition-colors duration-200 ease-out hover:bg-primary/10 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        >
+            {state === 'copied' ? (
+                <Check aria-hidden className="size-3.5" />
+            ) : (
+                <Share2 aria-hidden className="size-3.5" />
+            )}
+            {state === 'copied' && 'Link copied'}
+            {state === 'failed' && 'Copy failed'}
+            {state === 'idle' && 'Share basket'}
+        </button>
+    );
+}
+
+/**
+ * Where this basket came from, said once at the top of it. Dismissible, because
+ * it has done its job the moment it has been read.
+ */
+function SharedNotice({ text }: { text: string }) {
+    const [dismissed, setDismissed] = useState(false);
+
+    if (dismissed) {
+        return null;
+    }
+
+    return (
+        <div className="flex items-start gap-2 rounded-2xl bg-primary/10 p-3 text-xs text-primary">
+            <Users aria-hidden className="mt-px size-4 shrink-0" />
+            <p className="flex-1">{text}</p>
+            <button
+                type="button"
+                onClick={() => setDismissed(true)}
+                aria-label="Dismiss"
+                className="-my-1 -mr-1 flex size-6 shrink-0 items-center justify-center rounded-full transition-colors duration-200 ease-out hover:bg-primary/10 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            >
+                <X className="size-3.5" />
+            </button>
+        </div>
     );
 }
 
