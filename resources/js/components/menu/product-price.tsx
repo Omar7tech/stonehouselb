@@ -54,7 +54,11 @@ export function ProductPrice({
     return (
         <span
             className={cn(
-                'inline-flex flex-wrap items-baseline gap-x-2 gap-y-0.5',
+                // `min-w-0` so the price can shrink inside a flex row rather
+                // than shoving whatever stands beside it off the edge. It never
+                // matters in dollars and always matters in pounds: "1,350,000
+                // LBP" is thirteen characters where "$15.00" is six.
+                'inline-flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5',
                 className,
             )}
         >

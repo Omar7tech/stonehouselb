@@ -352,61 +352,71 @@ export function ProductDialog({
                         </p>
                     )}
 
-                    <div className="flex items-center justify-between gap-3">
-                        <div className="flex min-w-0 flex-col gap-1.5">
-                            <ProductPrice
-                                price={basePrice}
-                                discountPrice={discountPrice}
-                            />
+                    {/* The dish's price and how many of it, on one line. The
+                        button gets a line of its own below rather than standing
+                        beside them: a price in Lebanese Pounds is thirteen
+                        characters, and two of them abreast — one here, one on
+                        the button — do not fit across a phone. A button that
+                        only fits in one currency is a button that doesn't fit.
 
-                            {onAdd && (
-                                <Stepper
-                                    value={quantity}
-                                    min={1}
-                                    label={product.name}
-                                    onChange={setQuantity}
-                                />
-                            )}
-                        </div>
+                        It reads better for the full width anyway, being the one
+                        thing on the sheet you have come here to press. */}
+                    <div className="flex items-center justify-between gap-3">
+                        <ProductPrice
+                            price={basePrice}
+                            discountPrice={discountPrice}
+                        />
 
                         {onAdd && (
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    onAdd({
-                                        variantIndex: hasVariants
-                                            ? variantIndex
-                                            : null,
-                                        addons: selectedAddons,
-                                        excludedIngredients: excluded,
-                                        quantity,
-                                    })
-                                }
-                                className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-5 py-3 font-display text-sm text-primary-foreground uppercase transition-transform duration-200 ease-out hover:scale-[1.03] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:scale-95 motion-reduce:transform-none"
-                            >
-                                {editing ? (
-                                    <Check className="size-4" strokeWidth={3} />
-                                ) : (
-                                    <ShoppingBag className="size-4" />
-                                )}
-                                {/* Ligatures off, or Stretch Pro reads the `DD` of
-                                "ADD" as one double-width D. */}
-                                <StretchText>
-                                    {editing ? 'Save' : 'Add'}
-                                </StretchText>
-                                {/* Divided off rather than run on: "ADD $12.40"
-                                    reads as one phrase and the eye stops
-                                    trusting which part is the number. */}
-                                <span
-                                    aria-hidden
-                                    className="h-4 w-px bg-primary-foreground/30"
-                                />
-                                <span className="tabular-nums">
-                                    {pricing.primary(lineTotalUsd)}
-                                </span>
-                            </button>
+                            <Stepper
+                                value={quantity}
+                                min={1}
+                                label={product.name}
+                                onChange={setQuantity}
+                            />
                         )}
                     </div>
+
+                    {onAdd && (
+                        <button
+                            type="button"
+                            onClick={() =>
+                                onAdd({
+                                    variantIndex: hasVariants
+                                        ? variantIndex
+                                        : null,
+                                    addons: selectedAddons,
+                                    excludedIngredients: excluded,
+                                    quantity,
+                                })
+                            }
+                            className="mt-0.5 flex w-full items-center justify-center gap-2.5 rounded-full bg-primary px-5 py-3.5 font-display text-sm text-primary-foreground uppercase transition-transform duration-200 ease-out hover:scale-[1.01] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:scale-[0.99] motion-reduce:transform-none"
+                        >
+                            {editing ? (
+                                <Check
+                                    className="size-4 shrink-0"
+                                    strokeWidth={3}
+                                />
+                            ) : (
+                                <ShoppingBag className="size-4 shrink-0" />
+                            )}
+                            {/* Ligatures off, or Stretch Pro reads the `DD` of
+                                "ADD" as one double-width D. */}
+                            <StretchText className="shrink-0">
+                                {editing ? 'Save' : 'Add'}
+                            </StretchText>
+                            {/* Divided off rather than run on: "ADD $12.40"
+                                reads as one phrase and the eye stops trusting
+                                which part is the number. */}
+                            <span
+                                aria-hidden
+                                className="h-4 w-px shrink-0 bg-primary-foreground/30"
+                            />
+                            <span className="truncate tabular-nums">
+                                {pricing.primary(lineTotalUsd)}
+                            </span>
+                        </button>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>
