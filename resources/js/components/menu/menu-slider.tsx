@@ -1,6 +1,6 @@
 import useEmblaCarousel from 'embla-carousel-react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { ChevronRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { SmartImage } from '@/components/smart-image';
 import { usePricing } from '@/lib/use-pricing';
@@ -22,8 +22,8 @@ const ADVANCE_AFTER_MS = 5000;
  * It advances on its own, which is the whole point of a promotion — but it
  * stops the moment a pointer rests on it or the keyboard reaches into it, and
  * never starts at all for a customer who has asked their machine to hold still.
- * The row is Embla's, so a finger swipes it and a mouse drags it; the arrows
- * are for the desk, where there is nothing to swipe with.
+ * The row is Embla's, so a finger swipes it and a mouse drags it, and the dots
+ * under it go straight to a slide for anyone who would rather aim than drag.
  */
 export function MenuSlider({
     slides,
@@ -108,9 +108,6 @@ export function MenuSlider({
         return () => window.clearInterval(timer);
     }, [emblaApi, canAdvance, selectedSnap]);
 
-    const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
-    const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
-
     if (slides.length === 0) {
         return null;
     }
@@ -154,33 +151,29 @@ export function MenuSlider({
                 </ul>
             </div>
 
+            {/* The dots are the only control the row needs. Arrows were here
+                for the desk, laid over the artwork, and they were in the way of
+                the pictures they were meant to help you see — the row drags
+                with a mouse as readily as it swipes with a finger, and a dot
+                goes straight to a slide rather than one step towards it. */}
             {snaps.length > 1 && (
-                <>
-                    {/* Desk only: a phone has the whole card to swipe and no
-                        cursor to reach a 36px target with. Laid over the
-                        pictures rather than under them, so the row keeps its
-                        full width for the artwork. */}
-                    <Arrow side="left" onClick={scrollPrev} />
-                    <Arrow side="right" onClick={scrollNext} />
-
-                    <div className="flex items-center justify-center gap-1.5">
-                        {snaps.map((snap, index) => (
-                            <button
-                                key={snap}
-                                type="button"
-                                onClick={() => emblaApi?.scrollTo(index)}
-                                aria-label={`Go to slide ${index + 1}`}
-                                aria-current={index === selectedSnap}
-                                className={cn(
-                                    'h-1.5 rounded-full transition-all duration-300 ease-out focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
-                                    index === selectedSnap
-                                        ? 'w-6 bg-primary'
-                                        : 'w-1.5 bg-primary/25 hover:bg-primary/50',
-                                )}
-                            />
-                        ))}
-                    </div>
-                </>
+                <div className="flex items-center justify-center gap-1.5">
+                    {snaps.map((snap, index) => (
+                        <button
+                            key={snap}
+                            type="button"
+                            onClick={() => emblaApi?.scrollTo(index)}
+                            aria-label={`Go to slide ${index + 1}`}
+                            aria-current={index === selectedSnap}
+                            className={cn(
+                                'h-1.5 rounded-full transition-all duration-300 ease-out focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
+                                index === selectedSnap
+                                    ? 'w-6 bg-primary'
+                                    : 'w-1.5 bg-primary/25 hover:bg-primary/50',
+                            )}
+                        />
+                    ))}
+                </div>
             )}
         </section>
     );
@@ -375,37 +368,5 @@ function SlidePrice({
                 </span>
             )}
         </span>
-    );
-}
-
-/** One of the two desk-only arrows, hung off the middle of the row's edge. */
-function Arrow({
-    side,
-    onClick,
-}: {
-    side: 'left' | 'right';
-    onClick: () => void;
-}) {
-    const Icon = side === 'left' ? ChevronLeft : ChevronRight;
-
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            aria-label={side === 'left' ? 'Previous slide' : 'Next slide'}
-            className={cn(
-                // Pinned against the top half of the row rather than its true
-                // middle: the dots sit under the pictures, and centring on the
-                // whole section would leave the arrows low on the artwork.
-                'absolute top-[calc(50%-1rem)] hidden size-9 -translate-y-1/2 items-center justify-center rounded-full',
-                'bg-surface/90 text-primary shadow-md backdrop-blur-sm transition-colors duration-200 ease-out',
-                'hover:bg-surface focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none lg:flex',
-                // On the slide's own gutter, so each one stands on the corner
-                // of the artwork rather than half off it on the bare wall.
-                side === 'left' ? 'left-2' : 'right-2',
-            )}
-        >
-            <Icon className="size-5" />
-        </button>
     );
 }
