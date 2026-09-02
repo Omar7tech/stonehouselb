@@ -1,5 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { CartSheet } from '@/components/menu/cart-sheet';
 import { CartStrip } from '@/components/menu/cart-strip';
@@ -186,6 +186,11 @@ function MenuView({
      */
     const [addonsOverride, setAddonsOverride] = useState<Addon[] | null>(null);
 
+    /** The pills row, so switching category can hold it where it stands. */
+    const pillsRef = useRef<HTMLDivElement>(null);
+    /** Where the row sat on screen just before a switch, in viewport pixels. */
+    const pillsTop = useRef<number | null>(null);
+
     /**
      * Every product on the menu by id, so a basket line can be traced back to
      * the dish it came from. A line whose product has since been unpublished
@@ -228,10 +233,55 @@ function MenuView({
         window.history.replaceState(window.history.state, '', url);
     }, [activeCategory]);
 
+    /**
+     * Opening a category from the boxes, or going back to them. Both swap one
+     * view for another, so the page is taken to the top of the new one — the
+     * boxes may run well past the fold, and landing halfway down a list of
+     * dishes you have not seen the start of reads as a page that lost its
+     * place.
+     */
     const selectCategory = (id: number | null): void => {
         setActiveCategoryId(id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
+
+    /**
+     * Switching category from the pills, which is not a change of view: the
+     * customer is standing at the row of pills, and they should still be
+     * standing there when the dishes under it change. Everything above the row
+     * is the same on both categories, so its place on the page is unchanged and
+     * simply not scrolling is enough.
+     *
+     * The exception is a shorter category: the document loses height, the
+     * browser clamps the scroll to the new bottom, and the row travels up the
+     * screen on its own. So the row's position is measured before the swap and
+     * put back after it, which holds it still in that case too.
+     */
+    const switchCategory = (id: number): void => {
+        pillsTop.current =
+            pillsRef.current?.getBoundingClientRect().top ?? null;
+        setActiveCategoryId(id);
+    };
+
+    useLayoutEffect(() => {
+        const before = pillsTop.current;
+        pillsTop.current = null;
+
+        if (before === null) {
+            return;
+        }
+
+        const after = pillsRef.current?.getBoundingClientRect().top;
+
+        if (after === undefined || after === before) {
+            return;
+        }
+
+        // Instant, not smooth: this is a correction for something that has
+        // already happened, and animating it would draw the eye to the very
+        // movement it exists to hide.
+        window.scrollBy({ top: after - before, behavior: 'instant' });
+    }, [activeCategoryId]);
 
     const hasCart = count > 0;
 
@@ -526,12 +576,14 @@ function MenuView({
                             />
                         ) : (
                             <>
-                                <CategoryPills
-                                    categories={categories}
-                                    activeId={activeCategory.id}
-                                    onSelect={selectCategory}
-                                    onClear={() => selectCategory(null)}
-                                />
+                                <div ref={pillsRef}>
+                                    <CategoryPills
+                                        categories={categories}
+                                        activeId={activeCategory.id}
+                                        onSelect={switchCategory}
+                                        onClear={() => selectCategory(null)}
+                                    />
+                                </div>
 
                                 <ul className={PRODUCT_LIST[cardStyle]}>
                                     {products.map((product) => (
