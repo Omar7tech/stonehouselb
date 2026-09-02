@@ -14,10 +14,9 @@ import {
     Users,
     X,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 
 import { withoutLabel } from '@/components/menu/ingredient-picker';
-import { OrderQr } from '@/components/menu/order-qr';
 import { ProductImage } from '@/components/menu/product-image';
 import {
     Dialog,
@@ -505,6 +504,18 @@ function CartLines({
 const COPIED_HOLDS_MS = 2500;
 
 /**
+ * The code and the encoder behind it, fetched only when somebody sets out to
+ * share a basket.
+ *
+ * It is the heaviest thing on the menu by some way and the least used: a
+ * customer ordering a taouk should not be made to download a QR encoder to do
+ * it. Split out, the cost is paid by the few people who share and by nobody
+ * else — and it is paid early, since {@see SharePanel} asks for the chunk the
+ * moment it opens rather than waiting for the tap.
+ */
+const OrderQr = lazy(() => import('@/components/menu/order-qr'));
+
+/**
  * Handing this basket to somebody else, either way round.
  *
  * The whole basket travels in the link, so whoever opens it gets the order
@@ -529,6 +540,12 @@ function SharePanel({ onBack }: { onBack: () => void }) {
     // Built once for this basket and held, so the code is already drawn by the
     // time it is asked for — the tap reveals it rather than starting it.
     const url = useMemo(() => shareOrderUrl(items), [items]);
+
+    // And the encoder is fetched while the customer is still reading the two
+    // choices, so choosing the code costs a render rather than a round trip.
+    useEffect(() => {
+        void import('@/components/menu/order-qr');
+    }, []);
 
     useEffect(() => {
         if (state === 'idle') {
@@ -600,7 +617,16 @@ function SharePanel({ onBack }: { onBack: () => void }) {
                         crowded to the edges of a card is one a camera has to
                         work for. */}
                     <div className="rounded-2xl bg-white p-3 shadow-sm">
-                        <OrderQr value={url} className="max-w-56" />
+                        {/* The plate is drawn either way, so the square does
+                            not appear from nowhere on the rare occasion the
+                            chunk has not landed yet. */}
+                        <Suspense
+                            fallback={
+                                <div className="aspect-square w-full max-w-56 animate-pulse rounded-lg bg-black/5" />
+                            }
+                        >
+                            <OrderQr value={url} className="max-w-56" />
+                        </Suspense>
                     </div>
 
                     <p className="max-w-64 text-center text-xs text-muted-foreground">

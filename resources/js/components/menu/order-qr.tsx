@@ -17,8 +17,13 @@ const QUIET_ZONE = 4;
  * — inverted codes are the single most common reason a beautiful QR does not
  * scan. So the plate stays white even at midnight in dark mode, which also
  * happens to be the brightest thing the screen can offer the camera.
+ *
+ * A default export, and the only thing in this file, so that it and the encoder
+ * behind it can be split into a chunk of their own. Almost nobody who opens the
+ * menu will ever show a code, and none of them should be made to download the
+ * machinery for one on the way in.
  */
-export function OrderQr({
+export default function OrderQr({
     value,
     className,
 }: {
