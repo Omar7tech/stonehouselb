@@ -20,6 +20,10 @@ return new class extends Migration
             $table->string('subtitle')->nullable();
             $table->text('description')->nullable();
             $table->unsignedSmallInteger('preparation_time')->nullable();
+            // Nullable rather than defaulted: a dish nobody has counted is not
+            // a zero-calorie dish, and the storefront hides the figure entirely
+            // rather than printing one the kitchen never gave.
+            $table->unsignedSmallInteger('calories')->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('is_featured')->default(false);
             $table->boolean('is_spicy')->default(false);
