@@ -32,11 +32,17 @@ class GeneralSettings extends Settings
      * (0 = Sunday) so the storefront needs no remapping. Each row is shaped
      * `['day' => int, 'is_closed' => bool, 'opens_at' => string, 'closes_at' => string]`.
      *
+     * That shape is what the dashboard writes, not what can be read back: this
+     * is a JSON column, and it holds whatever was last put in it — a row from
+     * an older shape, a half-saved form, or something that isn't a row at all.
+     * So it is typed as the loose thing it is and squared up on the way out by
+     * {@see self::storefrontOpeningHours()}, which is the only reader.
+     *
      * Typed with `@phpstan-var` for the same reason {@see self::$social_links}
      * is: a nested array type in a `@var` tag makes the settings package build
      * a broken cast and throw on boot.
      *
-     * @phpstan-var array<int, array{day: int, is_closed: bool, opens_at: string, closes_at: string}>
+     * @phpstan-var array<int, mixed>
      */
     public array $opening_hours;
 
@@ -196,22 +202,23 @@ class GeneralSettings extends Settings
      */
     protected function isWithinDay(CarbonInterface $now, CarbonInterface $day): bool
     {
-        // Malformed rows are dropped first: `firstWhere()` reads null off a
-        // non-array row, and `null == 0` would otherwise match it on Sundays.
-        $hours = collect($this->opening_hours)
-            ->filter(fn (mixed $row): bool => is_array($row))
+        // Read through the same door the storefront uses, so a row this call
+        // would honour is exactly a row the customer was shown. Malformed rows
+        // are already gone by here: a non-array row reads null for every key,
+        // and `null == 0` would otherwise match one on Sundays.
+        $hours = collect($this->storefrontOpeningHours())
             ->firstWhere('day', $day->dayOfWeek);
 
-        if ($hours === null || ($hours['is_closed'] ?? false)) {
+        if ($hours === null || $hours['isClosed']) {
             return false;
         }
 
-        if (blank($hours['opens_at'] ?? null) || blank($hours['closes_at'] ?? null)) {
+        if (blank($hours['opensAt']) || blank($hours['closesAt'])) {
             return false;
         }
 
-        $opensAt = $day->copy()->setTimeFromTimeString($hours['opens_at']);
-        $closesAt = $day->copy()->setTimeFromTimeString($hours['closes_at']);
+        $opensAt = $day->copy()->setTimeFromTimeString($hours['opensAt']);
+        $closesAt = $day->copy()->setTimeFromTimeString($hours['closesAt']);
 
         if ($closesAt->lessThanOrEqualTo($opensAt)) {
             $closesAt->addDay();
@@ -224,20 +231,46 @@ class GeneralSettings extends Settings
      * The weekly schedule as the storefront reads it — camelCase keys, ordered
      * by nothing in particular but always a plain list.
      *
-     * @return array<int, array{day: int, isClosed: bool, opensAt: string, closesAt: string}>
+     * Also where {@see self::$opening_hours} is made trustworthy: rows that are
+     * not arrays, and rows not naming a real weekday, are dropped rather than
+     * passed on as a day nobody can be open on. Missing times survive as empty
+     * strings, which every reader already treats as no hours published.
+     *
+     * @return list<array{day: int, isClosed: bool, opensAt: string, closesAt: string}>
      */
     public function storefrontOpeningHours(): array
     {
-        return collect($this->opening_hours)
-            ->filter(fn (mixed $row): bool => is_array($row))
-            ->map(fn (array $row): array => [
-                'day' => (int) $row['day'],
+        $rows = [];
+
+        foreach ($this->opening_hours as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $day = $row['day'] ?? null;
+
+            if (! is_int($day) && ! is_string($day)) {
+                continue;
+            }
+
+            $day = (int) $day;
+
+            if ($day < 0 || $day > 6) {
+                continue;
+            }
+
+            $opensAt = $row['opens_at'] ?? null;
+            $closesAt = $row['closes_at'] ?? null;
+
+            $rows[] = [
+                'day' => $day,
                 'isClosed' => (bool) ($row['is_closed'] ?? false),
-                'opensAt' => (string) ($row['opens_at'] ?? ''),
-                'closesAt' => (string) ($row['closes_at'] ?? ''),
-            ])
-            ->values()
-            ->all();
+                'opensAt' => is_string($opensAt) ? $opensAt : '',
+                'closesAt' => is_string($closesAt) ? $closesAt : '',
+            ];
+        }
+
+        return $rows;
     }
 
     /**
