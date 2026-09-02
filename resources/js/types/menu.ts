@@ -89,6 +89,32 @@ export type Product = {
     ingredients: string[];
 };
 
+/**
+ * One card in the carousel above the menu. Mirrors
+ * `App\Http\Resources\SlideResource`.
+ */
+export type Slide = {
+    id: number;
+    /** A line laid over the picture, or null when the picture says it all. */
+    text: string | null;
+    /**
+     * The slide's own artwork, falling back to the linked dish's photo. Null
+     * only when there is neither, which leaves a plain lettered card.
+     */
+    image: string | null;
+    /**
+     * The dish the slide opens. Null for a picture that only advertises —
+     * and for one whose dish is not sold on the menu being shown, which the
+     * server settles before the slide ever gets here.
+     */
+    product: Product | null;
+    /**
+     * Extras from the dish's own category, carried along because the sheet a
+     * slide opens may be for a dish in a category the customer never entered.
+     */
+    addons: Addon[];
+};
+
 /** Mirrors `App\Http\Resources\CategoryResource`. */
 export type Category = {
     id: number;

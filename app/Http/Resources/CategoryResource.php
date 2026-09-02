@@ -30,7 +30,7 @@ class CategoryResource extends JsonResource
             // photo whole.
             'image' => $this->getFirstMediaUrl('image', 'webp') ?: null,
             'thumbnail' => $this->getFirstMediaUrl('image', 'thumb') ?: null,
-            'addons' => $this->addonsPayload(),
+            'addons' => self::addonsPayload($this->addons ?? []),
             'products' => $this->whenLoaded(
                 'products',
                 fn (): array => ProductResource::collection($this->products)->resolve(),
@@ -39,20 +39,25 @@ class CategoryResource extends JsonResource
     }
 
     /**
-     * The extras offered on every product in this category, with their prices
-     * cast to numbers — the JSON column stores what the admin form put in it,
-     * which for a price is a string.
+     * The extras offered on every product in a category, with their prices cast
+     * to numbers — the JSON column stores what the admin form put in it, which
+     * for a price is a string.
      *
+     * Static so a slide can send the same shape: a sheet opened from the
+     * carousel offers the extras of the dish's own category, and it has the
+     * category rather than this resource to read them from.
+     *
+     * @param  array<int, mixed>  $addons
      * @return list<array{name: string, price: float}>
      */
-    private function addonsPayload(): array
+    public static function addonsPayload(array $addons): array
     {
         return array_values(array_map(
             fn (array $addon): array => [
                 'name' => (string) ($addon['name'] ?? ''),
                 'price' => (float) ($addon['price'] ?? 0),
             ],
-            $this->addons ?? [],
+            $addons,
         ));
     }
 }

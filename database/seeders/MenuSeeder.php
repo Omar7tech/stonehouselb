@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\OrderType;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Slide;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Database\Seeder;
 
@@ -55,5 +56,31 @@ class MenuSeeder extends Seeder
                 ->sequence(fn (Sequence $sequence): array => ['sort_order' => $sequence->index])
                 ->create();
         }
+
+        $this->seedSlides();
+    }
+
+    /**
+     * A few carousel slides pointing at dishes already on the menu, so the
+     * strip above it has something in it on a fresh install. No artwork is
+     * seeded — the storefront falls back to the dish's own photo, and the shop
+     * uploads the real thing.
+     */
+    private function seedSlides(): void
+    {
+        if (Slide::query()->exists()) {
+            return;
+        }
+
+        Product::query()
+            ->inRandomOrder()
+            ->take(3)
+            ->get()
+            ->each(function (Product $product, int $index): void {
+                Slide::factory()->create([
+                    'product_id' => $product->id,
+                    'sort_order' => $index,
+                ]);
+            });
     }
 }

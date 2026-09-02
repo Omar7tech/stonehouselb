@@ -7,6 +7,7 @@ import { CartToast } from '@/components/menu/cart-toast';
 import { CategoryGrid } from '@/components/menu/category-grid';
 import { CategoryPills } from '@/components/menu/category-pills';
 import { CheckoutBar } from '@/components/menu/checkout-bar';
+import { MenuSlider } from '@/components/menu/menu-slider';
 import { OrderTypeSwitch } from '@/components/menu/order-type-switch';
 import { ProductCard } from '@/components/menu/product-card';
 import { ProductDialog } from '@/components/menu/product-dialog';
@@ -25,6 +26,7 @@ import type {
     OrderType,
     Product,
     ProductCardStyle,
+    Slide,
 } from '@/types';
 
 interface MenuProps {
@@ -35,6 +37,11 @@ interface MenuProps {
      * controller drops the empty ones, so a pill always opens onto products.
      */
     categories: Category[];
+    /**
+     * The carousel above the menu. Empty until the shop adds one, which leaves
+     * the strip out of the page entirely rather than holding space for it.
+     */
+    slides: Slide[];
 }
 
 /**
@@ -135,7 +142,12 @@ export default function Menu(props: MenuProps) {
     );
 }
 
-function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
+function MenuView({
+    orderType,
+    orderTypeLabel,
+    categories,
+    slides,
+}: MenuProps) {
     // Delivery is the menu you order from; dine-in is the same menu to read.
     const canOrder = orderType === 'delivery';
 
@@ -167,6 +179,12 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
         excludedIngredients: string[];
         quantity: number;
     } | null>(null);
+    /**
+     * Extras the sheet was handed rather than looked up, which is how a dish
+     * opened from the carousel gets its own category's. Null means the usual
+     * lookup applies.
+     */
+    const [addonsOverride, setAddonsOverride] = useState<Addon[] | null>(null);
 
     /**
      * Every product on the menu by id, so a basket line can be traced back to
@@ -238,6 +256,24 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
         setOpenProduct(product);
         setOpenVariantIndex(variantIndex);
         setEditing(null);
+        setAddonsOverride(null);
+        setProductOpen(true);
+    };
+
+    /**
+     * Open the dish a slide is advertising, on its first size and its own
+     * category's extras — the customer may be looking at the carousel from the
+     * landing view, with no category open to inherit anything from.
+     */
+    const openSlide = (slide: Slide): void => {
+        if (slide.product === null) {
+            return;
+        }
+
+        setOpenProduct(slide.product);
+        setOpenVariantIndex(slide.product.variants.length > 0 ? 0 : null);
+        setEditing(null);
+        setAddonsOverride(slide.addons);
         setProductOpen(true);
     };
 
@@ -258,6 +294,9 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
         setOpen(false);
         setOpenProduct(entry.product);
         setOpenVariantIndex(item.variantIndex);
+        // The line's own category is what the lookup finds, so nothing has to
+        // be handed over here — and anything left from a slide would be wrong.
+        setAddonsOverride(null);
         setEditing({
             key: item.key,
             addons: item.addons,
@@ -393,6 +432,33 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
                         <OrderTypeSwitch current={orderType} />
                     </div>
 
+                    {/* Straight under the switch, above everything the menu
+                        itself draws: it is the first thing on the page after
+                        the way between the two menus, and it stays there
+                        whether the customer is on the boxes or deep in a
+                        category — a promotion shown only on the front page is
+                        one that half the orders never meet.
+
+                        Out on the wall rather than inside the panel, so the
+                        pictures are the full width of the column and the menu
+                        below still opens on its heading.
+
+                        Held still while the sheet is open: it is behind the
+                        overlay there, and a row that has moved on by itself is
+                        not the row the customer left. */}
+                    {slides.length > 0 && (
+                        // Asked here as well as inside the slider, or a shop
+                        // with no slides would keep this row's padding as a
+                        // band of empty wall.
+                        <div className="px-5 pb-5">
+                            <MenuSlider
+                                slides={slides}
+                                onOpen={openSlide}
+                                paused={productOpen}
+                            />
+                        </div>
+                    )}
+
                     {/* Always on the delivery menu, empty or not — it holds the
                         space the order lives in, so the first item added
                         doesn't shove the page down as you reach for it. */}
@@ -506,6 +572,7 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
                 // extras: the customer may well have moved on to another
                 // category, or back to the boxes, since adding it.
                 addons={
+                    addonsOverride ??
                     (openProduct === null
                         ? undefined
                         : productsById.get(openProduct.id)?.addons) ??
