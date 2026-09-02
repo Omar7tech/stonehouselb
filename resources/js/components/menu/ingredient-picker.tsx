@@ -34,6 +34,8 @@ export function IngredientPicker({
 }) {
     const removedCount = excluded.length;
     const isEditable = onToggle !== undefined;
+    const isEmptied =
+        ingredients.length > 0 && removedCount >= ingredients.length;
 
     return (
         <div className="flex flex-col gap-2">
@@ -57,11 +59,23 @@ export function IngredientPicker({
                 )}
             </div>
 
-            {isEditable && (
-                <p className="text-xs text-muted-foreground">
-                    All in by default — tap anything you'd rather leave out.
-                </p>
-            )}
+            {isEditable &&
+                (isEmptied ? (
+                    /* Allowed, not blocked: a customer who wants the bread and
+                       nothing else is entitled to ask, and a shop that can't do
+                       it will say so when the order reaches them. What is not
+                       allowed is doing it by accident — three taps down a list
+                       and everything is gone without a word said about it. */
+                    <p className="text-xs font-medium text-spicy">
+                        That&rsquo;s everything out. The kitchen may check with
+                        you before making it.
+                    </p>
+                ) : (
+                    <p className="text-xs text-muted-foreground">
+                        All in by default — tap anything you&rsquo;d rather
+                        leave out.
+                    </p>
+                ))}
 
             <ul className="flex flex-wrap gap-1.5">
                 {ingredients.map((ingredient) => {

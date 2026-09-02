@@ -105,7 +105,15 @@ export function ProductDialog({
                         )?.quantity ?? 0,
                 ),
             );
-            setExcluded(editing?.excludedIngredients ?? []);
+            // Only what the dish still contains. A line added before the
+            // kitchen rewrote the recipe can be carrying an ingredient that is
+            // no longer in it — kept, that would be an exclusion with no chip
+            // to un-strike, so the customer could never take it back off.
+            setExcluded(
+                (editing?.excludedIngredients ?? []).filter(
+                    (name) => product?.ingredients.includes(name) ?? false,
+                ),
+            );
         }
     }
 

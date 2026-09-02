@@ -45,6 +45,46 @@ it('drops rows the kitchen left blank rather than offering them to remove', func
         );
 });
 
+it('lists a repeated ingredient once, in the kitchen\'s first spelling', function (): void {
+    $category = Category::factory()->create();
+
+    Product::factory()->for($category)->create([
+        'ingredients' => [
+            ['name' => 'Garlic'],
+            ['name' => 'Tahini'],
+            ['name' => 'garlic'],
+            ['name' => ' GARLIC '],
+        ],
+    ]);
+
+    // The picker is keyed by name — the customer takes out "Garlic", not the
+    // third row of the repeater — so a duplicate would draw a second chip that
+    // toggles as one with the first.
+    $this->get(route('menu.dine-in'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('categories.0.products.0.ingredients', ['Garlic', 'Tahini'])
+        );
+});
+
+it('drops a row that is not a row at all', function (): void {
+    $category = Category::factory()->create();
+
+    Product::factory()->for($category)->create([
+        'ingredients' => [
+            ['name' => 'Mint'],
+            'Lemon',
+            null,
+        ],
+    ]);
+
+    $this->get(route('menu.dine-in'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('categories.0.products.0.ingredients', ['Mint'])
+        );
+});
+
 it('sends an empty list for a product that lists nothing', function (): void {
     $category = Category::factory()->create();
 
