@@ -8,6 +8,7 @@ import { CategoryGrid } from '@/components/menu/category-grid';
 import { CategoryPills } from '@/components/menu/category-pills';
 import { CheckoutBar } from '@/components/menu/checkout-bar';
 import { MenuSlider } from '@/components/menu/menu-slider';
+import { OrderAgain } from '@/components/menu/order-again';
 import { OrderTypeSwitch } from '@/components/menu/order-type-switch';
 import { ProductCard } from '@/components/menu/product-card';
 import { ProductDialog } from '@/components/menu/product-dialog';
@@ -19,6 +20,7 @@ import { StoneWallBackdrop } from '@/components/stone-wall-backdrop';
 import { Stretch, StretchText } from '@/components/stretch';
 import { CartProvider, useCart } from '@/contexts/cart-context';
 import type { CartAddon, CartItem } from '@/contexts/cart-context';
+import { isUsualOrder, readOrders, rebuildOrder } from '@/lib/order-history';
 import { cn } from '@/lib/utils';
 import type {
     Addon,
@@ -151,7 +153,7 @@ function MenuView({
     // Delivery is the menu you order from; dine-in is the same menu to read.
     const canOrder = orderType === 'delivery';
 
-    const { items, count, addItem, replaceItem, setOpen, lastAdded } =
+    const { items, count, addItem, replaceItem, restore, setOpen, lastAdded } =
         useCart();
     const cardStyle: ProductCardStyle =
         usePage().props.productCardStyle ?? ('row' as const);
@@ -214,6 +216,57 @@ function MenuView({
 
         return lookup;
     }, [categories]);
+
+    /**
+     * The orders this browser has sent. Read once and never again: sending
+     * hands the browser to WhatsApp, so the list cannot change while this page
+     * is up.
+     */
+    const [pastOrders] = useState(readOrders);
+
+    /**
+     * The last order, read against the menu as it stands today. Null when there
+     * is nothing to offer — no history, or nothing in it still on sale — which
+     * is what keeps the card off a first visit.
+     */
+    const lastOrder = useMemo(() => {
+        const past = pastOrders[0];
+
+        if (past === undefined) {
+            return null;
+        }
+
+        const rebuilt = rebuildOrder(past.items, productsById);
+
+        if (rebuilt.items.length === 0) {
+            return null;
+        }
+
+        return {
+            ...rebuilt,
+            sentAt: past.sentAt,
+            usual: isUsualOrder(pastOrders, past),
+        };
+    }, [pastOrders, productsById]);
+
+    /**
+     * Put the last order back in the basket and show it. The basket opens
+     * rather than a message being shown: what landed is a whole order, and
+     * seeing it is the only confirmation worth giving.
+     *
+     * It merges rather than replaces, so nothing the customer has picked out
+     * today is thrown away by reaching for a shortcut — and it merges by
+     * quantity rather than adding to it, so pressing this twice leaves one copy
+     * of the order rather than two.
+     */
+    const reorderLast = (): void => {
+        if (lastOrder === null) {
+            return;
+        }
+
+        restore(lastOrder.items);
+        setOpen(true);
+    };
 
     const activeCategory =
         categories.find((category) => category.id === activeCategoryId) ?? null;
@@ -569,6 +622,21 @@ function MenuView({
                         >
                             C<Stretch level={2}>H</Stretch>OOSE YOUR CRAVING.
                         </StretchText>
+
+                        {/* On the front page only, and only on the menu you
+                            can order from. It is a way past the whole menu, so
+                            it belongs where the menu starts — offered again
+                            three categories deep, it would be in the way of the
+                            browsing it exists to skip. */}
+                        {canOrder && activeCategory === null && lastOrder && (
+                            <OrderAgain
+                                items={lastOrder.items}
+                                sentAt={lastOrder.sentAt}
+                                usual={lastOrder.usual}
+                                dropped={lastOrder.dropped}
+                                onReorder={reorderLast}
+                            />
+                        )}
 
                         {activeCategory === null ? (
                             /* The landing view. `CategoryGrid` also carries the

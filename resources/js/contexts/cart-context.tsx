@@ -86,7 +86,7 @@ function exclusionsSignature(excluded: string[]): string {
  * kitchen do something different — size, extras, and what was left out — so two
  * dishes made apart are two lines, and two made the same way are one.
  */
-function toCartItem(input: AddToCartInput): CartItem {
+export function toCartItem(input: AddToCartInput): CartItem {
     const addons = (input.addons ?? []).filter((addon) => addon.quantity > 0);
     const excludedIngredients = input.excludedIngredients ?? [];
     const signature = addonsSignature(addons);
@@ -139,9 +139,9 @@ type CartActions = {
     setNote: (key: string, note: string) => void;
     clear: () => void;
     /**
-     * Put a basket back exactly as it was, which is what undoing a clear does.
-     * Whole rather than line by line: half a restored order is worse than none,
-     * and the customer asked for the basket they had.
+     * Put a set of lines back in the basket — undoing a clear, or sending a
+     * past order back in. Pressing twice does nothing the second time, which is
+     * what separates this from adding.
      */
     restore: (items: CartItem[]) => void;
 };
@@ -323,9 +323,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     const clear = useCallback((): void => setItems([]), []);
 
+    /**
+     * Bring a set of lines into the basket without adding to it.
+     *
+     * A line the basket already holds is raised to whichever quantity is
+     * larger, never summed — so pressing "order again" twice leaves one order
+     * rather than two, while a customer who had already put three of something
+     * in keeps their three. Anything the basket holds and this doesn't is left
+     * alone, so nothing is taken away either.
+     */
     const restore = useCallback((restored: CartItem[]): void => {
-        // Anything added since the clear is kept and the restored lines are
-        // topped up into it, so an undo can never take something away.
         setItems((previous) => {
             if (previous.length === 0) {
                 return restored;
@@ -346,7 +353,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
                 merged[index] = {
                     ...merged[index],
-                    quantity: merged[index].quantity + item.quantity,
+                    quantity: Math.max(merged[index].quantity, item.quantity),
                 };
             });
 

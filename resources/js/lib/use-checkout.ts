@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import type { CartItem } from '@/contexts/cart-context';
 import { getBestLocation, isPermissionDenied } from '@/lib/geolocation';
 import type { LocationResult } from '@/lib/geolocation';
+import { rememberOrder } from '@/lib/order-history';
 import { useShopOpen } from '@/lib/shop';
 import type { PriceParts } from '@/lib/use-pricing';
 import { buildOrderMessage, buildWhatsAppUrl } from '@/lib/whatsapp';
@@ -142,6 +143,12 @@ export function useCheckout({
             });
 
             const url = buildWhatsAppUrl(whatsappNumber, message);
+
+            // Kept as it was sent, so the customer can send it again without
+            // building it a second time. Written here rather than on the way
+            // back, because there is no way back — the send hands the browser
+            // to WhatsApp and this page is gone.
+            rememberOrder(items);
 
             setWhatsappUrl(url);
             setStep('sending');
