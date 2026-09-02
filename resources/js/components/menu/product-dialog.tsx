@@ -148,6 +148,18 @@ export function ProductDialog({
         0,
     );
 
+    /**
+     * What pressing the button actually costs: the dish at its effective price,
+     * plus its extras, times how many.
+     *
+     * The price beside it stays the price of one — that is the dish's price, it
+     * is what the card said, and it is what changes when a size is picked. This
+     * is the other question, and with a stepper sitting right there it has to be
+     * answered somewhere: a control that moves while every number on screen
+     * stays put reads as broken, however correct each number is on its own.
+     */
+    const lineTotalUsd = ((discountPrice ?? basePrice) + extrasUsd) * quantity;
+
     // Kept in the kitchen's order rather than the order they were tapped, so
     // the cart line and the order message read the way the dish is written.
     const toggleIngredient = (name: string): void => {
@@ -382,11 +394,16 @@ export function ProductDialog({
                                 <StretchText>
                                     {editing ? 'Save' : 'Add'}
                                 </StretchText>
-                                {extrasUsd > 0 && (
-                                    <span className="text-primary-foreground/70">
-                                        +{pricing.primary(extrasUsd)}
-                                    </span>
-                                )}
+                                {/* Divided off rather than run on: "ADD $12.40"
+                                    reads as one phrase and the eye stops
+                                    trusting which part is the number. */}
+                                <span
+                                    aria-hidden
+                                    className="h-4 w-px bg-primary-foreground/30"
+                                />
+                                <span className="tabular-nums">
+                                    {pricing.primary(lineTotalUsd)}
+                                </span>
                             </button>
                         )}
                     </div>
