@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { cartItemUnitUsd, useCart } from '@/contexts/cart-context';
 
+import { nextOpeningLabel, useShop } from '@/lib/shop';
 import { useCheckout } from '@/lib/use-checkout';
 import { usePricing } from '@/lib/use-pricing';
 import { cn } from '@/lib/utils';
@@ -31,6 +32,8 @@ import { cn } from '@/lib/utils';
 export function CartSheet() {
     const { items, open, setOpen, subtotalUsd } = useCart();
     const pricing = usePricing();
+    // Only read when the shop is shut, but a hook cannot be called by halves.
+    const opensLabel = nextOpeningLabel(useShop());
 
     const deliveryFeeUsd = pricing.deliveryFeeUsd;
     const totalUsd = subtotalUsd + (deliveryFeeUsd ?? 0);
@@ -128,10 +131,21 @@ export function CartSheet() {
                             Send order
                         </button>
 
-                        {!checkout.canSend && (
+                        {/* Two different closures, and the difference matters:
+                            a shut shop reopens at a time we can name, while a
+                            shop with nowhere to send an order does not. */}
+                        {!checkout.shopOpen ? (
                             <p className="mt-2 text-center text-xs text-muted-foreground">
-                                Ordering is closed right now.
+                                We&rsquo;re closed right now, so orders
+                                can&rsquo;t be sent. Your basket keeps.
+                                {opensLabel && ` ${opensLabel}.`}
                             </p>
+                        ) : (
+                            !checkout.canSend && (
+                                <p className="mt-2 text-center text-xs text-muted-foreground">
+                                    Ordering is closed right now.
+                                </p>
+                            )
                         )}
                     </div>
                 )}

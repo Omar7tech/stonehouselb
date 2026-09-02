@@ -2,7 +2,9 @@ import { usePage } from '@inertiajs/react';
 import { ArrowUpRight, MapPin } from 'lucide-react';
 import type { CSSProperties } from 'react';
 
+import { ShopHours } from '@/components/menu/shop-hours';
 import { StretchText } from '@/components/stretch';
+import { hasPublishedHours, useShop } from '@/lib/shop';
 import { cn } from '@/lib/utils';
 
 /** The mark's own proportions, taken from the artwork's viewBox. */
@@ -50,6 +52,9 @@ const LOGO_KNOCKOUT = {
  */
 export function SiteFooter() {
     const { socialLinks, locationUrl } = usePage().props;
+    // The hours draw their own rule above them, so the list below only tightens
+    // up under the location button when there is nothing in between.
+    const hoursShown = hasPublishedHours(useShop());
 
     return (
         <footer className="relative overflow-hidden rounded-t-[2rem] text-primary-foreground shadow-[0_-6px_20px_rgb(0_0_0/0.11)]">
@@ -103,6 +108,9 @@ export function SiteFooter() {
                     </a>
                 )}
 
+                {/* Where the shop is, then when it is there. */}
+                <ShopHours />
+
                 {/* One line per account, ruled like a listing. Nothing changes
                     colour on hover — the row's own rule simply draws itself in
                     under the name, which is all the pointing it needs.
@@ -116,7 +124,7 @@ export function SiteFooter() {
                             'relative border-t border-primary-foreground/20',
                             // Closer under the button than under the mark: the
                             // two belong to the same block of business.
-                            locationUrl ? 'mt-6' : 'mt-9',
+                            locationUrl && !hoursShown ? 'mt-6' : 'mt-9',
                         )}
                     >
                         {socialLinks.map(({ label, url }, index) => (

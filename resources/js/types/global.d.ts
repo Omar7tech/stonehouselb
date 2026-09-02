@@ -7,6 +7,7 @@ import type {
     SocialLink,
     VariantStyle,
 } from '@/types/menu';
+import type { Shop } from '@/types/shop';
 
 declare module 'react' {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -22,6 +23,8 @@ declare module '@inertiajs/core' {
             auth: Auth;
             pricing: Pricing;
             checkout: Checkout;
+            /** Whether the shop is open, and the schedule to re-check against. */
+            shop: Shop;
             /** How the landing view draws its category boxes. */
             categoryLayout: CategoryLayout;
             /** How a product's sizes are offered on the card and in the sheet. */

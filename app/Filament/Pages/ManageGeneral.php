@@ -5,13 +5,17 @@ namespace App\Filament\Pages;
 use App\Enums\CategoryLayout;
 use App\Enums\PriceDisplay;
 use App\Enums\ProductCardStyle;
+use App\Enums\ShopStatusMode;
 use App\Enums\VariantStyle;
+use App\Enums\Weekday;
 use App\Settings\GeneralSettings;
 use BackedEnum;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Pages\SettingsPage;
 use Filament\Schemas\Components\Section;
@@ -39,6 +43,74 @@ class ManageGeneral extends SettingsPage
                 Tabs::make()
                     ->columnSpanFull()
                     ->tabs([
+                        Tab::make('Shop status')
+                            ->icon(Heroicon::OutlinedBuildingStorefront)
+                            ->schema([
+                                Radio::make('status_mode')
+                                    ->label('How the shop opens and closes')
+                                    ->options(ShopStatusMode::class)
+                                    ->descriptions(collect(ShopStatusMode::cases())
+                                        ->mapWithKeys(fn (ShopStatusMode $mode): array => [
+                                            $mode->value => $mode->getDescription(),
+                                        ])
+                                        ->all())
+                                    ->default(ShopStatusMode::Manual->value)
+                                    ->required()
+                                    ->columnSpanFull(),
+
+                                Toggle::make('is_open')
+                                    ->label('The shop is open')
+                                    ->helperText('Turn off to close the storefront: the menu stays readable, but orders cannot be sent.')
+                                    ->default(true)
+                                    ->columnSpanFull()
+                                    ->visibleJs(<<<'JS'
+                                        $get('status_mode') === 'manual'
+                                        JS),
+
+                                Repeater::make('opening_hours')
+                                    ->label('Weekly opening hours')
+                                    ->helperText('A closing time earlier than the opening time runs past midnight — open 18:00, close 02:00 keeps the shop open until two in the morning.')
+                                    ->default(GeneralSettings::defaultOpeningHours())
+                                    ->addable(false)
+                                    ->deletable(false)
+                                    ->reorderable(false)
+                                    ->collapsible()
+                                    ->collapsed()
+                                    ->columnSpanFull()
+                                    ->itemLabel(fn (array $state): ?string => Weekday::tryFrom($state['day'] ?? -1)?->getLabel())
+                                    ->schema([
+                                        Hidden::make('day'),
+
+                                        Toggle::make('is_closed')
+                                            ->label('Closed all day')
+                                            ->default(false)
+                                            ->live()
+                                            ->columnSpanFull(),
+
+                                        TimePicker::make('opens_at')
+                                            ->label('Opens at')
+                                            ->seconds(false)
+                                            ->default('09:00')
+                                            ->required()
+                                            ->visibleJs(<<<'JS'
+                                                ! $get('is_closed')
+                                                JS),
+
+                                        TimePicker::make('closes_at')
+                                            ->label('Closes at')
+                                            ->seconds(false)
+                                            ->default('17:00')
+                                            ->required()
+                                            ->visibleJs(<<<'JS'
+                                                ! $get('is_closed')
+                                                JS),
+                                    ])
+                                    ->columns(2)
+                                    ->visibleJs(<<<'JS'
+                                        $get('status_mode') === 'automatic'
+                                        JS),
+                            ]),
+
                         Tab::make('Pricing')
                             ->icon(Heroicon::OutlinedBanknotes)
                             ->schema([

@@ -5,12 +5,41 @@ namespace App\Settings;
 use App\Enums\CategoryLayout;
 use App\Enums\PriceDisplay;
 use App\Enums\ProductCardStyle;
+use App\Enums\ShopStatusMode;
 use App\Enums\VariantStyle;
+use App\Enums\Weekday;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Carbon;
 use Spatie\LaravelSettings\Settings;
 use Spatie\LaravelSettings\SettingsCasts\EnumCast;
 
 class GeneralSettings extends Settings
 {
+    /**
+     * How the open/closed state is decided: by hand (`Manual`) or from the
+     * weekly {@see self::$opening_hours} schedule (`Automatic`).
+     */
+    public ShopStatusMode $status_mode;
+
+    /**
+     * The switch behind manual mode. Only authoritative while the status mode
+     * is `Manual`; the schedule answers for `Automatic`.
+     */
+    public bool $is_open;
+
+    /**
+     * The weekly schedule, one row per weekday, keyed by JS-style day number
+     * (0 = Sunday) so the storefront needs no remapping. Each row is shaped
+     * `['day' => int, 'is_closed' => bool, 'opens_at' => string, 'closes_at' => string]`.
+     *
+     * Typed with `@phpstan-var` for the same reason {@see self::$social_links}
+     * is: a nested array type in a `@var` tag makes the settings package build
+     * a broken cast and throw on boot.
+     *
+     * @phpstan-var array<int, array{day: int, is_closed: bool, opens_at: string, closes_at: string}>
+     */
+    public array $opening_hours;
+
     /**
      * Whether prices may be displayed in Lebanese Pounds. When off, the
      * storefront falls back to USD regardless of {@see self::$price_display}.
@@ -116,8 +145,99 @@ class GeneralSettings extends Settings
             'category_layout' => new EnumCast(CategoryLayout::class),
             'price_display' => new EnumCast(PriceDisplay::class),
             'product_card_style' => new EnumCast(ProductCardStyle::class),
+            'status_mode' => new EnumCast(ShopStatusMode::class),
             'variant_style' => new EnumCast(VariantStyle::class),
         ];
+    }
+
+    /**
+     * The schedule a shop starts with: every day, nine to five. A baseline to
+     * edit rather than seven empty rows to fill in.
+     *
+     * @return array<int, array{day: int, is_closed: bool, opens_at: string, closes_at: string}>
+     */
+    public static function defaultOpeningHours(): array
+    {
+        return array_map(static fn (Weekday $day): array => [
+            'day' => $day->value,
+            'is_closed' => false,
+            'opens_at' => '09:00',
+            'closes_at' => '17:00',
+        ], Weekday::cases());
+    }
+
+    /**
+     * Whether the shop is open right now, answered by whichever mode is active.
+     */
+    public function isCurrentlyOpen(?CarbonInterface $now = null): bool
+    {
+        if ($this->status_mode === ShopStatusMode::Manual) {
+            return $this->is_open;
+        }
+
+        return $this->isWithinSchedule($now ?? Carbon::now());
+    }
+
+    /**
+     * Whether the given moment falls inside the weekly schedule. Yesterday's
+     * row is checked as well, because a closing time at or before the opening
+     * time runs past midnight (open 18:00, close 02:00) and keeps the shop open
+     * into the small hours of the next day.
+     */
+    protected function isWithinSchedule(CarbonInterface $now): bool
+    {
+        return $this->isWithinDay($now, $now->copy()->startOfDay())
+            || $this->isWithinDay($now, $now->copy()->subDay()->startOfDay());
+    }
+
+    /**
+     * Whether the given moment falls inside `$day`'s hours, whose session may
+     * end after midnight.
+     */
+    protected function isWithinDay(CarbonInterface $now, CarbonInterface $day): bool
+    {
+        // Malformed rows are dropped first: `firstWhere()` reads null off a
+        // non-array row, and `null == 0` would otherwise match it on Sundays.
+        $hours = collect($this->opening_hours)
+            ->filter(fn (mixed $row): bool => is_array($row))
+            ->firstWhere('day', $day->dayOfWeek);
+
+        if ($hours === null || ($hours['is_closed'] ?? false)) {
+            return false;
+        }
+
+        if (blank($hours['opens_at'] ?? null) || blank($hours['closes_at'] ?? null)) {
+            return false;
+        }
+
+        $opensAt = $day->copy()->setTimeFromTimeString($hours['opens_at']);
+        $closesAt = $day->copy()->setTimeFromTimeString($hours['closes_at']);
+
+        if ($closesAt->lessThanOrEqualTo($opensAt)) {
+            $closesAt->addDay();
+        }
+
+        return $now->betweenIncluded($opensAt, $closesAt);
+    }
+
+    /**
+     * The weekly schedule as the storefront reads it — camelCase keys, ordered
+     * by nothing in particular but always a plain list.
+     *
+     * @return array<int, array{day: int, isClosed: bool, opensAt: string, closesAt: string}>
+     */
+    public function storefrontOpeningHours(): array
+    {
+        return collect($this->opening_hours)
+            ->filter(fn (mixed $row): bool => is_array($row))
+            ->map(fn (array $row): array => [
+                'day' => (int) $row['day'],
+                'isClosed' => (bool) ($row['is_closed'] ?? false),
+                'opensAt' => (string) ($row['opens_at'] ?? ''),
+                'closesAt' => (string) ($row['closes_at'] ?? ''),
+            ])
+            ->values()
+            ->all();
     }
 
     /**

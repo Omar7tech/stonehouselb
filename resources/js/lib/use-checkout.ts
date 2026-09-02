@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import type { CartItem } from '@/contexts/cart-context';
 import { getBestLocation, isPermissionDenied } from '@/lib/geolocation';
 import type { LocationResult } from '@/lib/geolocation';
+import { useShopOpen } from '@/lib/shop';
 import type { PriceParts } from '@/lib/use-pricing';
 import { buildOrderMessage, buildWhatsAppUrl } from '@/lib/whatsapp';
 
@@ -70,6 +71,9 @@ export function useCheckout({
 }: CheckoutInput) {
     const { whatsappNumber, checkout } = usePage().props;
     const { requireFullName, requirePhoneNumber, getClientLocation } = checkout;
+    // A closed shop still shows its menu and still fills a cart; it just has
+    // nobody to hand the order to, so the send is what closes.
+    const shopOpen = useShopOpen();
 
     const [step, setStep] = useState<CheckoutStep>('cart');
     const [name, setName] = useState(() => readStored(NAME_STORAGE_KEY));
@@ -86,7 +90,7 @@ export function useCheckout({
     // resolves just after the customer chose to send without it.
     const sentRef = useRef(false);
 
-    const canSend = whatsappNumber !== null && items.length > 0;
+    const canSend = whatsappNumber !== null && items.length > 0 && shopOpen;
     const trimmedName = name.trim();
     const trimmedPhone = phone.trim();
     const detailsValid =
@@ -110,6 +114,15 @@ export function useCheckout({
                 whatsappNumber === null ||
                 items.length === 0
             ) {
+                return;
+            }
+
+            // Closing time can land mid-checkout. Rather than a button that
+            // quietly does nothing, walk back to the item list, which is where
+            // the "we're closed" line is.
+            if (!shopOpen) {
+                setStep('cart');
+
                 return;
             }
 
@@ -142,6 +155,7 @@ export function useCheckout({
         },
         [
             whatsappNumber,
+            shopOpen,
             items,
             pricing,
             subtotalUsd,
@@ -237,6 +251,7 @@ export function useCheckout({
         requireFullName,
         requirePhoneNumber,
         canSend,
+        shopOpen,
         detailsValid,
         locationDenied,
         whatsappUrl,

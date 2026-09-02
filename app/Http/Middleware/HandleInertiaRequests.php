@@ -44,6 +44,16 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            // The open/closed state, plus everything the storefront needs to
+            // work it out again itself: on the automatic schedule the client
+            // re-checks as the clock runs, so a shop that opens while the menu
+            // is on screen does not need a reload to say so.
+            'shop' => [
+                'isOpen' => $settings->isCurrentlyOpen(),
+                'statusMode' => $settings->status_mode->value,
+                'isManuallyOpen' => $settings->is_open,
+                'openingHours' => $settings->storefrontOpeningHours(),
+            ],
             'pricing' => [
                 'display' => $settings->resolvedPriceDisplay()->value,
                 'lbpRate' => $settings->usableLbpRate(),
