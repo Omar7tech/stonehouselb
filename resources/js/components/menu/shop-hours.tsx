@@ -32,7 +32,7 @@ export function ShopHours() {
     return (
         <section
             aria-labelledby="footer-hours"
-            className="relative mt-9 border-t border-primary-foreground/20 pt-5"
+            className="relative mt-9 border-t border-slab-ink/20 pt-5"
         >
             <h2
                 id="footer-hours"
@@ -44,8 +44,8 @@ export function ShopHours() {
                     <span
                         aria-hidden
                         className={cn(
-                            'size-1.5 rounded-full border border-primary-foreground',
-                            open ? 'bg-primary-foreground' : 'bg-transparent',
+                            'size-1.5 rounded-full border border-slab-ink',
+                            open ? 'bg-slab-ink' : 'bg-transparent',
                         )}
                     />
                     {open ? 'Open now' : 'Closed'}

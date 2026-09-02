@@ -57,7 +57,7 @@ export function SiteFooter() {
     const hoursShown = hasPublishedHours(useShop());
 
     return (
-        <footer className="relative overflow-hidden rounded-t-[2rem] text-primary-foreground shadow-[0_-6px_20px_rgb(0_0_0/0.11)]">
+        <footer className="relative overflow-hidden rounded-t-[2rem] text-slab-ink shadow-[0_-6px_20px_rgb(0_0_0/0.11)]">
             {/* The orange itself, so the wordmark can be taken out of it. The
                 colour cannot sit on the footer: whatever is behind the hole
                 would be filled straight back in. */}
@@ -95,7 +95,7 @@ export function SiteFooter() {
                         href={locationUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="group relative mt-9 flex items-center justify-center gap-3 rounded-full border border-primary-foreground bg-primary-foreground px-6 py-4 text-primary transition-colors duration-300 ease-out hover:bg-transparent hover:text-primary-foreground focus-visible:bg-transparent focus-visible:text-primary-foreground focus-visible:outline-none motion-reduce:transition-none"
+                        className="group relative mt-9 flex items-center justify-center gap-3 rounded-full border border-slab-ink bg-slab-ink px-6 py-4 text-primary transition-colors duration-300 ease-out hover:bg-transparent hover:text-slab-ink focus-visible:bg-transparent focus-visible:text-slab-ink focus-visible:outline-none motion-reduce:transition-none"
                     >
                         <MapPin
                             className="size-5 shrink-0 transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-focus-visible:-translate-y-0.5 motion-reduce:transform-none"
@@ -121,7 +121,7 @@ export function SiteFooter() {
                 {socialLinks.length > 0 && (
                     <ul
                         className={cn(
-                            'relative border-t border-primary-foreground/20',
+                            'relative border-t border-slab-ink/20',
                             // Closer under the button than under the mark: the
                             // two belong to the same block of business.
                             locationUrl && !hoursShown ? 'mt-6' : 'mt-9',
@@ -130,7 +130,7 @@ export function SiteFooter() {
                         {socialLinks.map(({ label, url }, index) => (
                             <li
                                 key={index}
-                                className="border-b border-primary-foreground/20"
+                                className="border-b border-slab-ink/20"
                             >
                                 <a
                                     href={url}
@@ -143,7 +143,7 @@ export function SiteFooter() {
                                     place rather than a second one appearing. */}
                                     <span
                                         aria-hidden
-                                        className="absolute inset-x-0 -bottom-px h-px origin-left scale-x-0 bg-primary-foreground transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)] group-hover:scale-x-100 group-focus-visible:scale-x-100 motion-reduce:transition-none"
+                                        className="absolute inset-x-0 -bottom-px h-px origin-left scale-x-0 bg-slab-ink transition-transform duration-500 ease-[cubic-bezier(0.65,0,0.35,1)] group-hover:scale-x-100 group-focus-visible:scale-x-100 motion-reduce:transition-none"
                                     />
 
                                     <StretchText className="font-display text-lg uppercase transition-transform duration-300 ease-out group-hover:translate-x-1.5 group-focus-visible:translate-x-1.5 motion-reduce:transform-none sm:text-xl">

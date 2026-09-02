@@ -113,6 +113,7 @@
     --font-heading: var(--font-sans);
     --color-surface: var(--surface);
     --color-cart-surface: var(--cart-surface);
+    --color-slab-ink: var(--slab-ink);
     --color-spicy: var(--spicy);
     --color-vegan: var(--vegan);
     --color-sidebar-ring: var(--sidebar-ring);
@@ -171,6 +172,12 @@
     --cart-surface: #f8f8f8;
     /* Brand orange, kept as shadcn's `primary` so components inherit it. */
     --primary: #f99f3e;
+    /* What is written on the footer's orange slab. Its own token rather than
+       `primary-foreground`, because the slab is the same orange on both sheets
+       while its ink is not: white here, black on the dark sheet. Everything
+       else standing on the orange — buttons, chips, badges — keeps
+       `primary-foreground` and stays white throughout. */
+    --slab-ink: oklch(1 0 0);
     /* The two marks that mean something before they are read: heat and diet.
        Muted well off pure red and green so they sit beside the brand orange
        rather than fighting it, and dark enough to clear AA as small type on
@@ -242,9 +249,12 @@
     --surface: oklch(0.145 0 0);
     --cart-surface: oklch(0.13 0 0);
     --primary: #f99f3e;
-    /* White stays: the footer's slab is the same orange on both sheets, and
-       what reads on it does not change with the page behind it. */
     --primary-foreground: oklch(1 0 0);
+    /* The footer turns its ink over: black on the orange rather than white.
+       Two bright slabs stacked — an orange foot under a white-lettered one —
+       is the one place the dark sheet stops being dark, and the orange is
+       light enough to carry black type far better than it carries white. */
+    --slab-ink: oklch(0.16 0 0);
     /* Lifted well clear of their light values. The same marks at the same hues,
        but read against black rather than white — the darker pair would sink
        into the card they sit on. */
