@@ -75,6 +75,19 @@ class ProductFactory extends Factory
     }
 
     /**
+     * A product that occasionally picks up a badge. The odds are deliberately
+     * low so a seeded menu shows a sprinkling of them rather than a wall.
+     */
+    public function randomlyFlagged(): static
+    {
+        return $this->state(fn (): array => [
+            'is_featured' => random_int(1, 100) <= 10,
+            'is_spicy' => random_int(1, 100) <= 15,
+            'is_vegan' => random_int(1, 100) <= 12,
+        ]);
+    }
+
+    /**
      * A product that has a `$chanceInPercent` chance of being sold in 2 to 4
      * sizes, priced up from its own base price. The rest keep a single price,
      * so a seeded menu ends up with a realistic mix of both kinds.
