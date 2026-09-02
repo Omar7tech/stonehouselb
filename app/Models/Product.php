@@ -63,6 +63,7 @@ class Product extends Model implements HasMedia
         return [
             'calories' => 'integer',
             'discount_price' => 'decimal:2',
+            'ingredients' => 'array',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
             'is_spicy' => 'boolean',

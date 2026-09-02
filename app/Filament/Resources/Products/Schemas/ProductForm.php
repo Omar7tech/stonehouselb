@@ -105,6 +105,27 @@ class ProductForm
                                     ->inline(false),
                             ]),
 
+                        Tab::make('Ingredients')
+                            ->icon(Heroicon::OutlinedListBullet)
+                            ->schema([
+                                Repeater::make('ingredients')
+                                    ->hiddenLabel()
+                                    ->helperText('What is in the dish, listed in the order it should be read. Leave empty to say nothing about it.')
+                                    ->defaultItems(0)
+                                    ->table([
+                                        TableColumn::make('Ingredient')->markAsRequired(),
+                                    ])
+                                    ->compact()
+                                    ->addActionLabel('Add ingredient')
+                                    ->reorderable()
+                                    ->schema([
+                                        TextInput::make('name')
+                                            ->placeholder('Grilled halloumi')
+                                            ->required()
+                                            ->maxLength(255),
+                                    ]),
+                            ]),
+
                         Tab::make('Variants')
                             ->icon(Heroicon::OutlinedRectangleStack)
                             ->schema([

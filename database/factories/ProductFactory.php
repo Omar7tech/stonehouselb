@@ -20,6 +20,20 @@ class ProductFactory extends Factory
     private const VARIANT_NAMES = ['Small', 'Medium', 'Large', 'Family'];
 
     /**
+     * A pantry to draw demo dishes from. Kept to things a Lebanese grill would
+     * actually have in the back, so a seeded menu reads as a menu rather than
+     * as three words of Latin under every dish.
+     *
+     * @var list<string>
+     */
+    private const INGREDIENTS = [
+        'Halloumi', 'Sumac', 'Pomegranate molasses', 'Tahini', 'Parsley',
+        'Garlic', 'Lemon', 'Olive oil', 'Chickpeas', 'Mint', 'Tomato',
+        'Cucumber', 'Pickled turnip', 'Aleppo pepper', 'Za\'atar', 'Labneh',
+        'Bulgur', 'Walnuts', 'Cinnamon', 'Grilled onion',
+    ];
+
+    /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
@@ -41,6 +55,7 @@ class ProductFactory extends Factory
             'discount_price' => null,
             'order_type' => OrderType::Both,
             'variants' => null,
+            'ingredients' => null,
             'category_id' => Category::factory(),
         ];
     }
@@ -72,6 +87,46 @@ class ProductFactory extends Factory
                 ['name' => 'Large', 'price' => 6, 'discount_price' => 5],
             ],
         ]);
+    }
+
+    /**
+     * A product listing what is in it, each row shaped `['name']`.
+     */
+    public function withIngredients(): static
+    {
+        return $this->state(fn (): array => [
+            'ingredients' => [
+                ['name' => 'Halloumi'],
+                ['name' => 'Za\'atar'],
+                ['name' => 'Olive oil'],
+            ],
+        ]);
+    }
+
+    /**
+     * A product that has a `$chanceInPercent` chance of listing 3 to 7 of its
+     * ingredients, drawn from the pantry. The rest list none, so a seeded menu
+     * shows both the dishes that say what is in them and the ones that don't.
+     */
+    public function randomlyWithIngredients(int $chanceInPercent = 65): static
+    {
+        return $this->state(function () use ($chanceInPercent): array {
+            if (random_int(1, 100) > $chanceInPercent) {
+                return ['ingredients' => null];
+            }
+
+            $picked = (array) array_rand(
+                array_flip(self::INGREDIENTS),
+                random_int(3, 7),
+            );
+
+            return [
+                'ingredients' => array_map(
+                    static fn (string $name): array => ['name' => $name],
+                    $picked,
+                ),
+            ];
+        });
     }
 
     /**

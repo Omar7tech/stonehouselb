@@ -61,6 +61,20 @@ class ProductInfolist
                             ->boolean(),
                     ]),
 
+                Section::make('Ingredients')
+                    ->columnSpanFull()
+                    ->components([
+                        RepeatableEntry::make('ingredients')
+                            ->hiddenLabel()
+                            ->placeholder('No ingredients listed.')
+                            ->table([
+                                TableColumn::make('Ingredient'),
+                            ])
+                            ->schema([
+                                TextEntry::make('name'),
+                            ]),
+                    ]),
+
                 Section::make('Variants')
                     ->columnSpanFull()
                     ->components([

@@ -50,6 +50,7 @@ class MenuSeeder extends Seeder
                 ->for($category)
                 ->orderType(OrderType::Both)
                 ->randomlyWithVariants()
+                ->randomlyWithIngredients()
                 ->randomlyFlagged()
                 ->sequence(fn (Sequence $sequence): array => ['sort_order' => $sequence->index])
                 ->create();

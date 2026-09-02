@@ -33,6 +33,11 @@ return new class extends Migration
             $table->decimal('discount_price', 8, 2)->nullable();
             $table->string('order_type')->default(OrderType::Both->value);
             $table->json('variants')->nullable();
+            // What is in the dish, in the order the kitchen lists it. A column
+            // of its own rather than more prose in `description`, so it can be
+            // read as a list — and so a customer avoiding one thing can be
+            // answered without anyone parsing a sentence.
+            $table->json('ingredients')->nullable();
             $table->foreignIdFor(Category::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
         });

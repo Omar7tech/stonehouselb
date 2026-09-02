@@ -10,6 +10,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
@@ -57,6 +58,14 @@ class ProductsTable
                     ->badge()
                     ->color('gray')
                     ->state(fn (Product $record): int => count($record->variants ?? [])),
+                // Listed or not, rather than how many: the question this column
+                // is scanned for is which dishes still say nothing about what
+                // is in them, and a count of six answers it no better than a
+                // tick does.
+                IconColumn::make('ingredients')
+                    ->label('Ingredients')
+                    ->boolean()
+                    ->state(fn (Product $record): bool => filled($record->ingredients)),
                 ToggleColumn::make('is_active')
                     ->label('Active')
                     ->sortable(),
