@@ -1,5 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { CartSheet } from '@/components/menu/cart-sheet';
 import { CartStrip } from '@/components/menu/cart-strip';
@@ -17,9 +17,15 @@ import { SiteHeader } from '@/components/menu/site-header';
 import { StoneWallBackdrop } from '@/components/stone-wall-backdrop';
 import { Stretch, StretchText } from '@/components/stretch';
 import { CartProvider, useCart } from '@/contexts/cart-context';
-import type { CartAddon } from '@/contexts/cart-context';
+import type { CartAddon, CartItem } from '@/contexts/cart-context';
 import { cn } from '@/lib/utils';
-import type { Category, OrderType, Product, ProductCardStyle } from '@/types';
+import type {
+    Addon,
+    Category,
+    OrderType,
+    Product,
+    ProductCardStyle,
+} from '@/types';
 
 interface MenuProps {
     orderType: OrderType;
@@ -133,7 +139,8 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
     // Delivery is the menu you order from; dine-in is the same menu to read.
     const canOrder = orderType === 'delivery';
 
-    const { items, count, addItem } = useCart();
+    const { items, count, addItem, replaceItem, setOpen, lastAdded } =
+        useCart();
     const cardStyle: ProductCardStyle =
         usePage().props.productCardStyle ?? ('row' as const);
 
@@ -149,6 +156,41 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
         null,
     );
     const [productOpen, setProductOpen] = useState(false);
+    /**
+     * The basket line the sheet is currently editing, and the choices it was
+     * opened on. Null means the sheet is adding rather than changing, which is
+     * what tells the footer whether its button says Add or Save.
+     */
+    const [editing, setEditing] = useState<{
+        key: string;
+        addons: CartAddon[];
+        excludedIngredients: string[];
+        quantity: number;
+    } | null>(null);
+
+    /**
+     * Every product on the menu by id, so a basket line can be traced back to
+     * the dish it came from. A line whose product has since been unpublished
+     * finds nothing here and simply loses its edit button, rather than opening
+     * a sheet on a dish that is no longer sold.
+     */
+    const productsById = useMemo(() => {
+        const lookup = new Map<number, { product: Product; addons: Addon[] }>();
+
+        categories.forEach((category) => {
+            category.products.forEach((product) => {
+                lookup.set(product.id, {
+                    product,
+                    // The extras belong to the category, so they have to be
+                    // carried alongside the dish rather than looked up again
+                    // from whichever category happens to be open.
+                    addons: category.addons,
+                });
+            });
+        });
+
+        return lookup;
+    }, [categories]);
 
     const activeCategory =
         categories.find((category) => category.id === activeCategoryId) ?? null;
@@ -195,7 +237,43 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
     ): void => {
         setOpenProduct(product);
         setOpenVariantIndex(variantIndex);
+        setEditing(null);
         setProductOpen(true);
+    };
+
+    /**
+     * Reopen a basket line in its own sheet, on exactly what was chosen for it.
+     *
+     * The basket closes on the way: two sheets stacked on a phone is one sheet
+     * too many, and the customer is going to be handed straight back to the
+     * basket when they are done anyway.
+     */
+    const editCartItem = (item: CartItem): void => {
+        const entry = productsById.get(item.productId);
+
+        if (entry === undefined) {
+            return;
+        }
+
+        setOpen(false);
+        setOpenProduct(entry.product);
+        setOpenVariantIndex(item.variantIndex);
+        setEditing({
+            key: item.key,
+            addons: item.addons,
+            excludedIngredients: item.excludedIngredients,
+            quantity: item.quantity,
+        });
+        setProductOpen(true);
+    };
+
+    /** The same, from the toast — which knows a line by its key alone. */
+    const editCartItemByKey = (key: string): void => {
+        const item = items.find((candidate) => candidate.key === key);
+
+        if (item !== undefined) {
+            editCartItem(item);
+        }
     };
 
     /**
@@ -250,7 +328,7 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
         const variant =
             variantIndex === null ? null : openProduct.variants[variantIndex];
 
-        addItem({
+        const input = {
             productId: openProduct.id,
             variantIndex,
             name: openProduct.name,
@@ -263,11 +341,23 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
             addons,
             excludedIngredients,
             quantity,
-        });
+        };
+
+        setProductOpen(false);
+
+        // Changing a line hands the customer back to where they came from, with
+        // no toast: they are about to see the row they just changed, which says
+        // it landed better than a message about it would.
+        if (editing !== null) {
+            replaceItem(editing.key, input);
+            setOpen(true);
+
+            return;
+        }
 
         // The toast is the confirmation, here as well as on the card's quick
         // add — one answer to "did that work?" wherever the add came from.
-        setProductOpen(false);
+        addItem(input);
     };
 
     return (
@@ -412,15 +502,37 @@ function MenuView({ orderType, orderTypeLabel, categories }: MenuProps) {
 
             <ProductDialog
                 product={openProduct}
-                addons={activeCategory?.addons ?? []}
+                // A line opened from the basket brings its own category's
+                // extras: the customer may well have moved on to another
+                // category, or back to the boxes, since adding it.
+                addons={
+                    (openProduct === null
+                        ? undefined
+                        : productsById.get(openProduct.id)?.addons) ??
+                    activeCategory?.addons ??
+                    []
+                }
                 initialVariantIndex={openVariantIndex}
+                editing={editing}
                 open={productOpen}
                 onOpenChange={setProductOpen}
                 onAdd={canOrder ? addFromDialog : undefined}
             />
 
-            {canOrder && <CartToast />}
-            {canOrder && <CartSheet />}
+            {canOrder && (
+                <CartToast
+                    // Offered only for a dish there is something to choose
+                    // about, so the plain adds stay plain.
+                    onCustomise={
+                        lastAdded !== null &&
+                        (productsById.get(lastAdded.productId)?.product
+                            .ingredients.length ?? 0) > 0
+                            ? editCartItemByKey
+                            : undefined
+                    }
+                />
+            )}
+            {canOrder && <CartSheet onEditItem={editCartItem} />}
         </>
     );
 }

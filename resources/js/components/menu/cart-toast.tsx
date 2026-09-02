@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react';
+import { Check, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { useCart } from '@/contexts/cart-context';
@@ -8,13 +8,29 @@ import { cn } from '@/lib/utils';
 const DISMISS_AFTER_MS = 2600;
 
 /**
+ * Longer when there is something on it worth reading and acting on. Long enough
+ * to notice a second button, read it and reach it — and still short enough that
+ * it is gone before it is in the way.
+ */
+const DISMISS_WITH_ACTION_MS = 5000;
+
+/**
  * The "added" confirmation, riding just above the checkout button.
  *
  * Opening the whole order on every add would interrupt someone building a
  * larger one, so an add says so in passing and leaves them where they were.
  * There is a way through on it for the moment they are done.
  */
-export function CartToast() {
+export function CartToast({
+    onCustomise,
+}: {
+    /**
+     * Reopen the line just added, for a dish there is something to choose
+     * about. Absent when the dish is made one way only, which leaves the
+     * confirmation as the plain "added" it has always been.
+     */
+    onCustomise?: (key: string) => void;
+}) {
     const { lastAdded, count, setOpen } = useCart();
 
     // Which add has been dismissed, by timeout or by pressing through. The
@@ -37,18 +53,30 @@ export function CartToast() {
         const { nonce } = lastAdded;
         const timeout = window.setTimeout(
             () => setDismissedNonce(nonce),
-            DISMISS_AFTER_MS,
+            onCustomise ? DISMISS_WITH_ACTION_MS : DISMISS_AFTER_MS,
         );
 
         return () => window.clearTimeout(timeout);
-    }, [lastAdded]);
+    }, [lastAdded, onCustomise]);
 
-    const handleView = (): void => {
+    const dismiss = (): void => {
         if (lastAdded !== null) {
             setDismissedNonce(lastAdded.nonce);
         }
+    };
 
+    const handleView = (): void => {
+        dismiss();
         setOpen(true);
+    };
+
+    const handleCustomise = (): void => {
+        if (lastAdded === null || onCustomise === undefined) {
+            return;
+        }
+
+        dismiss();
+        onCustomise(lastAdded.key);
     };
 
     return (
@@ -82,9 +110,30 @@ export function CartToast() {
                     <Check className="size-3.5" strokeWidth={3} />
                 </span>
 
-                <span className="max-w-[42vw] truncate text-sm sm:max-w-xs">
+                <span
+                    className={cn(
+                        'truncate text-sm sm:max-w-xs',
+                        onCustomise ? 'max-w-[28vw]' : 'max-w-[42vw]',
+                    )}
+                >
                     Added {name}
                 </span>
+
+                {/* The one moment a customer who used the corner button finds
+                    out the dish could have been changed. It is offered rather
+                    than forced: the add already happened, this only says it can
+                    still be undone, and saying nothing at all is how someone
+                    ends up with the onions they didn't want. */}
+                {onCustomise && (
+                    <button
+                        type="button"
+                        onClick={handleCustomise}
+                        className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1.5 text-[0.7rem] font-semibold tracking-wide text-primary uppercase transition-colors duration-200 ease-out hover:bg-primary/20 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                    >
+                        <SlidersHorizontal aria-hidden className="size-3" />
+                        Change
+                    </button>
+                )}
 
                 <button
                     type="button"

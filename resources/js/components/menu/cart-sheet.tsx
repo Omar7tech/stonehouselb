@@ -3,6 +3,7 @@ import {
     LoaderCircle,
     MapPin,
     Minus,
+    Pencil,
     Plus,
     Trash2,
 } from 'lucide-react';
@@ -17,6 +18,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { cartItemUnitUsd, useCart } from '@/contexts/cart-context';
+import type { CartItem } from '@/contexts/cart-context';
 
 import { nextOpeningLabel, useShop } from '@/lib/shop';
 import { useCheckout } from '@/lib/use-checkout';
@@ -30,7 +32,15 @@ import { cn } from '@/lib/utils';
  * actually asks for (details, a note, a location) — so the customer never
  * leaves the menu to place an order.
  */
-export function CartSheet() {
+export function CartSheet({
+    onEditItem,
+}: {
+    /**
+     * Reopen a line in the product sheet. Absent for lines whose product has
+     * since left the menu — there is nothing left to open them on.
+     */
+    onEditItem?: (item: CartItem) => void;
+}) {
     const { items, open, setOpen, subtotalUsd } = useCart();
     const pricing = usePricing();
     // Only read when the shop is shut, but a hook cannot be called by halves.
@@ -70,7 +80,9 @@ export function CartSheet() {
                 </DialogHeader>
 
                 <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
-                    {checkout.step === 'cart' && <CartLines />}
+                    {checkout.step === 'cart' && (
+                        <CartLines onEditItem={onEditItem} />
+                    )}
 
                     {checkout.step === 'details' && (
                         <DetailsPanel checkout={checkout} />
@@ -156,7 +168,7 @@ export function CartSheet() {
 }
 
 /** Every line in the basket, with its own quantity and note. */
-function CartLines() {
+function CartLines({ onEditItem }: { onEditItem?: (item: CartItem) => void }) {
     const { items, increment, decrement, removeItem, setNote } = useCart();
     const pricing = usePricing();
 
@@ -218,14 +230,30 @@ function CartLines() {
                             </span>
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={() => removeItem(item.key)}
-                            aria-label={`Remove ${item.name}`}
-                            className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 ease-out hover:bg-surface hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-                        >
-                            <Trash2 className="size-4" />
-                        </button>
+                        {/* Stacked rather than side by side, so the one that
+                            throws the line away is never the one under a thumb
+                            reaching for the one that changes it. */}
+                        <div className="flex shrink-0 flex-col items-center gap-1">
+                            {onEditItem && (
+                                <button
+                                    type="button"
+                                    onClick={() => onEditItem(item)}
+                                    aria-label={`Change ${item.name}`}
+                                    className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 ease-out hover:bg-surface hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                                >
+                                    <Pencil className="size-4" />
+                                </button>
+                            )}
+
+                            <button
+                                type="button"
+                                onClick={() => removeItem(item.key)}
+                                aria-label={`Remove ${item.name}`}
+                                className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 ease-out hover:bg-surface hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                            >
+                                <Trash2 className="size-4" />
+                            </button>
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-2">

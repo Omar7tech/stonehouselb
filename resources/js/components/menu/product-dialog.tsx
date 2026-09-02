@@ -1,4 +1,5 @@
 import {
+    Check,
     Clock,
     Flame,
     Leaf,
@@ -43,6 +44,7 @@ export function ProductDialog({
     product,
     addons,
     initialVariantIndex,
+    editing,
     open,
     onOpenChange,
     onAdd,
@@ -52,6 +54,16 @@ export function ProductDialog({
     addons: readonly Addon[];
     /** The size chosen on the card, so the sheet opens on the same one. */
     initialVariantIndex: number | null;
+    /**
+     * The basket line being changed, when the sheet was opened from the cart
+     * rather than from the menu. Its choices are what the sheet opens on, and
+     * the action saves them back instead of adding a second line.
+     */
+    editing?: {
+        addons: CartAddon[];
+        excludedIngredients: string[];
+        quantity: number;
+    } | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onAdd?: (input: {
@@ -82,9 +94,18 @@ export function ProductDialog({
 
         if (open) {
             setVariantIndex(initialVariantIndex ?? 0);
-            setQuantity(1);
-            setAddonQuantities(addons.map(() => 0));
-            setExcluded([]);
+            setQuantity(editing?.quantity ?? 1);
+            // An extra the category has since dropped simply isn't offered
+            // again; the line keeps whatever else it had.
+            setAddonQuantities(
+                addons.map(
+                    (addon) =>
+                        editing?.addons.find(
+                            (chosen) => chosen.name === addon.name,
+                        )?.quantity ?? 0,
+                ),
+            );
+            setExcluded(editing?.excludedIngredients ?? []);
         }
     }
 
@@ -343,10 +364,16 @@ export function ProductDialog({
                                 }
                                 className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-5 py-3 font-display text-sm text-primary-foreground uppercase transition-transform duration-200 ease-out hover:scale-[1.03] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none active:scale-95 motion-reduce:transform-none"
                             >
-                                <ShoppingBag className="size-4" />
+                                {editing ? (
+                                    <Check className="size-4" strokeWidth={3} />
+                                ) : (
+                                    <ShoppingBag className="size-4" />
+                                )}
                                 {/* Ligatures off, or Stretch Pro reads the `DD` of
                                 "ADD" as one double-width D. */}
-                                <StretchText>Add</StretchText>
+                                <StretchText>
+                                    {editing ? 'Save' : 'Add'}
+                                </StretchText>
                                 {extrasUsd > 0 && (
                                     <span className="text-primary-foreground/70">
                                         +{pricing.primary(extrasUsd)}

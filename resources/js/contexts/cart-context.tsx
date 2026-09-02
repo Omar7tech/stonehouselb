@@ -21,6 +21,11 @@ export type CartItem = {
     key: string;
     productId: number;
     name: string;
+    /**
+     * Which size was chosen, kept alongside its name so the sheet can be
+     * reopened on the same one. Null when the product is sold in one size.
+     */
+    variantIndex: number | null;
     variantName: string | null;
     /** Effective (discounted) base unit price in USD, excluding add-ons. */
     unitUsd: number;
@@ -76,6 +81,33 @@ function exclusionsSignature(excluded: string[]): string {
     return [...excluded].sort().join(',');
 }
 
+/**
+ * One cart line from an add. The line's identity is everything that makes the
+ * kitchen do something different — size, extras, and what was left out — so two
+ * dishes made apart are two lines, and two made the same way are one.
+ */
+function toCartItem(input: AddToCartInput): CartItem {
+    const addons = (input.addons ?? []).filter((addon) => addon.quantity > 0);
+    const excludedIngredients = input.excludedIngredients ?? [];
+    const signature = addonsSignature(addons);
+    const without = exclusionsSignature(excludedIngredients);
+
+    return {
+        key: `${input.productId}:${input.variantIndex ?? 'base'}${
+            signature ? `:${signature}` : ''
+        }${without ? `:no(${without})` : ''}`,
+        productId: input.productId,
+        name: input.name,
+        variantIndex: input.variantIndex,
+        variantName: input.variantName,
+        unitUsd: input.unitUsd,
+        addons,
+        excludedIngredients,
+        image: input.image,
+        quantity: Math.max(1, input.quantity ?? 1),
+    };
+}
+
 type CartState = {
     items: CartItem[];
     count: number;
@@ -85,13 +117,22 @@ type CartState = {
     /**
      * The most recently added item. The `nonce` changes on every add — even
      * when the same product is re-added — so a toast can react to each one.
+     * The key names the line it landed on, so the confirmation can offer a way
+     * straight back into it.
      */
-    lastAdded: { nonce: number; name: string } | null;
+    lastAdded: {
+        nonce: number;
+        name: string;
+        key: string;
+        productId: number;
+    } | null;
 };
 
 type CartActions = {
     setOpen: (open: boolean) => void;
     addItem: (input: AddToCartInput) => void;
+    /** Rebuild the line at `key` from a fresh set of choices. */
+    replaceItem: (key: string, input: AddToCartInput) => void;
     increment: (key: string) => void;
     decrement: (key: string) => void;
     removeItem: (key: string) => void;
@@ -130,6 +171,7 @@ function readStoredItems(): CartItem[] {
             ...item,
             addons: item.addons ?? [],
             excludedIngredients: item.excludedIngredients ?? [],
+            variantIndex: item.variantIndex ?? null,
         }));
     } catch {
         return [];
@@ -139,10 +181,7 @@ function readStoredItems(): CartItem[] {
 export function CartProvider({ children }: { children: ReactNode }) {
     const [items, setItems] = useState<CartItem[]>(readStoredItems);
     const [open, setOpen] = useState(false);
-    const [lastAdded, setLastAdded] = useState<{
-        nonce: number;
-        name: string;
-    } | null>(null);
+    const [lastAdded, setLastAdded] = useState<CartState['lastAdded']>(null);
     // Monotonic counter, so re-adding the same product still fires the toast.
     const addNonceRef = useRef(0);
 
@@ -156,21 +195,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }, [items]);
 
     const addItem = useCallback((input: AddToCartInput): void => {
-        const addons = (input.addons ?? []).filter(
-            (addon) => addon.quantity > 0,
-        );
-        const excludedIngredients = input.excludedIngredients ?? [];
-        const signature = addonsSignature(addons);
-        // Two of the same dish made differently are two lines, not one with a
-        // quantity of two — the kitchen has to make them apart.
-        const without = exclusionsSignature(excludedIngredients);
-        const key = `${input.productId}:${input.variantIndex ?? 'base'}${
-            signature ? `:${signature}` : ''
-        }${without ? `:no(${without})` : ''}`;
-        const quantity = Math.max(1, input.quantity ?? 1);
+        const incoming = toCartItem(input);
 
         setItems((previous) => {
-            const existing = previous.find((item) => item.key === key);
+            const existing = previous.find((item) => item.key === incoming.key);
 
             // Re-adding moves the line to the end rather than topping it up
             // where it sits, so the list stays in the order things were last
@@ -178,32 +206,79 @@ export function CartProvider({ children }: { children: ReactNode }) {
             // Only adding does this; the +/- in the basket leave order alone.
             if (existing) {
                 return [
-                    ...previous.filter((item) => item.key !== key),
-                    { ...existing, quantity: existing.quantity + quantity },
+                    ...previous.filter((item) => item.key !== incoming.key),
+                    {
+                        ...existing,
+                        quantity: existing.quantity + incoming.quantity,
+                    },
                 ];
             }
 
-            return [
-                ...previous,
-                {
-                    key,
-                    productId: input.productId,
-                    name: input.name,
-                    variantName: input.variantName,
-                    unitUsd: input.unitUsd,
-                    addons,
-                    excludedIngredients,
-                    image: input.image,
-                    quantity,
-                },
-            ];
+            return [...previous, incoming];
         });
 
         // Signal a toast rather than opening the whole cart, so adding several
         // things in a row doesn't keep interrupting the customer.
         addNonceRef.current += 1;
-        setLastAdded({ nonce: addNonceRef.current, name: input.name });
+        setLastAdded({
+            nonce: addNonceRef.current,
+            name: incoming.name,
+            key: incoming.key,
+            productId: incoming.productId,
+        });
     }, []);
+
+    /**
+     * Rebuild one line from a fresh set of choices — what the sheet does when
+     * it is opened on a line already in the basket.
+     *
+     * The line keeps its place in the list rather than jumping to the end: the
+     * customer is editing where they are looking, and a row that moved under
+     * them while they saved would read as a different row. Its note is kept for
+     * the same reason — nothing they wrote is thrown away by a change to what
+     * is in the dish.
+     *
+     * Editing a line into one the basket already holds merges the two, since
+     * the kitchen has no way to tell the results apart.
+     */
+    const replaceItem = useCallback(
+        (key: string, input: AddToCartInput): void => {
+            setItems((previous) => {
+                const original = previous.find((item) => item.key === key);
+
+                if (original === undefined) {
+                    return previous;
+                }
+
+                const updated: CartItem = {
+                    ...toCartItem(input),
+                    note: original.note,
+                };
+
+                const twin = previous.find(
+                    (item) => item.key === updated.key && item.key !== key,
+                );
+
+                if (twin === undefined) {
+                    return previous.map((item) =>
+                        item.key === key ? updated : item,
+                    );
+                }
+
+                return previous
+                    .filter((item) => item.key !== key)
+                    .map((item) =>
+                        item.key === twin.key
+                            ? {
+                                  ...twin,
+                                  quantity: twin.quantity + updated.quantity,
+                              }
+                            : item,
+                    );
+            });
+        },
+        [],
+    );
 
     const increment = useCallback((key: string): void => {
         setItems((previous) =>
@@ -246,13 +321,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
         () => ({
             setOpen,
             addItem,
+            replaceItem,
             increment,
             decrement,
             removeItem,
             setNote,
             clear,
         }),
-        [addItem, increment, decrement, removeItem, setNote, clear],
+        [
+            addItem,
+            replaceItem,
+            increment,
+            decrement,
+            removeItem,
+            setNote,
+            clear,
+        ],
     );
 
     const state = useMemo<CartState>(
