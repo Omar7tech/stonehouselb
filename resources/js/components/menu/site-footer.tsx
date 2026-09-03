@@ -36,6 +36,28 @@ const LOGO_KNOCKOUT = {
 } satisfies CSSProperties;
 
 /**
+ * The maker's mark at the foot, taken out of the slab's own ink the way the
+ * wordmark above it is taken out of the orange.
+ *
+ * The artwork is drawn in white, which would be the one thing on this slab not
+ * wearing the footer's colours — and would vanish outright in the light theme,
+ * where the ink is the dark half of the pair. Masked, it is whatever
+ * `bg-current` is, so it follows the line of type beside it in both themes.
+ */
+const MAKER_MARK = {
+    maskImage: "url('/logos/yamenlogo.svg')",
+    WebkitMaskImage: "url('/logos/yamenlogo.svg')",
+    maskSize: 'contain',
+    WebkitMaskSize: 'contain',
+    maskRepeat: 'no-repeat',
+    WebkitMaskRepeat: 'no-repeat',
+    maskPosition: 'center',
+    WebkitMaskPosition: 'center',
+    /** The artwork's own proportions, from its viewBox. */
+    aspectRatio: '1151.2 / 110.92',
+} satisfies CSSProperties;
+
+/**
  * The foot of the page: one orange slab the whole menu comes to rest on.
  *
  * It is the wall's opposite — solid brand colour where everything above it is
@@ -174,6 +196,28 @@ export function SiteFooter() {
                     <span>© {new Date().getFullYear()} Stone House</span>
                     <span>Crunch &amp; Grill</span>
                 </div>
+
+                {/* Who built it, under the shop's own line and quieter than it:
+                    a credit is the last thing on the page, not a second name
+                    over the door. It brightens on hover, which is the only
+                    thing marking it as somewhere to go. */}
+                <a
+                    href="https://yamencreates.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="relative mt-4 flex items-center justify-center gap-2 text-[0.65rem] uppercase opacity-50 transition-opacity duration-300 ease-out hover:opacity-90 focus-visible:opacity-90 focus-visible:outline-none motion-reduce:transition-none"
+                >
+                    <span>Crafted by</span>
+
+                    {/* The mark itself, and the only name it needs: the label
+                        is what a reader hears in place of the artwork. */}
+                    <span
+                        role="img"
+                        aria-label="Yamen Creates"
+                        style={MAKER_MARK}
+                        className="h-2.5 bg-current"
+                    />
+                </a>
             </div>
         </footer>
     );
