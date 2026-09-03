@@ -40,7 +40,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(asset('logos/logo.svg'))
             ->brandLogoHeight('3rem')
             ->colors([
-                'primary' => Color::Taupe,
+                'primary' => Color::hex('#f99f3e'),
             ])
             ->subNavigationPosition(SubNavigationPosition::Top)
             ->darkMode(true)
