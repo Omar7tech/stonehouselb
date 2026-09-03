@@ -105,6 +105,20 @@ it('ignores schedule rows that name no real weekday', function (): void {
     expect($settings->usableBannerText())->toBe('Wednesday, written as a string');
 });
 
+it('shares the line with the home page as well as the menu', function (): void {
+    settings([
+        'show_banner' => true,
+        'banner_mode' => BannerMode::Fixed,
+        'banner_text' => 'Two for one on Fridays',
+    ]);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->where('banner', 'Two for one on Fridays')
+        );
+});
+
 it('starts every weekday of the default schedule on the same welcome', function (): void {
     $schedule = GeneralSettings::defaultBannerSchedule();
 

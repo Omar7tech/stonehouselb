@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowRight } from 'lucide-react';
 
+import { SiteBanner } from '@/components/menu/site-banner';
 import { StoneHouseLogo } from '@/components/stone-house-logo';
 import { StoneWallBackdrop } from '@/components/stone-wall-backdrop';
 import { Button } from '@/components/ui/button';
@@ -59,36 +60,45 @@ export default function Welcome() {
         <>
             <Head title="Welcome" />
             <StoneWallBackdrop />
-            <div className="flex min-h-screen flex-col items-center justify-center gap-12 p-6">
-                <StoneHouseLogo className="w-full max-w-md select-none sm:max-w-xl lg:max-w-2xl" />
+            {/* A column so the strip can sit on the top edge of the window and
+                the splash still centre itself in whatever is left. */}
+            <div className="flex min-h-screen flex-col">
+                <SiteBanner />
 
-                <div className="flex w-full max-w-md flex-col gap-4 sm:max-w-xl lg:max-w-2xl">
-                    {/* From `sm` up the pair lines up under the logo and shares
+                <div className="flex flex-1 flex-col items-center justify-center gap-12 p-6">
+                    <StoneHouseLogo className="w-full max-w-md select-none sm:max-w-xl lg:max-w-2xl" />
+
+                    <div className="flex w-full max-w-md flex-col gap-4 sm:max-w-xl lg:max-w-2xl">
+                        {/* From `sm` up the pair lines up under the logo and shares
                         its width, so the two read as one block. */}
-                    <div className="flex w-full animate-in flex-col gap-3 delay-1100 duration-450 ease-out fill-mode-backwards fade-in slide-in-from-bottom-4 motion-reduce:animate-none sm:flex-row sm:gap-4">
-                        <ChoiceButton label="Dine In" href="/menu/dine-in" />
-                        <ChoiceButton
-                            label="Delivery"
-                            href="/menu/delivery"
-                            outline
-                        />
-                    </div>
+                        <div className="flex w-full animate-in flex-col gap-3 delay-1100 duration-450 ease-out fill-mode-backwards fade-in slide-in-from-bottom-4 motion-reduce:animate-none sm:flex-row sm:gap-4">
+                            <ChoiceButton
+                                label="Dine In"
+                                href="/menu/dine-in"
+                            />
+                            <ChoiceButton
+                                label="Delivery"
+                                href="/menu/delivery"
+                                outline
+                            />
+                        </div>
 
-                    {/* Said here rather than at the door of the menu: the menu
+                        {/* Said here rather than at the door of the menu: the menu
                         is worth reading either way, and someone who knows
                         before they open it is not led on. */}
-                    {!shopOpen && (
-                        <div className="animate-in rounded-2xl bg-card/90 px-5 py-4 text-center shadow-md backdrop-blur-sm delay-1300 duration-450 ease-out fill-mode-backwards fade-in slide-in-from-bottom-4 motion-reduce:animate-none">
-                            <p className="font-display text-xl uppercase sm:text-2xl">
-                                We&rsquo;re closed right now
-                            </p>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                {opensLabel
-                                    ? `${opensLabel}. The menu is open to browse.`
-                                    : 'The menu is open to browse.'}
-                            </p>
-                        </div>
-                    )}
+                        {!shopOpen && (
+                            <div className="animate-in rounded-2xl bg-card/90 px-5 py-4 text-center shadow-md backdrop-blur-sm delay-1300 duration-450 ease-out fill-mode-backwards fade-in slide-in-from-bottom-4 motion-reduce:animate-none">
+                                <p className="font-display text-xl uppercase sm:text-2xl">
+                                    We&rsquo;re closed right now
+                                </p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    {opensLabel
+                                        ? `${opensLabel}. The menu is open to browse.`
+                                        : 'The menu is open to browse.'}
+                                </p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </>
