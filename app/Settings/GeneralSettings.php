@@ -2,6 +2,7 @@
 
 namespace App\Settings;
 
+use App\Enums\BannerMode;
 use App\Enums\CategoryLayout;
 use App\Enums\PriceDisplay;
 use App\Enums\ProductCardStyle;
@@ -45,6 +46,36 @@ class GeneralSettings extends Settings
      * @phpstan-var array<int, mixed>
      */
     public array $opening_hours;
+
+    /**
+     * Whether the promotional strip is shown across the top of the storefront.
+     */
+    public bool $show_banner;
+
+    /**
+     * How the strip picks its line: one fixed sentence, or one per weekday
+     * from {@see self::$banner_schedule}.
+     */
+    public BannerMode $banner_mode;
+
+    /**
+     * The line shown while the mode is `Fixed`.
+     */
+    public ?string $banner_text;
+
+    /**
+     * The line per weekday, used while the mode is `Scheduled`. One row per
+     * day, keyed by JS-style day number (0 = Sunday), shaped
+     * `['day' => int, 'text' => string]`.
+     *
+     * Loosely typed and squared up on the way out for the same reason
+     * {@see self::$opening_hours} is: this is a JSON column holding whatever
+     * was last written to it, and a nested `@var` array type makes the
+     * settings package build a broken cast and throw on boot.
+     *
+     * @phpstan-var array<int, mixed>
+     */
+    public array $banner_schedule;
 
     /**
      * Whether prices may be displayed in Lebanese Pounds. When off, the
@@ -148,6 +179,7 @@ class GeneralSettings extends Settings
     public static function casts(): array
     {
         return [
+            'banner_mode' => new EnumCast(BannerMode::class),
             'category_layout' => new EnumCast(CategoryLayout::class),
             'price_display' => new EnumCast(PriceDisplay::class),
             'product_card_style' => new EnumCast(ProductCardStyle::class),
@@ -170,6 +202,85 @@ class GeneralSettings extends Settings
             'opens_at' => '09:00',
             'closes_at' => '17:00',
         ], Weekday::cases());
+    }
+
+    /**
+     * The banner schedule a shop starts with: the same welcome on every day, a
+     * baseline to edit rather than seven empty rows to fill in.
+     *
+     * @return array<int, array{day: int, text: string}>
+     */
+    public static function defaultBannerSchedule(): array
+    {
+        return array_map(static fn (Weekday $day): array => [
+            'day' => $day->value,
+            'text' => 'Welcome to Stone House',
+        ], Weekday::cases());
+    }
+
+    /**
+     * The banner line for the given moment, before it is asked whether the
+     * banner is on at all. Null on a scheduled day nobody wrote a line for.
+     */
+    public function bannerTextFor(?CarbonInterface $now = null): ?string
+    {
+        if ($this->banner_mode === BannerMode::Fixed) {
+            return filled($this->banner_text) ? trim((string) $this->banner_text) : null;
+        }
+
+        $today = collect($this->bannerSchedule())
+            ->firstWhere('day', ($now ?? Carbon::now())->dayOfWeek);
+
+        return $today['text'] ?? null;
+    }
+
+    /**
+     * The banner line worth rendering, or null when there is nothing to show —
+     * the strip is off, or the line behind today is blank. A strip with no
+     * words in it is a band of orange across the top of the menu.
+     */
+    public function usableBannerText(?CarbonInterface $now = null): ?string
+    {
+        if (! $this->show_banner) {
+            return null;
+        }
+
+        return $this->bannerTextFor($now);
+    }
+
+    /**
+     * The banner schedule as a reader can trust it: rows that are not arrays,
+     * rows not naming a real weekday, and rows with nothing to say are dropped
+     * rather than passed on as a day with a blank line behind it.
+     *
+     * @return list<array{day: int, text: string}>
+     */
+    protected function bannerSchedule(): array
+    {
+        $rows = [];
+
+        foreach ($this->banner_schedule as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $day = $row['day'] ?? null;
+
+            if (! is_int($day) && ! is_string($day)) {
+                continue;
+            }
+
+            $day = (int) $day;
+            $text = $row['text'] ?? null;
+
+            if ($day < 0 || $day > 6 || ! is_string($text) || blank($text)) {
+                continue;
+            }
+
+            $rows[] = ['day' => $day, 'text' => trim($text)];
+        }
+
+        return $rows;
     }
 
     /**

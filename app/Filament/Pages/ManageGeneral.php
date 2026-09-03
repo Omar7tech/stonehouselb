@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\BannerMode;
 use App\Enums\CategoryLayout;
 use App\Enums\PriceDisplay;
 use App\Enums\ProductCardStyle;
@@ -108,6 +109,63 @@ class ManageGeneral extends SettingsPage
                                     ->columns(2)
                                     ->visibleJs(<<<'JS'
                                         $get('status_mode') === 'automatic'
+                                        JS),
+                            ]),
+
+                        Tab::make('Banner')
+                            ->icon(Heroicon::OutlinedMegaphone)
+                            ->schema([
+                                Toggle::make('show_banner')
+                                    ->label('Show the banner')
+                                    ->helperText('A strip across the very top of the storefront, above the logo.')
+                                    ->default(false)
+                                    ->columnSpanFull(),
+
+                                Radio::make('banner_mode')
+                                    ->label('How the line is picked')
+                                    ->options(BannerMode::class)
+                                    ->descriptions(collect(BannerMode::cases())
+                                        ->mapWithKeys(fn (BannerMode $mode): array => [
+                                            $mode->value => $mode->getDescription(),
+                                        ])
+                                        ->all())
+                                    ->default(BannerMode::Fixed->value)
+                                    ->required()
+                                    ->columnSpanFull()
+                                    ->visibleJs(<<<'JS'
+                                        $get('show_banner')
+                                        JS),
+
+                                TextInput::make('banner_text')
+                                    ->label('Banner line')
+                                    ->helperText('Kept short: it is one line across the top of a phone.')
+                                    ->default('Welcome to Stone House')
+                                    ->requiredIf('show_banner', true)
+                                    ->maxLength(120)
+                                    ->columnSpanFull()
+                                    ->visibleJs(<<<'JS'
+                                        $get('show_banner') && $get('banner_mode') === 'fixed'
+                                        JS),
+
+                                Repeater::make('banner_schedule')
+                                    ->label('A line per day')
+                                    ->helperText('Each day shows its own line. Leave a day empty to show no banner at all that day.')
+                                    ->default(GeneralSettings::defaultBannerSchedule())
+                                    ->addable(false)
+                                    ->deletable(false)
+                                    ->reorderable(false)
+                                    ->columnSpanFull()
+                                    ->itemLabel(fn (array $state): ?string => Weekday::tryFrom($state['day'] ?? -1)?->getLabel())
+                                    ->schema([
+                                        Hidden::make('day'),
+
+                                        TextInput::make('text')
+                                            ->label('Line')
+                                            ->maxLength(120)
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->visibleJs(<<<'JS'
+                                        $get('show_banner') && $get('banner_mode') === 'scheduled'
                                         JS),
                             ]),
 

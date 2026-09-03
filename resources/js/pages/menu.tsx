@@ -14,6 +14,7 @@ import { ProductCard } from '@/components/menu/product-card';
 import { ProductDialog } from '@/components/menu/product-dialog';
 import { ProductMinimal } from '@/components/menu/product-minimal';
 import { ProductShowcase } from '@/components/menu/product-showcase';
+import { SiteBanner } from '@/components/menu/site-banner';
 import { SiteFooter } from '@/components/menu/site-footer';
 import { SiteHeader } from '@/components/menu/site-header';
 import { StoneWallBackdrop } from '@/components/stone-wall-backdrop';
@@ -591,6 +592,11 @@ function MenuView({
                 Below that nothing changes: the layout a phone gets is the one
                 it had. */}
             <div className="flex min-h-screen flex-col">
+                {/* Above the column and everything in it: the strip is the top
+                    edge of the page, so it runs the full width of the window
+                    rather than stopping where the menu does. */}
+                <SiteBanner />
+
                 <div className="mx-auto flex w-full max-w-2xl flex-col lg:max-w-5xl xl:max-w-6xl">
                     <SiteHeader />
 

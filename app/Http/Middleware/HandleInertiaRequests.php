@@ -44,6 +44,10 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            // The strip across the top of the storefront. One resolved line
+            // rather than the settings behind it: which line today gets is the
+            // server's answer, and the client has no business recomputing it.
+            'banner' => $settings->usableBannerText(),
             // The open/closed state, plus everything the storefront needs to
             // work it out again itself: on the automatic schedule the client
             // re-checks as the clock runs, so a shop that opens while the menu

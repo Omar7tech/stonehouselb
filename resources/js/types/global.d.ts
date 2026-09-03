@@ -21,6 +21,8 @@ declare module '@inertiajs/core' {
         sharedPageProps: {
             name: string;
             auth: Auth;
+            /** The line for the strip above the header. Null leaves it out. */
+            banner: string | null;
             pricing: Pricing;
             checkout: Checkout;
             /** Whether the shop is open, and the schedule to re-check against. */
