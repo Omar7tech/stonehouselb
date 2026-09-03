@@ -160,7 +160,6 @@ describe('the plain boards for older televisions', function (): void {
         $response = $this->get(route('screen.show', $screen).'?simple='.$style);
 
         $response->assertOk()
-            ->assertSee('Counter TV')
             ->assertSee('Burgers')
             ->assertSee('Classic')
             ->assertSee('$8.50');
@@ -190,6 +189,23 @@ describe('the plain boards for older televisions', function (): void {
             ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
                 ->component('screen')
             );
+    });
+
+    it('keeps the screen name in the tab and off the board', function (): void {
+        $category = Category::factory()->create(['title' => 'Burgers']);
+        Product::factory()->for($category)->create();
+
+        $screen = DisplayScreen::factory()->create(['name' => 'Counter TV']);
+
+        $body = $this->get(route('screen.show', $screen).'?simple=still')
+            ->assertOk()
+            ->assertSee('<title>Counter TV', escape: false)
+            ->getContent();
+
+        // What the shop calls the set is a label for the dashboard. A customer
+        // reading the board should see the menu and the shop's name, and never
+        // learn which television they are standing in front of.
+        expect(substr_count((string) $body, 'Counter TV'))->toBe(1);
     });
 
     it('says so plainly when there is nothing on the menu', function (): void {

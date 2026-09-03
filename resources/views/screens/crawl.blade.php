@@ -56,7 +56,6 @@
     <div class="banner" id="banner">
         <div class="head">
             <p class="shop">{{ $shopName }}</p>
-            <p class="board-name">{{ $screen->name }}</p>
         </div>
     </div>
 

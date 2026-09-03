@@ -83,12 +83,12 @@ export default function ScreenBoard({
         page !== null &&
         (page.kind === 'slide' || screen.layout === 'spotlight');
 
-    // A category page names its category; a promotion is the shop talking, so
-    // it carries the shop's name instead.
+    // A category page names its category. A promotion names itself in its own
+    // artwork, so it gets no heading at all — and the screen's own name never
+    // appears anywhere on it: "Counter TV" is what the shop calls the set in
+    // the dashboard, not something a customer should be reading off the wall.
     const heading =
-        page === null || page.kind === 'slide'
-            ? screen.name
-            : page.category.name;
+        page !== null && page.kind === 'menu' ? page.category.name : null;
 
     return (
         <>
@@ -246,7 +246,8 @@ function ScreenHeader({
     clock,
     page,
 }: {
-    heading: string;
+    /** The category on show, or null on a page that names itself. */
+    heading: string | null;
     showLogo: boolean;
     clock: string;
     page: ScreenPage | null;
@@ -270,12 +271,14 @@ function ScreenHeader({
                     </span>
                 )}
 
-                <h1
-                    className="truncate leading-none font-semibold tracking-wide uppercase"
-                    style={{ fontSize: 'calc(var(--u) * 2.4)' }}
-                >
-                    {heading}
-                </h1>
+                {heading !== null && (
+                    <h1
+                        className="truncate leading-none font-semibold tracking-wide uppercase"
+                        style={{ fontSize: 'calc(var(--u) * 2.4)' }}
+                    >
+                        {heading}
+                    </h1>
+                )}
 
                 {pages > 1 && page !== null && page.kind === 'menu' && (
                     <span

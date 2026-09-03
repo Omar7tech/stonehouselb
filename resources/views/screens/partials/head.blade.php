@@ -53,14 +53,6 @@
         margin: 0;
     }
 
-    .board-name {
-        color: #9a9a9a;
-        font-size: 18px;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin: 6px 0 0;
-    }
-
     .category {
         color: #f99f3e;
         font-size: 30px;
