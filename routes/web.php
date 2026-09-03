@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DisplayScreenController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\PrintMenuController;
 use Illuminate\Support\Facades\Route;
@@ -13,3 +14,8 @@ Route::get('/menu/delivery', [MenuController::class, 'delivery'])->name('menu.de
 // because it shows nothing the menu itself doesn't, and kept out of search
 // results by the page's own robots tag.
 Route::get('/menu/print', PrintMenuController::class)->name('menu.print');
+
+// A screen hung in the shop, addressed by its own name: a television over the
+// counter, a tablet on a table. `?simple=still|cycle|crawl` serves the plain
+// HTML board instead, for sets whose browser cannot run the other one.
+Route::get('/screen/{displayScreen}', DisplayScreenController::class)->name('screen.show');
