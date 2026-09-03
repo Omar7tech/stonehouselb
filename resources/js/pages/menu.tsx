@@ -189,10 +189,8 @@ function MenuView({
      */
     const [addonsOverride, setAddonsOverride] = useState<Addon[] | null>(null);
 
-    /** The menu panel, so changing what is in it can bring its top back. */
-    const panelRef = useRef<HTMLElement>(null);
     /** Set by a category change, read once the new view has been laid out. */
-    const returnToPanel = useRef(false);
+    const returnToTop = useRef(false);
 
     /**
      * Every product on the menu by id, so a basket line can be traced back to
@@ -350,34 +348,22 @@ function MenuView({
      * Every one of these swaps the whole contents of the panel, and the new
      * contents start at its top. Left where they stood, a customer who picked a
      * box from halfway down the page lands halfway down a list they have never
-     * seen — so the panel's top is brought back to the top of the screen on
-     * every change.
+     * seen — so each change takes the page back to the top, where the order
+     * strip and the heading are, and the new view starts from its first line.
      */
     const selectCategory = (id: number | null): void => {
-        returnToPanel.current = true;
+        returnToTop.current = true;
         setActiveCategoryId(id);
     };
 
     useLayoutEffect(() => {
-        if (!returnToPanel.current) {
+        if (!returnToTop.current) {
             return;
         }
 
-        returnToPanel.current = false;
+        returnToTop.current = false;
 
-        const panel = panelRef.current;
-
-        if (panel === null) {
-            return;
-        }
-
-        // Measured after the swap: the carousel is on the boxes only, so the
-        // height above the panel is not the same on both sides of the change.
-        // A few pixels of air above it, so it reads as the top of a panel
-        // rather than as a page cut off at the edge of the screen.
-        const top = panel.getBoundingClientRect().top + window.scrollY - 12;
-
-        window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [activeCategoryId]);
 
     const hasCart = count > 0;
@@ -627,7 +613,6 @@ function MenuView({
                     cart's surplus white passes behind it rather than moving
                     it, so nothing here has to reach up to meet it. */}
                     <main
-                        ref={panelRef}
                         className={cn(
                             // `isolate` so the pattern below can sit on a negative
                             // layer: it puts it above the panel's own background
