@@ -18,6 +18,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 
 import { withoutLabel } from '@/components/menu/ingredient-picker';
 import { ProductImage } from '@/components/menu/product-image';
+import { StretchText } from '@/components/stretch';
 import {
     Dialog,
     DialogContent,
@@ -147,7 +148,9 @@ export function CartSheet({
                                         href={checkout.whatsappUrl}
                                         className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-3 font-display text-sm text-primary-foreground uppercase"
                                     >
-                                        Open it manually
+                                        <StretchText>
+                                            Open it manually
+                                        </StretchText>
                                     </a>
                                 )
                             }
@@ -989,7 +992,7 @@ function StepButtons({
                     'disabled:scale-100 disabled:opacity-50 motion-reduce:transform-none',
                 )}
             >
-                {nextLabel}
+                <StretchText>{nextLabel}</StretchText>
             </button>
         </div>
     );
