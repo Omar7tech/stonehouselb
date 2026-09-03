@@ -12,7 +12,11 @@
 @php
     $crawlRoute = request()->route()?->getName();
     $crawlSeo = app(\App\Support\Seo::class);
-    $crawlMeta = $crawlSeo->meta($crawlRoute);
+    // An error page is about a status rather than about the shop, and is
+    // never a search result: it names itself from the status it carries.
+    $crawlMeta = ($page['component'] ?? null) === 'error'
+        ? $crawlSeo->errorMeta((int) ($page['props']['status'] ?? 500))
+        : $crawlSeo->meta($crawlRoute);
     $crawlSettings = app(\App\Settings\GeneralSettings::class);
     // Only on the pages that actually show the menu: the outline stands in for
     // what React would have painted, so it must not claim more than the page does.

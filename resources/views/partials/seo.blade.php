@@ -10,10 +10,14 @@
 @php
     $seoRoute = request()->route()?->getName();
     $seo = app(\App\Support\Seo::class);
-    $meta = $seo->meta($seoRoute);
+    // An error page is about a status rather than about the shop, and is
+    // never a search result: it names itself from the status it carries.
+    $meta = ($page['component'] ?? null) === 'error'
+        ? $seo->errorMeta((int) ($page['props']['status'] ?? 500))
+        : $seo->meta($seoRoute);
     $settings = app(\App\Settings\GeneralSettings::class);
     $coordinates = $settings->usableCoordinates();
-    $graph = $seo->structuredData($seoRoute);
+    $graph = $meta['indexable'] ? $seo->structuredData($seoRoute) : null;
 @endphp
 
 {{-- The title lives in the Inertia head slot in the root template, so the app

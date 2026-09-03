@@ -2,12 +2,15 @@
 
 namespace App\Providers;
 
+use App\Support\Seo;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Inertia\ExceptionResponse;
+use Inertia\Inertia;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +29,48 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureCanonicalUrls();
+        $this->configureErrorPages();
+    }
+
+    /**
+     * Draw the error pages as the storefront rather than as Laravel.
+     *
+     * A customer who mistypes a URL, or arrives on a link from a year ago,
+     * should land somewhere that looks like the shop and offers them the menu —
+     * not on a white page with a number on it. So the statuses a customer can
+     * actually meet are rendered as the `error` page component, with the shared
+     * props the rest of the storefront gets, which is what lets it draw the
+     * same header, footer and shop status as every other page.
+     *
+     * A 500 with debug on is left to Laravel: while developing, the stack trace
+     * is the whole point, and a pretty page in front of it helps nobody.
+     */
+    protected function configureErrorPages(): void
+    {
+        Inertia::handleExceptionsUsing(function (ExceptionResponse $response) {
+            $status = $response->statusCode();
+
+            // 503 is deliberately not here. It is the status the app itself
+            // is down for — maintenance mode renders `errors/503.blade.php`
+            // with the framework bypassed entirely — so it is drawn by the
+            // plain branded page instead, and drawn the same way whatever the
+            // cause.
+            if (! in_array($status, [403, 404, 419, 429, 500], true)) {
+                return null;
+            }
+
+            if ($status >= 500 && config('app.debug')) {
+                return null;
+            }
+
+            return $response->render('error', [
+                'status' => $status,
+                // The tab's title is resolved where every other page's title is
+                // resolved, so an error page names itself the same way in the
+                // tab, in the history, and in a bookmark.
+                'title' => app(Seo::class)->errorMeta($status)['title'],
+            ])->withSharedData();
+        });
     }
 
     /**

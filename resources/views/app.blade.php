@@ -39,7 +39,9 @@
          told the same thing. The app rewrites it on a client-side visit from
          the same copy, shared as `seo` — the two cannot drift apart. --}}
     <x-inertia::head>
-        <title>{{ app(\App\Support\Seo::class)->meta(request()->route()?->getName())['title'] }}</title>
+        <title>{{ ($page['component'] ?? null) === 'error'
+            ? app(\App\Support\Seo::class)->errorMeta((int) ($page['props']['status'] ?? 500))['title']
+            : app(\App\Support\Seo::class)->meta(request()->route()?->getName())['title'] }}</title>
     </x-inertia::head>
 </head>
 

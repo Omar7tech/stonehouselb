@@ -96,6 +96,56 @@ class Seo
     }
 
     /**
+     * The head for an error page, which is a page about a status rather than
+     * about the shop.
+     *
+     * Never indexable, and never carrying the graph or the crawlable outline: a
+     * 404 that describes itself as the menu is a 404 that gets indexed as the
+     * menu, and a soft 404 is worse for a site than a hard one.
+     *
+     * @return array{
+     *     title: string,
+     *     description: string,
+     *     keywords: string,
+     *     image: string,
+     *     imageAlt: string,
+     *     imageWidth: int,
+     *     imageHeight: int,
+     *     type: string,
+     *     url: string,
+     *     robots: string,
+     *     indexable: bool,
+     * }
+     */
+    public function errorMeta(int $status): array
+    {
+        $name = config('app.name', 'Stone House');
+
+        [$title, $description] = match ($status) {
+            403 => ['Staff only', 'This part of the site is not open to customers.'],
+            404 => ['Page not found', 'That page is not on the menu. Head back to the menu or the front page.'],
+            419 => ['Page expired', 'The page sat open too long. Go back and try again.'],
+            429 => ['One moment', 'That was a lot of requests at once. Give it a moment and try again.'],
+            503 => ['Back in a moment', 'The site is down for a short while. The menu will be back shortly.'],
+            default => ['Something went wrong', 'Something broke on our end. Try again in a moment.'],
+        };
+
+        return [
+            'title' => $title.' — '.$name,
+            'description' => $description,
+            'keywords' => '',
+            'image' => asset(self::IMAGE),
+            'imageAlt' => self::IMAGE_ALT,
+            'imageWidth' => self::IMAGE_WIDTH,
+            'imageHeight' => self::IMAGE_HEIGHT,
+            'type' => 'website',
+            'url' => $this->canonicalUrl(),
+            'robots' => self::CLOSED,
+            'indexable' => false,
+        ];
+    }
+
+    /**
      * The just-enough slice of the meta shared with the app, so a client-side
      * visit retitles the tab exactly the way the server would have.
      *
