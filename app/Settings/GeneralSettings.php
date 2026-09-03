@@ -180,6 +180,36 @@ class GeneralSettings extends Settings
      */
     public ?string $location_url;
 
+    /**
+     * The shop's phone number as a customer would dial it, for the search
+     * result and the business card search engines build from it. Separate from
+     * {@see self::$whatsapp_number}, which is where orders go: a shop can take
+     * orders on one number and answer the phone on another.
+     */
+    public ?string $phone_number;
+
+    /**
+     * The street the shop is on, written the way a postal address is.
+     */
+    public ?string $street_address;
+
+    /**
+     * The town, and the governorate it sits in. What a local search actually
+     * matches on — "sefeeha near me" is answered from these two lines.
+     */
+    public ?string $address_locality;
+
+    public ?string $address_region;
+
+    /**
+     * Where the shop stands, in degrees. Given to the map crawlers and to the
+     * local-business graph; left empty, both simply go without it rather than
+     * pointing at the middle of the sea off Beirut.
+     */
+    public ?float $latitude;
+
+    public ?float $longitude;
+
     public static function group(): string
     {
         return 'general';
@@ -465,5 +495,39 @@ class GeneralSettings extends Settings
     public function usableLocationUrl(): ?string
     {
         return filled($this->location_url) ? trim((string) $this->location_url) : null;
+    }
+
+    /**
+     * The phone number worth publishing, or null when the shop has not given
+     * one. Falls back to the WhatsApp number, which is a number that reaches
+     * this shop either way.
+     */
+    public function usablePhoneNumber(): ?string
+    {
+        foreach ([$this->phone_number, $this->whatsapp_number] as $candidate) {
+            if (filled($candidate)) {
+                return trim((string) $candidate);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Where the shop stands, or null unless both degrees are set. Half a
+     * coordinate is not a location, and a zero is the Gulf of Guinea.
+     *
+     * @return array{latitude: float, longitude: float}|null
+     */
+    public function usableCoordinates(): ?array
+    {
+        $latitude = (float) $this->latitude;
+        $longitude = (float) $this->longitude;
+
+        if ($latitude === 0.0 || $longitude === 0.0) {
+            return null;
+        }
+
+        return ['latitude' => $latitude, 'longitude' => $longitude];
     }
 }

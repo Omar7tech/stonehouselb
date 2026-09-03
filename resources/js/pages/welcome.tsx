@@ -1,7 +1,8 @@
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { ArrowRight } from 'lucide-react';
 
 import { SiteBanner } from '@/components/menu/site-banner';
+import { PageHead } from '@/components/page-head';
 import { StoneHouseLogo } from '@/components/stone-house-logo';
 import { StoneWallBackdrop } from '@/components/stone-wall-backdrop';
 import { Button } from '@/components/ui/button';
@@ -58,7 +59,7 @@ export default function Welcome() {
 
     return (
         <>
-            <Head title="Welcome" />
+            <PageHead />
             <StoneWallBackdrop />
             {/* A column so the strip can sit on the top edge of the window and
                 the splash still centre itself in whatever is left. */}

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Settings\GeneralSettings;
+use App\Support\Seo;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -41,6 +42,10 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            // The title and description the server resolved for this route, so
+            // a client-side visit retitles the tab the way the first response
+            // did rather than writing its own version of the same page.
+            'seo' => app(Seo::class)->share($request->route()?->getName()),
             'auth' => [
                 'user' => $request->user(),
             ],

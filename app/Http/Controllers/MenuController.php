@@ -56,7 +56,6 @@ class MenuController extends Controller
 
         return Inertia::render('menu', [
             'orderType' => $orderType->value,
-            'orderTypeLabel' => $orderType->getLabel(),
             'categories' => CategoryResource::collection($categories)->resolve(),
             'slides' => SlideResource::collection($this->slides($orderType))->resolve(),
         ]);

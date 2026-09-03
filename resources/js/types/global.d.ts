@@ -21,6 +21,8 @@ declare module '@inertiajs/core' {
         sharedPageProps: {
             name: string;
             auth: Auth;
+            /** The title and description the server resolved for this route. */
+            seo: { title: string; description: string };
             /** The line for the strip above the header. Null leaves it out. */
             banner: string | null;
             pricing: Pricing;

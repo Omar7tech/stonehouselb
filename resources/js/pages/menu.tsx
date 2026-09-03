@@ -1,4 +1,4 @@
-import { Head, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { CartSheet } from '@/components/menu/cart-sheet';
@@ -17,6 +17,7 @@ import { ProductShowcase } from '@/components/menu/product-showcase';
 import { SiteBanner } from '@/components/menu/site-banner';
 import { SiteFooter } from '@/components/menu/site-footer';
 import { SiteHeader } from '@/components/menu/site-header';
+import { PageHead } from '@/components/page-head';
 import { StoneWallBackdrop } from '@/components/stone-wall-backdrop';
 import { Stretch, StretchText } from '@/components/stretch';
 import { CartProvider, useCart } from '@/contexts/cart-context';
@@ -35,7 +36,6 @@ import type {
 
 interface MenuProps {
     orderType: OrderType;
-    orderTypeLabel: string;
     /**
      * Only the categories with something in them for this order type — the
      * controller drops the empty ones, so a pill always opens onto products.
@@ -146,12 +146,7 @@ export default function Menu(props: MenuProps) {
     );
 }
 
-function MenuView({
-    orderType,
-    orderTypeLabel,
-    categories,
-    slides,
-}: MenuProps) {
+function MenuView({ orderType, categories, slides }: MenuProps) {
     // Delivery is the menu you order from; dine-in is the same menu to read.
     const canOrder = orderType === 'delivery';
 
@@ -575,7 +570,7 @@ function MenuView({
 
     return (
         <>
-            <Head title={`${orderTypeLabel} Menu`} />
+            <PageHead />
             <StoneWallBackdrop />
 
             {/* The footer is what lets the checkout button let go: sticky only

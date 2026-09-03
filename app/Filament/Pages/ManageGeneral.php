@@ -369,6 +369,50 @@ class ManageGeneral extends SettingsPage
                                     ->columnSpanFull(),
                             ]),
 
+                        Tab::make('Business')
+                            ->icon(Heroicon::OutlinedMapPin)
+                            ->schema([
+                                Section::make('Where you are')
+                                    ->description('Not shown on the menu — this is what Google, WhatsApp and the map apps are told. Every line you fill in is one more way a customer nearby finds the shop; a line left empty is simply left out rather than guessed at.')
+                                    ->columns(2)
+                                    ->schema([
+                                        TextInput::make('phone_number')
+                                            ->label('Phone number')
+                                            ->tel()
+                                            ->maxLength(40)
+                                            ->helperText('The number to call. Leave empty and the WhatsApp number is used.')
+                                            ->columnSpanFull(),
+
+                                        TextInput::make('street_address')
+                                            ->label('Street')
+                                            ->maxLength(160)
+                                            ->columnSpanFull(),
+
+                                        TextInput::make('address_locality')
+                                            ->label('Town')
+                                            ->maxLength(80)
+                                            ->helperText('What a search like "sefeeha near me" matches on.'),
+
+                                        TextInput::make('address_region')
+                                            ->label('Governorate')
+                                            ->maxLength(80),
+
+                                        TextInput::make('latitude')
+                                            ->label('Latitude')
+                                            ->numeric()
+                                            ->minValue(-90)
+                                            ->maxValue(90)
+                                            ->helperText('From Google Maps: right-click the shop, and the two numbers at the top are these.'),
+
+                                        TextInput::make('longitude')
+                                            ->label('Longitude')
+                                            ->numeric()
+                                            ->minValue(-180)
+                                            ->maxValue(180)
+                                            ->helperText('Both are needed, or neither is published.'),
+                                    ]),
+                            ]),
+
                         Tab::make('Footer')
                             ->icon(Heroicon::OutlinedLink)
                             ->schema([

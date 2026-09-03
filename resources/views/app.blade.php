@@ -5,6 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    @include('partials.seo')
+
     <link rel="icon" type="image/png" href="/favicon-96x96.png?v=20260819" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20260819" />
     <link rel="shortcut icon" href="/favicon.ico?v=20260819" />
@@ -33,12 +35,17 @@
 
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
+    {{-- The one title, resolved on the server so a crawler and a customer are
+         told the same thing. The app rewrites it on a client-side visit from
+         the same copy, shared as `seo` — the two cannot drift apart. --}}
     <x-inertia::head>
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ app(\App\Support\Seo::class)->meta(request()->route()?->getName())['title'] }}</title>
     </x-inertia::head>
 </head>
 
 <body class="font-sans antialiased">
+    @include('partials.crawlable')
+
     <x-inertia::app />
 </body>
 
