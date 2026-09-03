@@ -1,6 +1,7 @@
 import { ArrowUpRight } from 'lucide-react';
 
 import { CategoryArt } from '@/components/menu/category-art';
+import { useUppercaseCategoryTitles } from '@/lib/title-case';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/types';
 
@@ -46,6 +47,8 @@ export function CategoryRow({
     category: Category;
     onSelect: (id: number) => void;
 }) {
+    const uppercase = useUppercaseCategoryTitles();
+
     const count = category.products.length;
     // Held in a local so the null check narrows inside the map below, which a
     // property read on `category` would not survive. The small cut: these are
@@ -113,7 +116,12 @@ export function CategoryRow({
             {/* `min-w-0` so the name clips inside its own column rather than
                 shoving the art off the end of the band. */}
             <span className="relative z-10 flex min-w-0 flex-1 flex-col gap-1 py-4">
-                <span className="line-clamp-2 text-lg leading-tight font-semibold tracking-wide text-balance uppercase sm:text-2xl">
+                <span
+                    className={cn(
+                        'line-clamp-2 text-lg leading-tight font-semibold tracking-wide text-balance sm:text-2xl',
+                        uppercase && 'uppercase',
+                    )}
+                >
                     {category.name}
                 </span>
 

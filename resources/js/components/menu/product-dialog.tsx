@@ -28,6 +28,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import type { CartAddon } from '@/contexts/cart-context';
+import { useUppercaseProductTitles } from '@/lib/title-case';
 import { usePricing } from '@/lib/use-pricing';
 import { cn } from '@/lib/utils';
 import type { Addon, Product } from '@/types';
@@ -74,6 +75,7 @@ export function ProductDialog({
     }) => void;
 }) {
     const pricing = usePricing();
+    const uppercaseTitle = useUppercaseProductTitles();
 
     const [variantIndex, setVariantIndex] = useState(0);
     const [quantity, setQuantity] = useState(1);
@@ -200,7 +202,15 @@ export function ProductDialog({
 
                 <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
                     <DialogHeader className="shrink-0">
-                        <DialogTitle className="pr-8">
+                        {/* The sheet's own heading is the dish's name, so it
+                            follows the same house style as the card the
+                            customer opened it from. */}
+                        <DialogTitle
+                            className={cn(
+                                'pr-8',
+                                uppercaseTitle || 'normal-case',
+                            )}
+                        >
                             {product.name}
                         </DialogTitle>
 

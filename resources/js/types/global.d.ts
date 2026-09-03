@@ -33,6 +33,10 @@ declare module '@inertiajs/core' {
             variantStyle: VariantStyle;
             /** How one product is drawn in an open category. */
             productCardStyle: ProductCardStyle;
+            /** Whether category names are drawn in capitals. */
+            uppercaseCategoryTitles: boolean;
+            /** Whether product names are drawn in capitals. */
+            uppercaseProductTitles: boolean;
             /** The footer's links. Empty leaves the list out entirely. */
             socialLinks: SocialLink[];
             /** Map link for the footer's location button. Null leaves it out. */

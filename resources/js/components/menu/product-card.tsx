@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { ProductImage } from '@/components/menu/product-image';
 import { ProductPrice } from '@/components/menu/product-price';
 import { VariantSelector } from '@/components/menu/variant-selector';
+import { useUppercaseProductTitles } from '@/lib/title-case';
+import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
 
 /**
@@ -30,6 +32,8 @@ export function ProductCard({
     onOpen: (product: Product, variantIndex: number | null) => void;
     onAdd?: (product: Product, variantIndex: number | null) => void;
 }) {
+    const uppercase = useUppercaseProductTitles();
+
     const hasVariants = product.variants.length > 0;
 
     // Which size is chosen on the card. It is what the quick add adds, and the
@@ -84,7 +88,12 @@ export function ProductCard({
                     <div className="flex items-center gap-2">
                         {/* `min-w-0`, or the flex item refuses to shrink and
                             `truncate` never gets a narrower box to clip in. */}
-                        <h3 className="min-w-0 flex-1 truncate text-base leading-tight font-semibold uppercase sm:text-lg">
+                        <h3
+                            className={cn(
+                                'min-w-0 flex-1 truncate text-base leading-tight font-semibold sm:text-lg',
+                                uppercase && 'uppercase',
+                            )}
+                        >
                             {product.name}
                         </h3>
 

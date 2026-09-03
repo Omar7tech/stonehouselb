@@ -3,6 +3,8 @@ import { useState } from 'react';
 
 import { ProductImage } from '@/components/menu/product-image';
 import { ProductPrice } from '@/components/menu/product-price';
+import { useUppercaseProductTitles } from '@/lib/title-case';
+import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
 
 /**
@@ -34,6 +36,8 @@ export function ProductMinimal({
     onOpen: (product: Product, variantIndex: number | null) => void;
     onAdd?: (product: Product, variantIndex: number | null) => void;
 }) {
+    const uppercase = useUppercaseProductTitles();
+
     const hasVariants = product.variants.length > 0;
 
     // Kept so the sheet opens on the same size the card is quoting, which for
@@ -156,7 +160,12 @@ export function ProductMinimal({
 
             {/* The name has the line to itself, which is the whole reason the
                 marks moved onto the photo. */}
-            <h3 className="pointer-events-none relative mt-2.5 line-clamp-2 text-xs leading-snug font-medium tracking-wide uppercase sm:text-sm">
+            <h3
+                className={cn(
+                    'pointer-events-none relative mt-2.5 line-clamp-2 text-xs leading-snug font-medium tracking-wide sm:text-sm',
+                    uppercase && 'uppercase',
+                )}
+            >
                 {product.name}
             </h3>
 

@@ -1,6 +1,7 @@
 import { ArrowUpRight } from 'lucide-react';
 
 import { CategoryArt } from '@/components/menu/category-art';
+import { useUppercaseCategoryTitles } from '@/lib/title-case';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/types';
 
@@ -22,6 +23,8 @@ export function CategoryCard({
     category: Category;
     onSelect: (id: number) => void;
 }) {
+    const uppercase = useUppercaseCategoryTitles();
+
     return (
         <button
             type="button"
@@ -69,7 +72,12 @@ export function CategoryCard({
                 letter-spacing are doing legibility work here, not decoration.
                 `text-balance` keeps a two-line name from breaking to a single
                 orphaned word. */}
-            <span className="relative mt-2 line-clamp-2 text-center text-sm leading-tight font-semibold tracking-wide text-balance uppercase sm:text-base">
+            <span
+                className={cn(
+                    'relative mt-2 line-clamp-2 text-center text-sm leading-tight font-semibold tracking-wide text-balance sm:text-base',
+                    uppercase && 'uppercase',
+                )}
+            >
                 {category.name}
             </span>
         </button>

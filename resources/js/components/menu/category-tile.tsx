@@ -1,6 +1,7 @@
 import { ArrowUpRight } from 'lucide-react';
 
 import { CategoryArt } from '@/components/menu/category-art';
+import { useUppercaseCategoryTitles } from '@/lib/title-case';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/types';
 
@@ -31,6 +32,8 @@ export function CategoryTile({
     wide: boolean;
     onSelect: (id: number) => void;
 }) {
+    const uppercase = useUppercaseCategoryTitles();
+
     return (
         <button
             type="button"
@@ -101,7 +104,8 @@ export function CategoryTile({
                 meant to be read down. */}
             <span
                 className={cn(
-                    'relative line-clamp-2 text-sm leading-tight font-semibold tracking-wide text-balance uppercase',
+                    'relative line-clamp-2 text-sm leading-tight font-semibold tracking-wide text-balance',
+                    uppercase && 'uppercase',
                     wide ? 'min-w-0 flex-1 sm:text-lg' : 'mt-2 sm:text-base',
                 )}
             >

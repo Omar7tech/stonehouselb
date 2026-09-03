@@ -3,6 +3,7 @@ import { ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { SmartImage } from '@/components/smart-image';
+import { useUppercaseProductTitles } from '@/lib/title-case';
 import { usePricing } from '@/lib/use-pricing';
 import { cn } from '@/lib/utils';
 import type { Product, Slide } from '@/types';
@@ -190,6 +191,8 @@ function SlideCard({
     slide: Slide;
     onOpen: (slide: Slide) => void;
 }) {
+    const uppercaseProducts = useUppercaseProductTitles();
+
     const shell =
         'relative block w-full overflow-hidden rounded-2xl bg-card shadow-sm';
 
@@ -246,7 +249,8 @@ function SlideCard({
                                 to hold one at a size anybody can read. */}
                             <span
                                 className={cn(
-                                    'truncate text-base leading-tight font-semibold uppercase sm:text-lg',
+                                    'truncate text-base leading-tight font-semibold sm:text-lg',
+                                    uppercaseProducts && 'uppercase',
                                     onPhoto ? 'text-white' : 'text-foreground',
                                 )}
                             >

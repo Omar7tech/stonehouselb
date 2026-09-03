@@ -290,6 +290,25 @@ class ManageGeneral extends SettingsPage
                                             ->default(VariantStyle::Cards->value)
                                             ->required(),
                                     ]),
+
+                                Section::make('Title case')
+                                    ->description('Whether the storefront shouts the names you typed, or shows them exactly as written.')
+                                    ->icon(Heroicon::OutlinedLanguage)
+                                    ->collapsible()
+                                    ->collapsed()
+                                    ->persistCollapsed()
+                                    ->id('appearance-title-case')
+                                    ->schema([
+                                        Toggle::make('uppercase_category_titles')
+                                            ->label('Category names in capitals')
+                                            ->helperText('The names on the boxes of the opening screen.')
+                                            ->default(true),
+
+                                        Toggle::make('uppercase_product_titles')
+                                            ->label('Product names in capitals')
+                                            ->helperText('The names on the cards, in the carousel and at the head of the product sheet.')
+                                            ->default(true),
+                                    ]),
                             ]),
 
                         Tab::make('Delivery')

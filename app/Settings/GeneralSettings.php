@@ -112,6 +112,18 @@ class GeneralSettings extends Settings
     public ProductCardStyle $product_card_style;
 
     /**
+     * Whether category names are shouted in the storefront's title slots — the
+     * boxes on the landing view. Off leaves them exactly as they were typed.
+     */
+    public bool $uppercase_category_titles;
+
+    /**
+     * Whether product names are shouted wherever a dish is named as a title:
+     * the cards, the carousel and the heading of the product sheet.
+     */
+    public bool $uppercase_product_titles;
+
+    /**
      * Whether the delivery menu is available. When off the storefront is
      * dine-in only and `/menu/delivery` redirects back to the dine-in menu.
      */

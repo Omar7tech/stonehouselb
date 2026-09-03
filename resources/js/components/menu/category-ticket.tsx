@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 
 import { CategoryArt } from '@/components/menu/category-art';
+import { useUppercaseCategoryTitles } from '@/lib/title-case';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/types';
 
@@ -39,6 +40,8 @@ export function CategoryTicket({
     category: Category;
     onSelect: (id: number) => void;
 }) {
+    const uppercase = useUppercaseCategoryTitles();
+
     return (
         <button
             type="button"
@@ -74,7 +77,12 @@ export function CategoryTicket({
             </span>
 
             <span className="relative flex shrink-0 flex-col items-center gap-1.5 px-3 pt-2.5 pb-3">
-                <span className="line-clamp-2 text-center text-xs leading-tight font-semibold tracking-wide text-balance uppercase sm:text-sm">
+                <span
+                    className={cn(
+                        'line-clamp-2 text-center text-xs leading-tight font-semibold tracking-wide text-balance sm:text-sm',
+                        uppercase && 'uppercase',
+                    )}
+                >
                     {category.name}
                 </span>
 
