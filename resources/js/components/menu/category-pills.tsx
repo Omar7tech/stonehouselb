@@ -1,4 +1,5 @@
 import { LayoutGrid } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 import { StretchText } from '@/components/stretch';
 import { useDragScroll } from '@/lib/use-drag-scroll';
@@ -30,6 +31,42 @@ export function CategoryPills({
     onClear: () => void;
 }) {
     const { ref, dragHandlers } = useDragScroll<HTMLDivElement>();
+
+    const activeRef = useRef<HTMLButtonElement>(null);
+    /** Whether the row has already been placed once, on the first render. */
+    const settled = useRef(false);
+
+    /**
+     * Bring the open category into the middle of the row. A category picked
+     * from the boxes can sit anywhere in this list, including off the end of
+     * it, and a filter row that shows no sign of what is filtering it is the
+     * same as no marker at all.
+     *
+     * `scrollLeft` is moved directly rather than through `scrollIntoView`,
+     * which would scroll the page as well as the row.
+     */
+    useEffect(() => {
+        const scroller = ref.current;
+        const pill = activeRef.current;
+
+        if (scroller === null || pill === null) {
+            return;
+        }
+
+        const row = scroller.getBoundingClientRect();
+        const box = pill.getBoundingClientRect();
+        const offset = box.left - row.left - (row.width - box.width) / 2;
+
+        // Instant the first time — the row has only just appeared, so there is
+        // no movement to follow. Smooth after that, where the eye is already on
+        // a row it has seen and can watch travel to the next pill.
+        scroller.scrollBy({
+            left: offset,
+            behavior: settled.current ? 'smooth' : 'instant',
+        });
+
+        settled.current = true;
+    }, [activeId, ref]);
 
     return (
         // The way back sits outside the scroller, so it stays put while the
@@ -68,6 +105,7 @@ export function CategoryPills({
                             <li key={category.id}>
                                 <button
                                     type="button"
+                                    ref={isActive ? activeRef : undefined}
                                     aria-pressed={isActive}
                                     onClick={() => onSelect(category.id)}
                                     className={cn(

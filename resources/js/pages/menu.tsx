@@ -189,10 +189,10 @@ function MenuView({
      */
     const [addonsOverride, setAddonsOverride] = useState<Addon[] | null>(null);
 
-    /** The menu panel, so changing what is in it can hold it where it stands. */
+    /** The menu panel, so changing what is in it can bring its top back. */
     const panelRef = useRef<HTMLElement>(null);
-    /** Where it sat on screen just before the change, in viewport pixels. */
-    const panelTop = useRef<number | null>(null);
+    /** Set by a category change, read once the new view has been laid out. */
+    const returnToPanel = useRef(false);
 
     /**
      * Every product on the menu by id, so a basket line can be traced back to
@@ -347,42 +347,37 @@ function MenuView({
     /**
      * Open a category, switch to another one, or go back to the boxes.
      *
-     * None of these move the page. Everything above the panel — the header, the
-     * order-type switch, the carousel, the heading — is the same in every view,
-     * so the customer is looking at the same place before and after and should
-     * still be looking at it: taking them to the top of the document instead
-     * throws away wherever they had got to, on every single tap.
-     *
-     * The exception is a view that is shorter than the one it replaced: the
-     * document loses height, the browser clamps the scroll to the new bottom,
-     * and the page slides up on its own. So the panel's position on screen is
-     * measured before the swap and put back after it, which holds it still in
-     * that case too.
+     * Every one of these swaps the whole contents of the panel, and the new
+     * contents start at its top. Left where they stood, a customer who picked a
+     * box from halfway down the page lands halfway down a list they have never
+     * seen — so the panel's top is brought back to the top of the screen on
+     * every change.
      */
     const selectCategory = (id: number | null): void => {
-        panelTop.current =
-            panelRef.current?.getBoundingClientRect().top ?? null;
+        returnToPanel.current = true;
         setActiveCategoryId(id);
     };
 
     useLayoutEffect(() => {
-        const before = panelTop.current;
-        panelTop.current = null;
-
-        if (before === null) {
+        if (!returnToPanel.current) {
             return;
         }
 
-        const after = panelRef.current?.getBoundingClientRect().top;
+        returnToPanel.current = false;
 
-        if (after === undefined || after === before) {
+        const panel = panelRef.current;
+
+        if (panel === null) {
             return;
         }
 
-        // Instant, not smooth: this is a correction for something that has
-        // already happened, and animating it would draw the eye to the very
-        // movement it exists to hide.
-        window.scrollBy({ top: after - before, behavior: 'instant' });
+        // Measured after the swap: the carousel is on the boxes only, so the
+        // height above the panel is not the same on both sides of the change.
+        // A few pixels of air above it, so it reads as the top of a panel
+        // rather than as a page cut off at the edge of the screen.
+        const top = panel.getBoundingClientRect().top + window.scrollY - 12;
+
+        window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
     }, [activeCategoryId]);
 
     const hasCart = count > 0;
