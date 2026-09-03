@@ -189,8 +189,13 @@ function MenuView({
      */
     const [addonsOverride, setAddonsOverride] = useState<Addon[] | null>(null);
 
-    /** Set by a category change, read once the new view has been laid out. */
+    /** Set by a pick from the boxes, read once the new view is laid out. */
     const returnToTop = useRef(false);
+
+    /** The menu panel, so a change inside it can hold it where it stands. */
+    const panelRef = useRef<HTMLElement>(null);
+    /** Where it sat on screen just before the change, in viewport pixels. */
+    const panelTop = useRef<number | null>(null);
 
     /**
      * Every product on the menu by id, so a basket line can be traced back to
@@ -343,27 +348,62 @@ function MenuView({
     }, [activeCategory]);
 
     /**
-     * Open a category, switch to another one, or go back to the boxes.
+     * Open a category from the boxes.
      *
-     * Every one of these swaps the whole contents of the panel, and the new
-     * contents start at its top. Left where they stood, a customer who picked a
-     * box from halfway down the page lands halfway down a list they have never
-     * seen — so each change takes the page back to the top, where the order
-     * strip and the heading are, and the new view starts from its first line.
+     * The boxes are a grid the customer scrolls through, so the tap can come
+     * from anywhere down the page — and where it came from tells you nothing
+     * about the list that replaces it. This one goes back to the top, where the
+     * order strip and the heading are and the new list starts at its first row.
      */
-    const selectCategory = (id: number | null): void => {
+    const openCategory = (id: number): void => {
         returnToTop.current = true;
         setActiveCategoryId(id);
     };
 
+    /**
+     * Switch to another category, or go back to the boxes, from the pill row.
+     *
+     * This one does not move the page. The pills are the thing the customer is
+     * using, and they are at the top of the panel already — taking the page
+     * anywhere would carry the row they are tapping out from under them.
+     *
+     * The exception is a view shorter than the one it replaced: the document
+     * loses height, the browser clamps the scroll to the new bottom, and the
+     * page slides up on its own. So the panel's position on screen is measured
+     * before the swap and put back after it, which holds it still in that case
+     * too.
+     */
+    const selectCategory = (id: number | null): void => {
+        panelTop.current =
+            panelRef.current?.getBoundingClientRect().top ?? null;
+        setActiveCategoryId(id);
+    };
+
     useLayoutEffect(() => {
-        if (!returnToTop.current) {
+        const before = panelTop.current;
+        panelTop.current = null;
+
+        if (returnToTop.current) {
+            returnToTop.current = false;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
             return;
         }
 
-        returnToTop.current = false;
+        if (before === null) {
+            return;
+        }
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const after = panelRef.current?.getBoundingClientRect().top;
+
+        if (after === undefined || after === before) {
+            return;
+        }
+
+        // Instant, not smooth: this is a correction for something that has
+        // already happened, and animating it would draw the eye to the very
+        // movement it exists to hide.
+        window.scrollBy({ top: after - before, behavior: 'instant' });
     }, [activeCategoryId]);
 
     const hasCart = count > 0;
@@ -613,6 +653,7 @@ function MenuView({
                     cart's surplus white passes behind it rather than moving
                     it, so nothing here has to reach up to meet it. */}
                     <main
+                        ref={panelRef}
                         className={cn(
                             // `isolate` so the pattern below can sit on a negative
                             // layer: it puts it above the panel's own background
@@ -677,7 +718,7 @@ function MenuView({
                                something broken. */
                             <CategoryGrid
                                 categories={categories}
-                                onSelect={selectCategory}
+                                onSelect={openCategory}
                             />
                         ) : (
                             <>
