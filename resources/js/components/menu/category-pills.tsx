@@ -53,19 +53,43 @@ export function CategoryPills({
             return;
         }
 
-        const row = scroller.getBoundingClientRect();
-        const box = pill.getBoundingClientRect();
-        const offset = box.left - row.left - (row.width - box.width) / 2;
+        const centre = (): void => {
+            const row = scroller.getBoundingClientRect();
+            const box = pill.getBoundingClientRect();
+            const middle =
+                scroller.scrollLeft +
+                (box.left - row.left) -
+                (row.width - box.width) / 2;
 
-        // Instant the first time — the row has only just appeared, so there is
-        // no movement to follow. Smooth after that, where the eye is already on
-        // a row it has seen and can watch travel to the next pill.
-        scroller.scrollBy({
-            left: offset,
-            behavior: settled.current ? 'smooth' : 'instant',
+            const furthest = scroller.scrollWidth - scroller.clientWidth;
+            const left = Math.max(0, Math.min(middle, furthest));
+
+            // The first placement writes `scrollLeft` outright rather than
+            // asking for an instant scroll: the row has only just appeared, so
+            // there is no movement to follow, and `behavior: 'instant'` is
+            // rejected outright by older WebKit rather than ignored.
+            if (settled.current) {
+                scroller.scrollTo({ left, behavior: 'smooth' });
+
+                return;
+            }
+
+            scroller.scrollLeft = left;
+        };
+
+        centre();
+
+        // Again on the next frame. The row is measured the moment it appears,
+        // which is early enough to catch the display font landing and every
+        // pill changing width under the first answer.
+        const frame = requestAnimationFrame(() => {
+            centre();
+            settled.current = true;
         });
 
-        settled.current = true;
+        return () => {
+            cancelAnimationFrame(frame);
+        };
     }, [activeId, ref]);
 
     return (
