@@ -253,3 +253,60 @@ export function useFullscreen(): {
 
     return { active, toggle: supported ? toggle : null };
 }
+
+/** Which sheet a board is drawn on. Dark is the default, and the usual answer. */
+export type BoardTheme = 'dark' | 'light';
+
+/** Where a set remembers the sheet it was left on. */
+const THEME_KEY = 'stone-house-screen-theme';
+
+/**
+ * The board's own light/dark switch, remembered on the set itself.
+ *
+ * Deliberately not the storefront's theme: the person who picked the sheet on
+ * the website is at home on their phone, and the screen on the wall is a
+ * different object in a different room. A board over a bright counter reads
+ * better dark; a tablet on a table in daylight reads better light, and the only
+ * way to know which is to stand there and try it.
+ *
+ * Kept per device rather than per screen record, so two tablets showing the
+ * same board can be set differently — and so changing it needs no round trip to
+ * the dashboard while somebody is holding the set.
+ */
+export function useBoardTheme(): {
+    theme: BoardTheme;
+    toggle: () => void;
+} {
+    // Read once, lazily, rather than mirrored in from an effect. Storage can be
+    // missing or walled up entirely, and this page is server-rendered, so both
+    // are treated the same way: dark, which is the default anyway.
+    const [theme, setTheme] = useState<BoardTheme>(() => {
+        if (typeof window === 'undefined') {
+            return 'dark';
+        }
+
+        try {
+            const kept = window.localStorage.getItem(THEME_KEY);
+
+            return kept === 'light' ? 'light' : 'dark';
+        } catch {
+            return 'dark';
+        }
+    });
+
+    const toggle = useCallback((): void => {
+        setTheme((current) => {
+            const next = current === 'dark' ? 'light' : 'dark';
+
+            try {
+                window.localStorage.setItem(THEME_KEY, next);
+            } catch {
+                // The switch still works for as long as the set stays on.
+            }
+
+            return next;
+        });
+    }, []);
+
+    return { theme, toggle };
+}

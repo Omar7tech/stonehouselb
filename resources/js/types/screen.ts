@@ -2,7 +2,8 @@
 export type ScreenOrientation = 'landscape' | 'portrait';
 
 /** Mirrors `App\Enums\ScreenLayout` — how a screen draws its pages. */
-export type ScreenLayout = 'board' | 'spotlight' | 'split' | 'showcase';
+export type ScreenLayout =
+    'board' | 'spotlight' | 'split' | 'showcase' | 'strip';
 
 /** One screen in the shop, as the board page reads it. */
 export type Screen = {

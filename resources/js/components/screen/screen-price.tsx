@@ -10,6 +10,10 @@ import type { Product, Variant } from '@/types';
  * ten-inch tablet and on a wall-mounted fifty-five. The pounds line sits under
  * the dollars at two-thirds the size: on a board the dollar figure is what is
  * scanned, and the pound figure is what is checked.
+ *
+ * Everything but the figure itself is drawn in the ink it inherits, so the one
+ * component is right on the dark board, on the light board, and in white over a
+ * photograph — none of which it needs to be told about.
  */
 export function ScreenPrice({
     price,
@@ -33,7 +37,7 @@ export function ScreenPrice({
             <span className="flex items-baseline gap-[0.4em]">
                 {from && (
                     <span
-                        className="font-semibold text-white/45 uppercase"
+                        className="font-semibold text-current/45 uppercase"
                         style={{ fontSize: `calc(var(--u) * ${scale * 0.8})` }}
                     >
                         from
@@ -42,7 +46,7 @@ export function ScreenPrice({
 
                 {was != null && (
                     <span
-                        className="text-white/35 line-through"
+                        className="text-current/35 line-through"
                         style={{ fontSize: `calc(var(--u) * ${scale * 0.95})` }}
                     >
                         {pricing.primary(was)}
@@ -116,9 +120,9 @@ export function VariantPrices({
             {variants.map((variant, index) => (
                 <li
                     key={index}
-                    className="flex items-baseline justify-between gap-[1em] border-b border-white/10 pb-[0.3em]"
+                    className="flex items-baseline justify-between gap-[1em] border-b border-current/15 pb-[0.3em]"
                 >
-                    <span className="font-medium text-white/70 uppercase">
+                    <span className="font-medium text-current/70 uppercase">
                         {variant.name}
                     </span>
 

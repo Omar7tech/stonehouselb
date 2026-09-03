@@ -310,3 +310,112 @@
     --sidebar-border: oklch(1 0 0 / 12%);
     --sidebar-ring: oklch(0.6 0 0);
 }
+
+/*
+ * The screens: the boards hung on the wall.
+ *
+ * They carry their own palette rather than the storefront's, because a menu
+ * board is a different object from a web page — it is read from across a room,
+ * it is on for twelve hours, and the person who chose the site's theme is not
+ * the person standing in front of the television. Two sheets are offered, and
+ * the set remembers which one it was left on.
+ *
+ * Photographs are the exception to the flip: copy laid over a picture stays
+ * white on a dark wash in both sheets, because a photograph does not get
+ * lighter when the wall around it does.
+ */
+@layer components {
+    .board-dark {
+        --board-bg: #0b0b0b;
+        --board-ink: #ffffff;
+        --board-muted: rgb(255 255 255 / 0.45);
+        --board-faint: rgb(255 255 255 / 0.25);
+        --board-line: rgb(255 255 255 / 0.1);
+        --board-soft: rgb(255 255 255 / 0.05);
+        --board-panel: rgb(0 0 0 / 0.45);
+    }
+
+    .board-light {
+        /* Warm paper rather than white: a full-brightness white board in a lit
+           room glares, and the orange sits badly on pure white. */
+        --board-bg: #f6f3ee;
+        --board-ink: #171514;
+        --board-muted: rgb(23 21 20 / 0.55);
+        --board-faint: rgb(23 21 20 / 0.3);
+        --board-line: rgb(23 21 20 / 0.14);
+        --board-soft: rgb(23 21 20 / 0.05);
+        --board-panel: rgb(255 255 255 / 0.7);
+    }
+}
+
+@theme {
+    /*
+     * A photograph given the whole screen holds still for twelve seconds, and
+     * a still photograph on a wall reads as a poster somebody forgot to take
+     * down. The drift is slow enough that nobody catches it moving and long
+     * enough that the picture is never the same twice.
+     */
+    --animate-board-drift: board-drift 24s ease-in-out infinite alternate;
+
+    @keyframes board-drift {
+        from {
+            transform: scale(1.06) translate3d(-1.2%, -0.8%, 0);
+        }
+        to {
+            transform: scale(1.14) translate3d(1.2%, 1%, 0);
+        }
+    }
+
+    /*
+     * The strip: one run of cards printed twice, travelling exactly one copy's
+     * width before starting again, which makes the loop seamless.
+     */
+    --animate-board-strip: board-strip var(--strip-seconds, 40s) linear infinite;
+
+    @keyframes board-strip {
+        from {
+            transform: translate3d(0, 0, 0);
+        }
+        to {
+            transform: translate3d(-50%, 0, 0);
+        }
+    }
+
+    /* A row landing on the board, used staggered down a list. */
+    --animate-board-row: board-row 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+
+    @keyframes board-row {
+        from {
+            opacity: 0;
+            transform: translateY(0.6em);
+        }
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    /* A tile setting itself down on the wall. */
+    --animate-board-tile: board-tile 0.55s cubic-bezier(0.34, 1.2, 0.64, 1)
+        backwards;
+
+    @keyframes board-tile {
+        from {
+            opacity: 0;
+            transform: scale(0.94);
+        }
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-board-drift,
+    .animate-board-strip,
+    .animate-board-row,
+    .animate-board-tile {
+        animation: none;
+    }
+}

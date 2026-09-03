@@ -24,8 +24,11 @@ enum ScreenLayout: string implements HasDescription, HasIcon, HasLabel
     /** The photograph down one half, the dishes listed on the other. */
     case Split = 'split';
 
-    /** A large feature with the rest of the category queued beside it. */
+    /** A wall of tiles, one dish to each, big and small. */
     case Showcase = 'showcase';
+
+    /** The category travelling sideways, never stopping. */
+    case Strip = 'strip';
 
     public function getLabel(): string
     {
@@ -33,17 +36,19 @@ enum ScreenLayout: string implements HasDescription, HasIcon, HasLabel
             self::Board => 'Board',
             self::Spotlight => 'Spotlight',
             self::Split => 'Split',
-            self::Showcase => 'Showcase',
+            self::Showcase => 'Wall',
+            self::Strip => 'Strip',
         };
     }
 
     public function getDescription(): string
     {
         return match ($this) {
-            self::Board => 'The whole category at once, in columns with prices. The board above a counter.',
-            self::Spotlight => 'One dish at a time, its photograph filling the screen. Best for a short, showy menu.',
-            self::Split => 'The photograph down one half of the screen, the category listed on the other.',
-            self::Showcase => 'One dish featured large, with the rest of its category queued up the side.',
+            self::Board => 'Type only, no photographs: numbered dishes, dotted leaders out to the prices, the category ghosted behind. For a long menu and a queue that reads it.',
+            self::Spotlight => 'One dish, the whole screen, the photograph slowly drifting, with the price on a torn ticket. For a short menu shot properly.',
+            self::Split => 'A photograph cut across the screen on a slant, the dishes listed on what is left. Reads as a printed poster.',
+            self::Showcase => 'A wall of tiles, one dish to each, the first given twice the room. The way the website draws its categories.',
+            self::Strip => 'The category travelling sideways, never stopping. For a wide screen people walk past rather than queue at.',
         };
     }
 
@@ -53,7 +58,8 @@ enum ScreenLayout: string implements HasDescription, HasIcon, HasLabel
             self::Board => Heroicon::OutlinedTableCells,
             self::Spotlight => Heroicon::OutlinedSparkles,
             self::Split => Heroicon::OutlinedViewColumns,
-            self::Showcase => Heroicon::OutlinedQueueList,
+            self::Showcase => Heroicon::OutlinedSquares2x2,
+            self::Strip => Heroicon::OutlinedArrowsRightLeft,
         };
     }
 }

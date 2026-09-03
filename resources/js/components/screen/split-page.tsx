@@ -1,21 +1,25 @@
 import { ScreenMarks } from '@/components/screen/screen-marks';
 import { ProductLeadPrice } from '@/components/screen/screen-price';
 import { SmartImage } from '@/components/smart-image';
+import { StretchText } from '@/components/stretch';
 import type { ScreenPage } from '@/lib/screen-deck';
 import { cn } from '@/lib/utils';
+import type { Product } from '@/types';
 import type { ScreenOrientation } from '@/types/screen';
 
 /**
- * The photograph down one half, the category listed on the other.
+ * The poster: a photograph cut across the screen on a slant, the dishes listed
+ * on what is left.
  *
- * The compromise layout, and the one most shops actually want: appetising
- * enough to stop somebody in the queue, but still a list of dishes and prices
- * rather than a single hero. The picture is the first dish on the page that has
- * one, so the half that sells and the half that informs are always about the
- * same food.
+ * The seam is the whole idea. A screen halved down the middle is a web page
+ * with a picture beside it; a screen cut on a diagonal is a printed poster, and
+ * the eye follows the cut down into the list rather than picking one side to
+ * read. The category is set along the seam, running up the page, so the
+ * heading is part of the cut instead of a line above it.
  *
- * A tall screen stacks them — picture on top, list below — because a portrait
- * set split down the middle gives you two columns too narrow to be either.
+ * A tall screen takes the same idea horizontally — the cut runs across rather
+ * than down, because a portrait set split on a steep diagonal gives you two
+ * triangles too narrow to hold anything.
  */
 export function SplitPage({
     page,
@@ -30,14 +34,18 @@ export function SplitPage({
     const hero = page.products.find((product) => product.image !== null);
 
     return (
-        <div
-            className={cn(
-                'grid h-full min-h-0 gap-[2em]',
-                portrait ? 'grid-rows-[1fr_1.35fr]' : 'grid-cols-[1fr_1.15fr]',
-            )}
-            style={{ fontSize: 'var(--u)' }}
-        >
-            <div className="relative min-h-0 overflow-hidden rounded-[1em]">
+        <div className="relative h-full w-full overflow-hidden">
+            {/* The picture, clipped to the slant. It keeps the whole screen and
+                is cut back rather than being sized to a column, so the
+                photograph is never squeezed into a shape it was not shot in. */}
+            <div
+                className="absolute inset-0"
+                style={{
+                    clipPath: portrait
+                        ? 'polygon(0 0, 100% 0, 100% 46%, 0 54%)'
+                        : 'polygon(0 0, 54% 0, 46% 100%, 0 100%)',
+                }}
+            >
                 {hero?.image ? (
                     <SmartImage
                         src={hero.image}
@@ -48,60 +56,117 @@ export function SplitPage({
                         spinnerClassName="bg-black/40 text-white/30"
                     />
                 ) : (
-                    <div className="h-full w-full bg-primary/12" />
+                    <div className="h-full w-full bg-primary/20" />
                 )}
 
-                {/* The picture names itself, quietly. Without this the half is
-                    a photograph of something the customer cannot identify on
-                    the list beside it. */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_40%,transparent_20%,rgb(0_0_0/0.6)_100%)]" />
+
+                {/* The picture names itself, low on its own side. Without this
+                    the photograph is of something the customer cannot pick out
+                    of the list beside it. */}
                 {hero && (
-                    <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-[1.2em] pt-[3em]">
-                        <span
-                            className="leading-none font-semibold uppercase"
-                            style={{ fontSize: 'calc(var(--u) * 1.6)' }}
-                        >
-                            {hero.name}
-                        </span>
+                    <span
+                        className="absolute bottom-[1.5em] left-[1.5em] max-w-[80%] leading-none font-semibold text-white uppercase drop-shadow-[0_0.1em_0.4em_rgb(0_0_0/0.8)]"
+                        style={{ fontSize: 'calc(var(--u) * 1.7)' }}
+                    >
+                        {hero.name}
                     </span>
                 )}
             </div>
 
-            <ul className="flex min-w-0 flex-col justify-center">
-                {page.products.map((product) => (
-                    <li
+            {/* The seam itself, drawn as a hairline of the house orange so the
+                cut reads as deliberate rather than as a clipping artefact. */}
+            <div
+                aria-hidden
+                className="absolute inset-0 bg-primary"
+                style={{
+                    clipPath: portrait
+                        ? 'polygon(0 53.6%, 100% 45.6%, 100% 46.4%, 0 54.4%)'
+                        : 'polygon(53.6% 0, 54.4% 0, 46.4% 100%, 45.6% 100%)',
+                }}
+            />
+
+            {/* The category, run along the cut. */}
+            <StretchText
+                className={cn(
+                    'absolute font-display whitespace-nowrap text-(--board-ink) uppercase opacity-25',
+                    portrait
+                        ? 'right-[1.2em] bottom-[calc(50%+1.2em)]'
+                        : 'bottom-[2em] left-[calc(54%-1.5em)] origin-bottom-left -rotate-90',
+                )}
+                style={{ fontSize: 'calc(var(--u) * 1.6)' }}
+            >
+                {page.category.name}
+            </StretchText>
+
+            <ul
+                className={cn(
+                    'absolute flex flex-col justify-center gap-[0.2em]',
+                    portrait
+                        ? 'inset-x-[3em] top-[56%] bottom-[2.5em]'
+                        : 'top-[3em] right-[3em] bottom-[3em] left-[56%]',
+                )}
+                style={{ fontSize: 'var(--u)' }}
+            >
+                {page.products.map((product, index) => (
+                    <PosterLine
                         key={product.id}
-                        className="flex items-baseline gap-[0.6em] border-b border-white/8 py-[0.7em] last:border-b-0"
-                    >
-                        <span className="flex min-w-0 flex-col">
-                            <span className="flex min-w-0 items-center gap-[0.4em]">
-                                <span
-                                    className="truncate leading-none font-semibold uppercase"
-                                    style={{ fontSize: 'calc(var(--u) * 1.7)' }}
-                                >
-                                    {product.name}
-                                </span>
-
-                                <ScreenMarks product={product} scale={1.3} />
-                            </span>
-
-                            {product.subtitle && (
-                                <span
-                                    className="mt-[0.3em] truncate text-white/45"
-                                    style={{ fontSize: 'var(--u)' }}
-                                >
-                                    {product.subtitle}
-                                </span>
-                            )}
-                        </span>
-
-                        <span className="min-w-[1.5em] flex-1 translate-y-[-0.25em] border-b border-dotted border-white/20" />
-
-                        {showPrices && (
-                            <ProductLeadPrice product={product} scale={1.2} />
-                        )}
-                    </li>
+                        product={product}
+                        order={index}
+                        featured={hero?.id === product.id}
+                        showPrices={showPrices}
+                    />
                 ))}
             </ul>
         </div>
+    );
+}
+
+function PosterLine({
+    product,
+    order,
+    featured,
+    showPrices,
+}: {
+    product: Product;
+    order: number;
+    /** The one in the photograph, marked so the two halves are tied together. */
+    featured: boolean;
+    showPrices: boolean;
+}) {
+    return (
+        <li
+            className={cn(
+                'flex min-w-0 animate-board-row items-baseline gap-[0.6em] rounded-[0.4em] py-[0.55em]',
+                featured && 'bg-primary/10 px-[0.6em]',
+            )}
+            style={{ animationDelay: `${order * 70}ms` }}
+        >
+            <span className="flex min-w-0 flex-col">
+                <span className="flex min-w-0 items-center gap-[0.4em]">
+                    <span
+                        className="truncate leading-none font-semibold uppercase"
+                        style={{ fontSize: 'calc(var(--u) * 1.6)' }}
+                    >
+                        {product.name}
+                    </span>
+
+                    <ScreenMarks product={product} scale={1.3} />
+                </span>
+
+                {product.subtitle && (
+                    <span
+                        className="mt-[0.3em] truncate text-(--board-muted)"
+                        style={{ fontSize: 'var(--u)' }}
+                    >
+                        {product.subtitle}
+                    </span>
+                )}
+            </span>
+
+            <span className="min-w-[1em] flex-1 translate-y-[-0.25em] border-b border-dotted border-(--board-line)" />
+
+            {showPrices && <ProductLeadPrice product={product} scale={1.15} />}
+        </li>
     );
 }

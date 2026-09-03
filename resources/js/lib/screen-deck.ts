@@ -33,10 +33,14 @@ const PER_PAGE: Record<ScreenLayout, Record<ScreenOrientation, number>> = {
     board: { landscape: 8, portrait: 9 },
     // One dish, its photograph behind it. The page is the dish.
     spotlight: { landscape: 1, portrait: 1 },
-    // Half the screen is a photograph, so the list beside it takes what is left.
+    // A slanted photograph takes half the screen; the list has the rest.
     split: { landscape: 5, portrait: 6 },
-    // One dish featured, the rest of its category queued alongside.
-    showcase: { landscape: 1, portrait: 1 },
+    // A feature tile of four cells, and small ones filling the wall around it.
+    showcase: { landscape: 5, portrait: 5 },
+    // The strip does not page at all: it takes the category and travels
+    // through it. Capped so a category of eighty does not build a track a
+    // hundred screens wide for a set with no memory to spare.
+    strip: { landscape: 14, portrait: 14 },
 };
 
 /**

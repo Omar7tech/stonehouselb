@@ -115,6 +115,24 @@ it('deals in the slider offers, and leaves them out when the screen says so', fu
         );
 });
 
+it('draws every layout from the same deck', function (string $layout): void {
+    $category = Category::factory()->create(['title' => 'Burgers']);
+    Product::factory()->count(3)->for($category)->create();
+
+    $screen = DisplayScreen::factory()->create(['layout' => $layout]);
+
+    $this->get(route('screen.show', $screen))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->component('screen')
+            ->where('screen.layout', $layout)
+            ->has('categories.0.products', 3)
+        );
+})->with(array_map(
+    fn (ScreenLayout $layout): string => $layout->value,
+    ScreenLayout::cases(),
+));
+
 it('stops answering once a screen is taken down', function (): void {
     $screen = DisplayScreen::factory()->inactive()->create();
 
