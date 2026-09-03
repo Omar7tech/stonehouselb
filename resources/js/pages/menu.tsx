@@ -586,10 +586,12 @@ function MenuView({
 
                     {/* Straight under the switch, above everything the menu
                         itself draws: it is the first thing on the page after
-                        the way between the two menus, and it stays there
-                        whether the customer is on the boxes or deep in a
-                        category — a promotion shown only on the front page is
-                        one that half the orders never meet.
+                        the way between the two menus.
+
+                        The landing view only. Once a category is picked the
+                        customer is choosing between dishes, and a row of
+                        promotions above that list is competing with the choice
+                        it interrupted.
 
                         Out on the wall rather than inside the panel, so the
                         pictures are the full width of the column and the menu
@@ -598,7 +600,7 @@ function MenuView({
                         Held still while the sheet is open: it is behind the
                         overlay there, and a row that has moved on by itself is
                         not the row the customer left. */}
-                    {slides.length > 0 && (
+                    {activeCategory === null && slides.length > 0 && (
                         /* Asked here as well as inside the slider, or a shop
                            with no slides would keep this row's padding as a
                            band of empty wall.
