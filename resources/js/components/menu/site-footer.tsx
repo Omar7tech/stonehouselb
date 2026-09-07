@@ -10,6 +10,9 @@ import { cn } from '@/lib/utils';
 /** The mark's own proportions, taken from the artwork's viewBox. */
 const LOGO_ASPECT = '291.18 / 118.35';
 
+/** The same proportions as a multiplier, for working a height out of a width. */
+const LOGO_RATIO = '118.35 / 291.18';
+
 /**
  * The wordmark, cut out of the slab rather than drawn on it.
  *
@@ -20,17 +23,24 @@ const LOGO_ASPECT = '291.18 / 118.35';
  * Its place is set by the numbers the column below already uses — centred,
  * `py-10` from the top, and as wide as `max-w-2xl` less its `px-6` — so the
  * hole lands on the space held open for it without either side measuring the
- * other. `auto` takes the height from the artwork's own ratio.
+ * other.
+ *
+ * The height is worked out from that width and the artwork's own ratio rather
+ * than left to `auto`: an SVG carries no intrinsic size unless the file says
+ * so, and WebKit answers `auto` for one of those with the size of the box being
+ * masked — the whole footer — which stretched the mark from edge to edge on
+ * iOS. The width comes through `--footer-logo-w` because a percentage in the
+ * height slot would measure the footer's height, not its width.
  */
 const LOGO_KNOCKOUT = {
     maskImage: "url('/logos/logo.svg'), linear-gradient(#000, #000)",
     WebkitMaskImage: "url('/logos/logo.svg'), linear-gradient(#000, #000)",
     maskPosition: 'center 2.5rem, 0 0',
     WebkitMaskPosition: 'center 2.5rem, 0 0',
-    maskSize: 'min(100% - 3rem, 39rem) auto, auto',
-    WebkitMaskSize: 'min(100% - 3rem, 39rem) auto, auto',
-    maskRepeat: 'no-repeat, repeat',
-    WebkitMaskRepeat: 'no-repeat, repeat',
+    maskSize: `var(--footer-logo-w) calc(var(--footer-logo-w) * ${LOGO_RATIO}), 100% 100%`,
+    WebkitMaskSize: `var(--footer-logo-w) calc(var(--footer-logo-w) * ${LOGO_RATIO}), 100% 100%`,
+    maskRepeat: 'no-repeat, no-repeat',
+    WebkitMaskRepeat: 'no-repeat, no-repeat',
     maskComposite: 'exclude',
     WebkitMaskComposite: 'xor',
 } satisfies CSSProperties;
@@ -82,11 +92,18 @@ export function SiteFooter() {
         <footer className="relative overflow-hidden rounded-t-[2rem] text-slab-ink shadow-[0_-6px_20px_rgb(0_0_0/0.11)]">
             {/* The orange itself, so the wordmark can be taken out of it. The
                 colour cannot sit on the footer: whatever is behind the hole
-                would be filled straight back in. */}
+                would be filled straight back in.
+
+                The mark's width is the column's own — `max-w-2xl` less `px-6`,
+                pinned at `lg` the way the space held open for it is. It is
+                measured off the window rather than in percentages because the
+                knockout needs the same figure again for its height, and a
+                percentage there would measure the wrong side of the box. The
+                slab runs the full width of the window, so the two agree. */}
             <div
                 aria-hidden
                 style={LOGO_KNOCKOUT}
-                className="absolute inset-0 bg-primary"
+                className="absolute inset-0 bg-primary [--footer-logo-w:calc(min(100vw,42rem)-3rem)] lg:[--footer-logo-w:39rem]"
             />
 
             {/* The slab runs edge to edge; only its contents keep to the same
