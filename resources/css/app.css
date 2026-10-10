@@ -6,10 +6,11 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
 /*
- * The dark sheet is the visitor's own choice, taken with the switch in the
- * header and kept on their device — not the operating system's guess. So the
- * `dark:` variant keys off a `.dark` class rather than `prefers-color-scheme`:
- * a dark phone does not decide for someone who never asked.
+ * The dark sheet is the one the document is served with; the light one is the
+ * visitor's own choice, taken with the switch in the header and kept on their
+ * device — not the operating system's guess. So the `dark:` variant keys off a
+ * `.dark` class rather than `prefers-color-scheme`: a light phone does not
+ * decide for someone who never asked.
  */
 @custom-variant dark (&:where(.dark, .dark *));
 

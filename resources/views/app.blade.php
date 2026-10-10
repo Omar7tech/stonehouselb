@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
 
 <head>
     <meta charset="utf-8">
@@ -16,17 +16,17 @@
 
     {{-- The visitor's own theme, put on the document before anything is drawn.
          It is inline and ahead of the stylesheet on purpose: read from the
-         bundle instead and everyone who chose the dark sheet gets a white page
-         flashed at them first. Light needs nothing, being what the stylesheet
-         already is. --}}
+         bundle instead and everyone who chose the light sheet gets a dark page
+         flashed at them first. Dark needs nothing, being the class the
+         document is already served with. --}}
     <script>
         try {
-            if (localStorage.getItem('stone-house-theme') === 'dark') {
-                document.documentElement.classList.add('dark');
-                document.documentElement.style.colorScheme = 'dark';
+            if (localStorage.getItem('stone-house-theme-choice') === 'light') {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.style.colorScheme = 'light';
             }
         } catch (error) {
-            // Storage can be off or walled up. The light sheet is the default
+            // Storage can be off or walled up. The dark sheet is the default
             // anyway, so there is nothing to recover from.
         }
     </script>

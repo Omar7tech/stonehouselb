@@ -7,16 +7,19 @@ export type Theme = 'light' | 'dark';
  * Where the visitor's choice is kept. Deliberately theirs and not the shop's:
  * nothing here is stored on the server, so one customer reading in the dark
  * changes nothing for the next one.
+ *
+ * Not the older `stone-house-theme` key: that one was written on every visit,
+ * so its `light` says nothing about whether anyone asked for it. This one is
+ * only ever written by the switch.
  */
-const STORAGE_KEY = 'stone-house-theme';
+const STORAGE_KEY = 'stone-house-theme-choice';
 
 /**
- * Light unless the visitor has asked for otherwise — the OS preference is not
- * consulted. A menu is a printed thing that happens to be on a screen, and the
- * shop's own sheet is the white one; a dark phone should not decide that for
- * everyone who walks in.
+ * Dark unless the visitor has asked for otherwise — the OS preference is not
+ * consulted. The shop's own sheet is the dark one; a light phone should not
+ * decide that for everyone who walks in.
  */
-const DEFAULT_THEME: Theme = 'light';
+const DEFAULT_THEME: Theme = 'dark';
 
 /** The choice as it was left, or the default when there is nothing to read. */
 export function storedTheme(): Theme {
@@ -24,8 +27,8 @@ export function storedTheme(): Theme {
         return DEFAULT_THEME;
     }
 
-    return window.localStorage.getItem(STORAGE_KEY) === 'dark'
-        ? 'dark'
+    return window.localStorage.getItem(STORAGE_KEY) === 'light'
+        ? 'light'
         : DEFAULT_THEME;
 }
 
@@ -61,12 +64,20 @@ export function useTheme(): { theme: Theme; toggleTheme: () => void } {
 
     useEffect(() => {
         applyTheme(theme);
-        window.localStorage.setItem(STORAGE_KEY, theme);
     }, [theme]);
 
     const toggleTheme = useCallback(() => {
-        setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
-    }, []);
+        const next: Theme = theme === 'dark' ? 'light' : 'dark';
+
+        setTheme(next);
+
+        try {
+            window.localStorage.setItem(STORAGE_KEY, next);
+        } catch {
+            // Storage can be off or walled up; the switch still works for
+            // this visit.
+        }
+    }, [theme]);
 
     return { theme, toggleTheme };
 }
