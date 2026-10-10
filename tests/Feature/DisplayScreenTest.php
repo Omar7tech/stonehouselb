@@ -309,6 +309,16 @@ describe('the hand-picked board', function (): void {
             );
     });
 
+    it('never reloads itself, whatever the screen was set to before', function (): void {
+        $screen = DisplayScreen::factory()->handPicked()->create(['refresh_minutes' => 30]);
+
+        $this->get(route('screen.show', $screen))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->where('screen.refreshMinutes', null)
+            );
+    });
+
     it('saves the dishes from the dashboard in the order they were picked', function (): void {
         $first = Product::factory()->create();
         $second = Product::factory()->create();

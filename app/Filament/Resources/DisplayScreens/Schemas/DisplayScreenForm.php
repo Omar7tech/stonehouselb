@@ -139,6 +139,7 @@ class DisplayScreenForm
                             ->maxValue(1440)
                             ->default(30)
                             ->placeholder('Never')
+                            ->hidden(fn (Get $get): bool => self::isHandPicked($get))
                             ->helperText('How often the screen fetches the menu again, so a price you change here reaches it on its own. Leave empty to leave the set alone.'),
 
                         Toggle::make('show_prices')

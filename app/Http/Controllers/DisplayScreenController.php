@@ -73,7 +73,10 @@ class DisplayScreenController extends Controller
                 'menuUrl' => $orderType === OrderType::Delivery
                     ? route('menu.delivery')
                     : route('menu.dine-in'),
-                'refreshMinutes' => $displayScreen->refreshMinutes(),
+                // A hand-picked board is left exactly as it was opened: it
+                // never fetches itself again, whatever the column still holds
+                // from a layout the screen was on before.
+                'refreshMinutes' => $handPicked ? null : $displayScreen->refreshMinutes(),
             ],
             'categories' => CategoryResource::collection($categories)->resolve(),
             'slides' => SlideResource::collection($slides)->resolve(),
