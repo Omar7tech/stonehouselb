@@ -20,7 +20,7 @@ enum ScreenTileSpacing: string implements HasLabel
         return match ($this) {
             self::Tight => 'Tight',
             self::Regular => 'Regular',
-            self::Airy => 'Airy',
+            self::Airy => 'Wide',
         };
     }
 }

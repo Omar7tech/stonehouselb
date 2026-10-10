@@ -1,8 +1,7 @@
-import { Maximize, Minimize } from 'lucide-react';
+import { Flame, Leaf, Maximize, Minimize, Star } from 'lucide-react';
 import type { ReactNode, RefObject } from 'react';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 
-import { ScreenMarks } from '@/components/screen/screen-marks';
 import { StoneHouseLogo } from '@/components/stone-house-logo';
 import { leadPrice } from '@/lib/screen-deck';
 import { useFullscreen, useIdleChrome } from '@/lib/use-screen';
@@ -306,19 +305,7 @@ function Tile({
                 />
             )}
 
-            {/* On a chip of the board's own paper, for the same reason the
-                price is: an icon laid straight on a photograph is lost on half
-                of them. The marks are sized in the board's unit, so the chip
-                hands them the tile's instead. */}
-            {showMarks &&
-                (product.isFeatured || product.isSpicy || product.isVegan) && (
-                    <span
-                        className="absolute top-[0.45em] left-[0.45em] flex rounded-full bg-(--paper) px-[0.45em] py-[0.35em]"
-                        style={{ ['--u' as string]: 'max(0.62em, 12px)' }}
-                    >
-                        <ScreenMarks product={product} />
-                    </span>
-                )}
+            {showMarks && <Marks product={product} />}
 
             {(showNames || showPrices) && (
                 <Label
@@ -398,6 +385,53 @@ function Label({
                 {price}
             </div>
         </div>
+    );
+}
+
+/**
+ * What a tile can say about its dish without words: it is the house pick, it
+ * is hot, it is vegan.
+ *
+ * Each is a small disc of the board's own paper with the icon set solid in its
+ * own colour, tucked into the top corner — the size of a sticker on a sandwich
+ * wrapper, not of a second label. On the paper for the same reason the price
+ * is: an icon laid straight on a photograph is lost on half of them. Solid
+ * rather than outlined, because at this size an outline is a smudge.
+ */
+function Marks({ product }: { product: Product }) {
+    const marks = [
+        product.isFeatured && {
+            icon: Star,
+            label: 'House favourite',
+            tone: 'text-primary',
+        },
+        product.isSpicy && { icon: Flame, label: 'Spicy', tone: 'text-spicy' },
+        product.isVegan && { icon: Leaf, label: 'Vegan', tone: 'text-vegan' },
+    ].filter((mark) => mark !== false);
+
+    if (marks.length === 0) {
+        return null;
+    }
+
+    return (
+        // Sized against the tile, with a floor: on a board carrying many
+        // tiles a disc scaled all the way down stops being an icon.
+        <span className="absolute top-[0.4em] right-[0.4em] flex gap-[0.2em] text-[max(1em,15px)]">
+            {marks.map(({ icon: Icon, label, tone }) => (
+                <span
+                    key={label}
+                    className="grid size-[0.78em] place-items-center rounded-full bg-(--paper)"
+                >
+                    <Icon
+                        aria-label={label}
+                        role="img"
+                        className={cn('size-[0.44em]', tone)}
+                        fill="currentColor"
+                        strokeWidth={1.5}
+                    />
+                </span>
+            ))}
+        </span>
     );
 }
 
