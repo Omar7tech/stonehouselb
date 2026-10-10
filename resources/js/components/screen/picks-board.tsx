@@ -12,24 +12,22 @@ import type { Screen } from '@/types/screen';
 
 const OrderQr = lazy(() => import('@/components/menu/order-qr'));
 
-/** The space between two tiles, as a share of a tile's side. */
-const GAP = 0.09;
-
 /**
  * The hand-picked board: the dishes the shop chose, and nothing else.
  *
  * Every other layout is a show — pages turning, photographs drifting, tiles
  * setting themselves down. This one is a shelf. It is white, it is still, and
- * every dish on it is a square photograph with its price underneath in black,
- * all of them on the screen at once. Nothing here animates, on purpose: it is
- * the board for the counter where somebody is deciding, not for the wall
- * somebody is walking past.
+ * every dish on it is a photograph with its price set into it on a white
+ * label, in black, all of them on the screen at once. Nothing here animates,
+ * on purpose: it is the board for the counter where somebody is deciding, not
+ * for the wall somebody is walking past.
  *
- * The tiles are as large as the screen allows. The grid is not a fixed number
- * of columns but whichever arrangement gives the biggest square for the number
- * of dishes chosen — four dishes on a television are two enormous rows of two
- * or one row of four, whichever is larger on that set — so the same list reads
- * properly on a wall-mounted fifty-five and on a tablet stood upright.
+ * The photographs take the whole screen between them. The dishes are dealt
+ * into rows — as many rows as keeps every tile closest to square on this
+ * particular set — and each row is then stretched edge to edge, so five dishes
+ * are three over two with no hole where a sixth would have been. The same list
+ * therefore fills a wall-mounted fifty-five and a tablet stood upright, with
+ * nothing left over on either.
  */
 export function PicksBoard({
     screen,
@@ -38,23 +36,13 @@ export function PicksBoard({
     screen: Screen;
     products: Product[];
 }) {
-    const pricing = usePricing();
     const chrome = useIdleChrome();
     const fullscreen = useFullscreen();
 
     const stage = useRef<HTMLDivElement>(null);
     const room = useRoom(stage);
 
-    // How tall the copy under a photograph stands, as a share of the tile's
-    // side. Worked out from what is actually printed there, so a board with
-    // the names switched off gives that room back to the photographs.
-    const caption =
-        (screen.showNames ? 0.15 : 0) +
-        (screen.showPrices ? 0.2 : 0) +
-        (screen.showPrices && pricing.showUsd && pricing.showLbp ? 0.1 : 0) +
-        (screen.showNames || screen.showPrices ? 0.05 : 0);
-
-    const fit = room === null ? null : fitTiles(products.length, room, caption);
+    const layout = room === null ? null : dealRows(products.length, room);
 
     return (
         <div
@@ -66,15 +54,15 @@ export function PicksBoard({
                 // The same unit the other boards are sized in, so the mark and
                 // the code are the size they are everywhere else.
                 ['--u' as string]: 'calc(0.6vw + 0.4vh)',
-                padding: 'calc(var(--u) * 2.5)',
-                gap: 'calc(var(--u) * 2)',
+                padding: 'calc(var(--u) * 1.4)',
+                gap: 'calc(var(--u) * 1.4)',
             }}
         >
             {screen.showLogo && (
                 <header className="flex shrink-0 justify-center">
                     <span
                         className="block"
-                        style={{ width: 'calc(var(--u) * 10)' }}
+                        style={{ width: 'calc(var(--u) * 9)' }}
                     >
                         {/* The mark draws itself in everywhere else. Here it
                             is simply there, like everything else on the
@@ -84,7 +72,7 @@ export function PicksBoard({
                 </header>
             )}
 
-            <main ref={stage} className="relative min-h-0 flex-1">
+            <main ref={stage} className="min-h-0 flex-1">
                 {products.length === 0 ? (
                     <p
                         className="grid h-full place-items-center text-center text-black/50"
@@ -94,29 +82,43 @@ export function PicksBoard({
                         the dashboard and it will show them.
                     </p>
                 ) : (
-                    fit !== null && (
-                        <div className="absolute inset-0 grid place-items-center">
-                            <ul
-                                className="flex flex-wrap justify-center"
-                                style={{
-                                    // One em is a tenth of a tile, so
-                                    // everything on a tile is sized against
-                                    // the tile itself.
-                                    fontSize: `${fit.side / 10}px`,
-                                    width: `${fit.width}px`,
-                                    gap: `${fit.side * GAP}px`,
-                                }}
-                            >
-                                {products.map((product) => (
-                                    <Tile
-                                        key={product.id}
-                                        product={product}
-                                        caption={caption}
-                                        showNames={screen.showNames}
-                                        showPrices={screen.showPrices}
-                                    />
-                                ))}
-                            </ul>
+                    layout !== null && (
+                        <div
+                            className="flex h-full flex-col"
+                            style={{
+                                gap: 'calc(var(--u) * 1)',
+                                // One em is a tenth of a tile's shorter side,
+                                // so a label is sized against the photograph
+                                // it sits on.
+                                fontSize: `${layout.side / 10}px`,
+                            }}
+                        >
+                            {layout.rows.map((count, row) => {
+                                const start = layout.rows
+                                    .slice(0, row)
+                                    .reduce((sum, size) => sum + size, 0);
+
+                                return (
+                                    <ul
+                                        key={row}
+                                        className="flex min-h-0 flex-1"
+                                        style={{ gap: 'calc(var(--u) * 1)' }}
+                                    >
+                                        {products
+                                            .slice(start, start + count)
+                                            .map((product) => (
+                                                <Tile
+                                                    key={product.id}
+                                                    product={product}
+                                                    showNames={screen.showNames}
+                                                    showPrices={
+                                                        screen.showPrices
+                                                    }
+                                                />
+                                            ))}
+                                    </ul>
+                                );
+                            })}
                         </div>
                     )
                 )}
@@ -164,10 +166,10 @@ export function PicksBoard({
                             ? 'Leave fullscreen'
                             : 'Show fullscreen'
                     }
-                    className="absolute rounded-full bg-black/5 text-black [&>svg]:size-[calc(var(--u)*1.6)]"
+                    className="absolute rounded-full bg-white text-black shadow-md [&>svg]:size-[calc(var(--u)*1.6)]"
                     style={{
-                        top: 'calc(var(--u) * 1.5)',
-                        right: 'calc(var(--u) * 1.5)',
+                        top: 'calc(var(--u) * 2)',
+                        right: 'calc(var(--u) * 2)',
                         padding: 'calc(var(--u) * 0.9)',
                     }}
                 >
@@ -178,16 +180,20 @@ export function PicksBoard({
     );
 }
 
-/** One dish: a square photograph, and under it what it is and what it costs. */
+/**
+ * One dish: its photograph, with what it costs set into the foot of it.
+ *
+ * The price stands on a white label rather than straight on the picture. A
+ * figure laid over a photograph is only readable where the photograph happens
+ * to be dark, and a price is the one thing on this board that has to be
+ * readable on every tile.
+ */
 function Tile({
     product,
-    caption,
     showNames,
     showPrices,
 }: {
     product: Product;
-    /** The height of the copy under the photograph, as a share of the tile. */
-    caption: number;
     showNames: boolean;
     showPrices: boolean;
 }) {
@@ -196,15 +202,15 @@ function Tile({
     const art = product.image ?? product.thumbnail;
 
     return (
-        <li className="flex w-[10em] flex-col">
+        <li className="relative min-w-0 flex-1 overflow-hidden rounded-[0.45em] bg-black/5">
             {art === null ? (
-                // A dish with no photograph still holds its square, named, so
-                // the grid stays a grid and the tile still says what it is.
-                <div className="grid size-[10em] place-items-center rounded-[0.4em] bg-black/5 p-[1em] text-center">
-                    <span className="line-clamp-3 text-[0.9em] leading-tight font-semibold text-black/40 uppercase">
+                // A dish with no photograph still holds its tile, and still
+                // says what it is when the label below is not going to.
+                !showNames && (
+                    <span className="absolute inset-0 grid place-items-center p-[1em] text-center text-[0.9em] leading-tight font-semibold text-black/40 uppercase">
                         {product.name}
                     </span>
-                </div>
+                )
             ) : (
                 // A plain image rather than the storefront's loading one: that
                 // one fades its photograph in, and nothing on this board
@@ -213,48 +219,42 @@ function Tile({
                     src={art}
                     alt={product.name}
                     draggable={false}
-                    className="size-[10em] rounded-[0.4em] bg-black/5 object-cover"
+                    className="absolute inset-0 size-full object-cover"
                 />
             )}
 
-            {caption > 0 && (
-                <div
-                    className="flex flex-col items-center justify-end overflow-hidden text-center"
-                    style={{ height: `${caption * 10}em` }}
-                >
-                    {showNames && (
-                        <span className="w-full truncate text-[0.8em] leading-[1.5] font-medium text-black/60 uppercase">
-                            {product.name}
-                        </span>
-                    )}
+            {(showNames || showPrices) && (
+                <div className="absolute inset-x-0 bottom-[0.55em] flex justify-center px-[0.55em]">
+                    <div className="flex max-w-full flex-col items-center rounded-[0.4em] bg-white px-[0.7em] py-[0.4em] text-center shadow-[0_0.1em_0.6em_rgb(0_0_0/0.18)]">
+                        {showNames && (
+                            <span className="max-w-full truncate text-[0.62em] leading-[1.4] font-semibold tracking-wide text-black/60 uppercase">
+                                {product.name}
+                            </span>
+                        )}
 
-                    {showPrices && (
-                        <>
-                            <span className="flex items-baseline justify-center gap-[0.35em] leading-none tabular-nums">
+                        {/* Dollars only, whatever the storefront quotes in:
+                            one figure per tile is what reads from across a
+                            room. */}
+                        {showPrices && (
+                            <span className="flex items-baseline justify-center gap-[0.3em] leading-none tabular-nums">
                                 {lead.from && (
-                                    <span className="text-[0.65em] font-semibold text-black/45 uppercase">
+                                    <span className="text-[0.55em] font-semibold text-black/50 uppercase">
                                         from
                                     </span>
                                 )}
 
                                 {lead.was !== null && (
-                                    <span className="text-[0.85em] text-black/40 line-through">
-                                        {pricing.primary(lead.was)}
+                                    <span className="text-[0.75em] text-black/40 line-through">
+                                        {pricing.usd(lead.was)}
                                     </span>
                                 )}
 
-                                <span className="text-[1.6em] font-bold text-black">
-                                    {pricing.primary(lead.price)}
+                                <span className="text-[1.35em] font-bold text-black">
+                                    {pricing.usd(lead.price)}
                                 </span>
                             </span>
-
-                            {pricing.showUsd && pricing.showLbp && (
-                                <span className="mt-[0.3em] text-[0.75em] leading-none font-medium text-black/55 tabular-nums">
-                                    {pricing.lbp(lead.price)}
-                                </span>
-                            )}
-                        </>
-                    )}
+                        )}
+                    </div>
                 </div>
             )}
         </li>
@@ -262,44 +262,53 @@ function Tile({
 }
 
 /**
- * The arrangement that gives the largest square tile for this many dishes in
- * this much room.
+ * Deal this many dishes into rows for this much room.
  *
- * Every column count is tried, because the best one is not a function of the
- * screen's shape alone: seven dishes on a wide set are best as four over three,
- * and on a tall one as two columns of four.
+ * Every row count is tried, and the one kept is the one whose least square
+ * tile is still the most square — judged on the least, because an arrangement
+ * is only as good as its worst tile. The dishes are then spread evenly over
+ * the rows, so seven go four over three rather than four, two and one.
  */
-function fitTiles(
+function dealRows(
     count: number,
     room: { width: number; height: number },
-    caption: number,
-): { side: number; width: number } | null {
+): { rows: number[]; side: number } | null {
     if (count === 0 || room.width <= 0 || room.height <= 0) {
         return null;
     }
 
-    let best = { side: 0, columns: 1 };
+    /** How near a tile of this shape is to square: 1 is square, 0 is a line. */
+    const squareness = (width: number, height: number): number =>
+        Math.min(width, height) / Math.max(width, height);
 
-    for (let columns = 1; columns <= count; columns++) {
-        const rows = Math.ceil(count / columns);
+    let best = { rows: 1, score: 0 };
 
-        const side = Math.min(
-            room.width / (columns + GAP * (columns - 1)),
-            room.height / (rows * (1 + caption) + GAP * (rows - 1)),
+    for (let rows = 1; rows <= count; rows++) {
+        const height = room.height / rows;
+
+        const score = Math.min(
+            squareness(room.width / Math.ceil(count / rows), height),
+            squareness(room.width / Math.floor(count / rows), height),
         );
 
-        if (side > best.side) {
-            best = { side, columns };
+        if (score > best.score) {
+            best = { rows, score };
         }
     }
 
-    // Whole pixels, rounded down: a tile a fraction too wide wraps the row,
-    // and a row that wraps runs the last one off the bottom of the screen.
-    const side = Math.floor(best.side);
+    const base = Math.floor(count / best.rows);
+    const extra = count % best.rows;
 
     return {
-        side,
-        width: Math.ceil(side * best.columns + side * GAP * (best.columns - 1)),
+        // The fuller rows first, so a short row closes the board rather than
+        // opening it.
+        rows: Array.from({ length: best.rows }, (_, row) =>
+            row < extra ? base + 1 : base,
+        ),
+        side: Math.min(
+            room.width / Math.ceil(count / best.rows),
+            room.height / best.rows,
+        ),
     };
 }
 
