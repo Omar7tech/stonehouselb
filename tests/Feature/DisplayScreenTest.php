@@ -420,6 +420,20 @@ describe('the label on a hand-picked tile', function (): void {
 });
 
 describe('the screens in the dashboard', function (): void {
+    it('marks the hand-picked layout as new, and still saves it', function (): void {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(CreateDisplayScreen::class)
+            ->assertSeeHtml('fi-badge')
+            ->assertSeeInOrder(['Hand-picked', 'New'])
+            ->fillForm(['name' => 'Window tablet', 'layout' => ScreenLayout::Picks->value])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        expect(DisplayScreen::query()->where('name', 'Window tablet')->sole()->layout)
+            ->toBe(ScreenLayout::Picks);
+    });
+
     it('asks a hand-picked screen which menu its code opens only once it shows a code', function (): void {
         $screen = DisplayScreen::factory()->handPicked()->create(['show_qr' => false]);
 

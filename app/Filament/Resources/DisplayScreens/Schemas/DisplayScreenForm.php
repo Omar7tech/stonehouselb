@@ -22,6 +22,8 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\HtmlString;
 
 /**
  * The form is asked in the order the decisions are made in: where the screen
@@ -92,7 +94,7 @@ class DisplayScreenForm
                     ->components([
                         Radio::make('layout')
                             ->hiddenLabel()
-                            ->options(ScreenLayout::class)
+                            ->options(self::layoutOptions())
                             ->descriptions(collect(ScreenLayout::cases())
                                 ->mapWithKeys(fn (ScreenLayout $case): array => [
                                     $case->value => $case->getDescription(),
@@ -279,6 +281,31 @@ class DisplayScreenForm
                             ->columnSpanFull(),
                     ]),
             ]);
+    }
+
+    /**
+     * The layouts, each under its own name — with a badge beside the one that
+     * was added last, so somebody who set their screens up months ago can see
+     * there is something on this list they have not tried.
+     *
+     * @return array<string, string|HtmlString>
+     */
+    private static function layoutOptions(): array
+    {
+        $options = [];
+
+        foreach (ScreenLayout::cases() as $layout) {
+            $options[$layout->value] = $layout === ScreenLayout::Picks
+                ? new HtmlString(
+                    '<span style="display: inline-flex; align-items: center; gap: 0.5rem;">'
+                    .e($layout->getLabel())
+                    .Blade::render('<x-filament::badge color="success" size="sm">New</x-filament::badge>')
+                    .'</span>'
+                )
+                : $layout->getLabel();
+        }
+
+        return $options;
     }
 
     /**
