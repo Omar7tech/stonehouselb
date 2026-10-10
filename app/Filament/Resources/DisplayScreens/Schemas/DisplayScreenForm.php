@@ -121,24 +121,14 @@ class DisplayScreenForm
                     ->icon(Heroicon::OutlinedQueueList)
                     ->columnSpanFull()
                     ->components([
-                        ToggleButtons::make('order_type')
-                            ->label(fn (Get $get): string => self::isHandPicked($get)
-                                ? 'Which menu the code opens'
-                                : 'Which menu it quotes')
-                            ->options([
-                                OrderType::DineIn->value => OrderType::DineIn->getLabel(),
-                                OrderType::Delivery->value => OrderType::Delivery->getLabel(),
-                            ])
-                            ->icons([
-                                OrderType::DineIn->value => Heroicon::OutlinedBuildingStorefront,
-                                OrderType::Delivery->value => Heroicon::OutlinedTruck,
-                            ])
-                            ->default(OrderType::DineIn->value)
-                            ->inline()
-                            ->required()
-                            ->helperText(fn (Get $get): string => self::isHandPicked($get)
-                                ? 'Only matters if the screen shows a code to scan: this is the menu a customer\'s phone lands on.'
-                                : 'Dine-in is what can be eaten in, the usual choice for a screen in the room. Delivery is what can be sent out, for a screen at the takeaway hatch.'),
+                        // On a board that runs categories this decides which
+                        // dishes it may quote. The hand-picked board asks the
+                        // same question further down, under the code, because
+                        // there the code is the only thing it changes.
+                        self::menuChoice()
+                            ->label('Which menu it quotes')
+                            ->helperText('Dine-in is what can be eaten in, the usual choice for a screen in the room. Delivery is what can be sent out, for a screen at the takeaway hatch.')
+                            ->hidden(fn (Get $get): bool => self::isHandPicked($get)),
 
                         Select::make('categories')
                             ->label('Categories')
@@ -224,7 +214,14 @@ class DisplayScreenForm
                         Toggle::make('show_qr')
                             ->label('Code to scan')
                             ->helperText('A QR that opens the menu on a phone.')
+                            ->live()
                             ->default(false),
+
+                        self::menuChoice()
+                            ->label('Which menu the code opens')
+                            ->helperText('The menu a customer\'s phone lands on when they scan it.')
+                            ->visible(fn (Get $get): bool => self::isHandPicked($get) && (bool) $get('show_qr'))
+                            ->columnSpanFull(),
 
                         TextInput::make('rotation_seconds')
                             ->label('Seconds per page')
@@ -259,6 +256,26 @@ class DisplayScreenForm
                             ->columnSpanFull(),
                     ]),
             ]);
+    }
+
+    /**
+     * The dine-in or delivery choice. Asked in one of two places, never both,
+     * depending on what the answer changes on the layout in hand.
+     */
+    private static function menuChoice(): ToggleButtons
+    {
+        return ToggleButtons::make('order_type')
+            ->options([
+                OrderType::DineIn->value => OrderType::DineIn->getLabel(),
+                OrderType::Delivery->value => OrderType::Delivery->getLabel(),
+            ])
+            ->icons([
+                OrderType::DineIn->value => Heroicon::OutlinedBuildingStorefront,
+                OrderType::Delivery->value => Heroicon::OutlinedTruck,
+            ])
+            ->default(OrderType::DineIn->value)
+            ->inline()
+            ->required();
     }
 
     /**

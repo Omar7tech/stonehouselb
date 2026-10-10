@@ -377,6 +377,23 @@ describe('the hand-picked board', function (): void {
 });
 
 describe('the screens in the dashboard', function (): void {
+    it('asks a hand-picked screen which menu its code opens only once it shows a code', function (): void {
+        $screen = DisplayScreen::factory()->handPicked()->create(['show_qr' => false]);
+
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(EditDisplayScreen::class, ['record' => $screen->getRouteKey()])
+            ->assertDontSee('Which menu the code opens')
+            ->assertDontSee('Which menu it quotes')
+            ->fillForm(['show_qr' => true])
+            ->assertSee('Which menu the code opens')
+            ->fillForm(['order_type' => OrderType::Delivery->value])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        expect($screen->refresh()->order_type)->toBe(OrderType::Delivery);
+    });
+
     it('saves a board that turns pages, with the categories chosen for it', function (): void {
         $category = Category::factory()->create();
 
