@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { lazy, Suspense, useMemo } from 'react';
 
 import { BoardPage } from '@/components/screen/board-page';
+import { PicksBoard } from '@/components/screen/picks-board';
 import { ShowcasePage } from '@/components/screen/showcase-page';
 import { SlidePage } from '@/components/screen/slide-page';
 import { SplitPage } from '@/components/screen/split-page';
@@ -22,8 +23,8 @@ import {
     useWakeLock,
 } from '@/lib/use-screen';
 import { cn } from '@/lib/utils';
-import type { Category, Slide } from '@/types';
-import type { Screen, ScreenLayout } from '@/types/screen';
+import type { Category, Product, Slide } from '@/types';
+import type { DeckLayout, Screen, ScreenLayout } from '@/types/screen';
 
 /**
  * The code is split off because almost every screen runs without one, and the
@@ -48,6 +49,48 @@ const FULL_BLEED: ReadonlySet<ScreenLayout> = new Set(['spotlight', 'split']);
  * itself again every so often so a price changed in the dashboard reaches the
  * wall on its own.
  *
+ * Five of the layouts turn pages and one does not. The hand-picked board shows
+ * the dishes chosen for it, all at once, and stands still; the rest are dealt a
+ * deck and rotate through it.
+ */
+export default function ScreenBoard({
+    screen,
+    categories,
+    slides,
+    products,
+}: {
+    screen: Screen;
+    categories: Category[];
+    slides: Slide[];
+    /** The dishes chosen for a hand-picked screen; empty on every other. */
+    products: Product[];
+}) {
+    useWakeLock();
+    useTimedReload(screen.refreshMinutes);
+
+    return (
+        <>
+            <Head title={`${screen.name} — Screen`}>
+                <meta name="robots" content="noindex, nofollow" />
+            </Head>
+
+            {screen.layout === 'picks' ? (
+                <PicksBoard screen={screen} products={products} />
+            ) : (
+                <RotatingBoard
+                    screen={screen}
+                    layout={screen.layout}
+                    categories={categories}
+                    slides={slides}
+                />
+            )}
+        </>
+    );
+}
+
+/**
+ * A board that turns its own pages on a timer.
+ *
  * The five layouts are five different objects rather than one list rearranged —
  * a ledger, a cinema, a poster, a wall and a strip — and each takes the screen
  * on its own terms. What they share is the unit everything is sized in, `--u`,
@@ -55,27 +98,26 @@ const FULL_BLEED: ReadonlySet<ScreenLayout> = new Set(['spotlight', 'split']);
  * a ten inch tablet then draw the same board at the size each room reads it
  * from, without a single breakpoint between them.
  */
-export default function ScreenBoard({
+function RotatingBoard({
     screen,
+    layout,
     categories,
     slides,
 }: {
     screen: Screen;
+    layout: DeckLayout;
     categories: Category[];
     slides: Slide[];
 }) {
-    useWakeLock();
-    useTimedReload(screen.refreshMinutes);
-
     const deck = useMemo(
         () =>
             buildDeck({
                 categories,
                 slides,
-                layout: screen.layout,
+                layout,
                 orientation: screen.orientation,
             }),
-        [categories, slides, screen.layout, screen.orientation],
+        [categories, slides, layout, screen.orientation],
     );
 
     const { index, progress } = useRotation(deck.length, screen.holdSeconds);
@@ -102,10 +144,6 @@ export default function ScreenBoard({
 
     return (
         <>
-            <Head title={`${screen.name} — Screen`}>
-                <meta name="robots" content="noindex, nofollow" />
-            </Head>
-
             <div
                 className={cn(
                     'relative flex h-[100dvh] w-screen flex-col overflow-hidden bg-(--board-bg) text-(--board-ink) select-none',

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Enums\OrderType;
+use App\Enums\ScreenLayout;
 use App\Enums\SimpleScreenStyle;
 use App\Http\Resources\CategoryResource;
+use App\Http\Resources\ProductResource;
 use App\Http\Resources\SlideResource;
 use App\Models\Category;
 use App\Models\DisplayScreen;
@@ -43,13 +45,18 @@ class DisplayScreenController extends Controller
             ? OrderType::Delivery
             : OrderType::DineIn;
 
-        $categories = $this->categories($displayScreen, $orderType);
-
         $simple = SimpleScreenStyle::tryFrom((string) $request->query('simple'));
 
         if ($simple !== null) {
-            return $this->plainScreen($displayScreen, $categories, $simple, $settings);
+            return $this->plainScreen($displayScreen, $this->categories($displayScreen, $orderType), $simple, $settings);
         }
+
+        // A hand-picked screen shows its own list and nothing else, so the
+        // menu and the slider are not fetched for it at all.
+        $handPicked = $displayScreen->layout === ScreenLayout::Picks;
+
+        $categories = $handPicked ? new Collection : $this->categories($displayScreen, $orderType);
+        $slides = $handPicked ? new Collection : $this->slides($displayScreen, $orderType);
 
         return Inertia::render('screen', [
             'screen' => [
@@ -58,6 +65,7 @@ class DisplayScreenController extends Controller
                 'layout' => $displayScreen->layout->value,
                 'holdSeconds' => $displayScreen->holdSeconds(),
                 'showPrices' => $displayScreen->show_prices,
+                'showNames' => $displayScreen->show_names,
                 'showLogo' => $displayScreen->show_logo,
                 'showQr' => $displayScreen->show_qr,
                 // Where a customer's phone lands when they scan the code. The
@@ -68,8 +76,30 @@ class DisplayScreenController extends Controller
                 'refreshMinutes' => $displayScreen->refreshMinutes(),
             ],
             'categories' => CategoryResource::collection($categories)->resolve(),
-            'slides' => SlideResource::collection($this->slides($displayScreen, $orderType))->resolve(),
+            'slides' => SlideResource::collection($slides)->resolve(),
+            'products' => ProductResource::collection(
+                $handPicked ? $this->handPickedProducts($displayScreen) : new Collection,
+            )->resolve(),
         ]);
+    }
+
+    /**
+     * The dishes chosen for a hand-picked screen, in the order they were
+     * chosen.
+     *
+     * Not narrowed to the menu the screen quotes: a dish named here was asked
+     * for by name, which outranks a filter. One taken off the menu altogether
+     * is still dropped, so a screen never sells what the kitchen has stopped
+     * making.
+     *
+     * @return Collection<int, Product>
+     */
+    private function handPickedProducts(DisplayScreen $displayScreen): Collection
+    {
+        return $displayScreen->products()
+            ->with('media')
+            ->where('products.is_active', true)
+            ->get();
     }
 
     /**

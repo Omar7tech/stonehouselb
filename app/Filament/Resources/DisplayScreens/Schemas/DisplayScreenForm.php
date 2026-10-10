@@ -6,14 +6,18 @@ use App\Enums\OrderType;
 use App\Enums\ScreenLayout;
 use App\Enums\ScreenOrientation;
 use App\Enums\SimpleScreenStyle;
+use App\Models\Category;
 use App\Models\DisplayScreen;
+use App\Models\Product;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class DisplayScreenForm
 {
@@ -53,6 +57,34 @@ class DisplayScreenForm
                             ->preload()
                             ->placeholder('The whole menu')
                             ->helperText('Leave empty and the screen shows every category, in the menu\'s own order. Choose some and it shows only those, in the order you pick them.')
+                            ->hidden(fn (Get $get): bool => self::isHandPicked($get))
+                            ->columnSpanFull(),
+
+                        // Not `->relationship()`: that syncs the ids and
+                        // forgets the order they were picked in, and on this
+                        // board the order is the layout.
+                        Select::make('products')
+                            ->label('Dishes to show')
+                            ->multiple()
+                            ->searchable()
+                            ->options(fn (): array => self::productOptions())
+                            ->placeholder('Choose the dishes for this screen')
+                            ->helperText('The screen shows exactly these, in the order you pick them, all at once. Up to about twelve reads well from across a room; every one you add makes each of them smaller.')
+                            ->visible(fn (Get $get): bool => self::isHandPicked($get))
+                            ->dehydrated(false)
+                            ->loadStateFromRelationshipsUsing(function (Select $component, DisplayScreen $record): void {
+                                $component->state($record->products()->pluck('products.id')->all());
+                            })
+                            ->saveRelationshipsUsing(function (DisplayScreen $record, ?array $state): void {
+                                $record->products()->sync(
+                                    collect($state ?? [])
+                                        ->values()
+                                        ->mapWithKeys(fn (int|string $id, int $position): array => [
+                                            (int) $id => ['sort_order' => $position],
+                                        ])
+                                        ->all(),
+                                );
+                            })
                             ->columnSpanFull(),
 
                         Toggle::make('is_active')
@@ -87,6 +119,7 @@ class DisplayScreenForm
                                 ])
                                 ->all())
                             ->default(ScreenLayout::Board->value)
+                            ->live()
                             ->required(),
 
                         TextInput::make('rotation_seconds')
@@ -96,6 +129,7 @@ class DisplayScreenForm
                             ->maxValue(600)
                             ->default(12)
                             ->required()
+                            ->hidden(fn (Get $get): bool => self::isHandPicked($get))
                             ->helperText('How long one page holds before the next takes its place. Ten to fifteen suits a queue; longer suits a table.'),
 
                         TextInput::make('refresh_minutes')
@@ -111,6 +145,12 @@ class DisplayScreenForm
                             ->label('Show prices')
                             ->default(true),
 
+                        Toggle::make('show_names')
+                            ->label('Show names')
+                            ->helperText('Turn off and each tile is the photograph and its price alone.')
+                            ->visible(fn (Get $get): bool => self::isHandPicked($get))
+                            ->default(true),
+
                         Toggle::make('show_logo')
                             ->label('Show the logo')
                             ->default(true),
@@ -118,6 +158,7 @@ class DisplayScreenForm
                         Toggle::make('show_slides')
                             ->label('Deal in the slider\'s offers')
                             ->helperText('The same slides that run above the online menu, spread through the categories.')
+                            ->hidden(fn (Get $get): bool => self::isHandPicked($get))
                             ->default(true),
 
                         Toggle::make('show_qr')
@@ -145,5 +186,37 @@ class DisplayScreenForm
                             ->color('gray'),
                     ]),
             ]);
+    }
+
+    /**
+     * Whether the form is on the layout that shows chosen dishes rather than
+     * categories, which is what decides which of its fields mean anything.
+     */
+    private static function isHandPicked(Get $get): bool
+    {
+        $layout = $get('layout');
+
+        return ($layout instanceof ScreenLayout ? $layout : ScreenLayout::tryFrom((string) $layout)) === ScreenLayout::Picks;
+    }
+
+    /**
+     * Every dish on the menu, grouped under its category so a long menu can be
+     * read down rather than searched blind.
+     *
+     * @return array<string, array<int, string>>
+     */
+    private static function productOptions(): array
+    {
+        return Category::query()
+            ->with(['products' => fn (Relation $query): Relation => $query->where('is_active', true)->orderBy('sort_order')])
+            ->orderBy('sort_order')
+            ->get()
+            ->filter(fn (Category $category): bool => $category->products->isNotEmpty())
+            ->mapWithKeys(fn (Category $category): array => [
+                $category->title => $category->products
+                    ->mapWithKeys(fn (Product $product): array => [$product->id => $product->title])
+                    ->all(),
+            ])
+            ->all();
     }
 }

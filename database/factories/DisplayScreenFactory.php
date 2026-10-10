@@ -25,6 +25,7 @@ class DisplayScreenFactory extends Factory
             'order_type' => OrderType::DineIn,
             'rotation_seconds' => 12,
             'show_prices' => true,
+            'show_names' => true,
             'show_logo' => true,
             'show_slides' => true,
             'show_qr' => false,
@@ -32,6 +33,14 @@ class DisplayScreenFactory extends Factory
             'is_active' => true,
             'sort_order' => 0,
         ];
+    }
+
+    /**
+     * A screen showing only the dishes chosen for it.
+     */
+    public function handPicked(): static
+    {
+        return $this->state(fn (): array => ['layout' => ScreenLayout::Picks]);
     }
 
     /**

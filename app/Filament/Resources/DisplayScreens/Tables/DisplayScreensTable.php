@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\DisplayScreens\Tables;
 
+use App\Enums\ScreenLayout;
 use App\Enums\SimpleScreenStyle;
 use App\Models\DisplayScreen;
 use Filament\Actions\Action;
@@ -42,9 +43,12 @@ class DisplayScreensTable
                 TextColumn::make('categories_count')
                     ->label('Shows')
                     ->counts('categories')
-                    ->formatStateUsing(fn (int $state): string => match ($state) {
-                        0 => 'Whole menu',
-                        1 => '1 category',
+                    ->formatStateUsing(fn (int $state, DisplayScreen $record): string => match (true) {
+                        // A hand-picked screen runs no categories at all, so
+                        // counting them would call it the whole menu.
+                        $record->layout === ScreenLayout::Picks => $record->products()->count().' chosen',
+                        $state === 0 => 'Whole menu',
+                        $state === 1 => '1 category',
                         default => $state.' categories',
                     })
                     ->badge()

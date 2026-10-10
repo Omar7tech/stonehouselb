@@ -1,5 +1,5 @@
 import type { Category, Product, Slide } from '@/types';
-import type { ScreenLayout, ScreenOrientation } from '@/types/screen';
+import type { DeckLayout, ScreenOrientation } from '@/types/screen';
 
 /**
  * One page a screen holds for its rotation: either a slice of a category, or a
@@ -29,7 +29,7 @@ export type ScreenPage =
  * column than a wide one fits in two, because it is not spending its height on
  * a heading and a photograph side by side.
  */
-const PER_PAGE: Record<ScreenLayout, Record<ScreenOrientation, number>> = {
+const PER_PAGE: Record<DeckLayout, Record<ScreenOrientation, number>> = {
     board: { landscape: 8, portrait: 9 },
     // One dish, its photograph behind it. The page is the dish.
     spotlight: { landscape: 1, portrait: 1 },
@@ -61,7 +61,7 @@ export function buildDeck({
 }: {
     categories: Category[];
     slides: Slide[];
-    layout: ScreenLayout;
+    layout: DeckLayout;
     orientation: ScreenOrientation;
 }): ScreenPage[] {
     const perPage = PER_PAGE[layout][orientation];

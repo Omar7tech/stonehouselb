@@ -3,7 +3,13 @@ export type ScreenOrientation = 'landscape' | 'portrait';
 
 /** Mirrors `App\Enums\ScreenLayout` — how a screen draws its pages. */
 export type ScreenLayout =
-    'board' | 'spotlight' | 'split' | 'showcase' | 'strip';
+    'board' | 'spotlight' | 'split' | 'showcase' | 'strip' | 'picks';
+
+/**
+ * The layouts that turn pages: everything but the hand-picked board, which
+ * shows its own list, all at once, and never moves.
+ */
+export type DeckLayout = Exclude<ScreenLayout, 'picks'>;
 
 /** One screen in the shop, as the board page reads it. */
 export type Screen = {
@@ -14,6 +20,8 @@ export type Screen = {
     /** How long one page holds before the next takes its place. */
     holdSeconds: number;
     showPrices: boolean;
+    /** Whether a hand-picked tile names its dish. Read by that layout only. */
+    showNames: boolean;
     showLogo: boolean;
     /** Whether a code to open the menu on a phone is drawn in the corner. */
     showQr: boolean;

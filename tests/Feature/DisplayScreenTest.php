@@ -2,11 +2,14 @@
 
 use App\Enums\OrderType;
 use App\Enums\ScreenLayout;
+use App\Filament\Resources\DisplayScreens\Pages\EditDisplayScreen;
 use App\Models\Category;
 use App\Models\DisplayScreen;
 use App\Models\Product;
 use App\Models\Slide;
+use App\Models\User;
 use Inertia\Testing\AssertableInertia;
+use Livewire\Livewire;
 
 it('renders a screen with the whole menu when no categories are chosen', function (): void {
     $first = Category::factory()->create(['title' => 'Burgers', 'sort_order' => 1]);
@@ -130,7 +133,8 @@ it('draws every layout from the same deck', function (string $layout): void {
         );
 })->with(array_map(
     fn (ScreenLayout $layout): string => $layout->value,
-    ScreenLayout::cases(),
+    // The hand-picked board is the one layout not fed the deck.
+    array_values(array_filter(ScreenLayout::cases(), fn (ScreenLayout $layout): bool => $layout !== ScreenLayout::Picks)),
 ));
 
 it('stops answering once a screen is taken down', function (): void {
@@ -232,5 +236,96 @@ describe('the plain boards for older televisions', function (): void {
         $this->get(route('screen.show', $screen).'?simple=still')
             ->assertOk()
             ->assertSee('Nothing on the menu yet.');
+    });
+});
+
+describe('the hand-picked board', function (): void {
+    it('shows exactly the dishes chosen for it, in the order they were chosen', function (): void {
+        $category = Category::factory()->create();
+        $classic = Product::factory()->for($category)->create(['title' => 'Classic']);
+        $lemonade = Product::factory()->for($category)->create(['title' => 'Lemonade']);
+        Product::factory()->for($category)->create(['title' => 'Not chosen']);
+
+        $screen = DisplayScreen::factory()->handPicked()->create();
+        $screen->products()->attach([
+            $lemonade->id => ['sort_order' => 0],
+            $classic->id => ['sort_order' => 1],
+        ]);
+
+        $this->get(route('screen.show', $screen))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->component('screen')
+                ->where('screen.layout', ScreenLayout::Picks->value)
+                ->where('screen.showNames', true)
+                ->has('products', 2)
+                ->where('products.0.name', 'Lemonade')
+                ->where('products.1.name', 'Classic')
+                // It runs no deck: the menu and the slider stay off it.
+                ->has('categories', 0)
+                ->has('slides', 0)
+            );
+    });
+
+    it('drops a chosen dish once it is taken off the menu', function (): void {
+        $live = Product::factory()->create(['title' => 'Classic']);
+        $gone = Product::factory()->create(['title' => 'Retired', 'is_active' => false]);
+
+        $screen = DisplayScreen::factory()->handPicked()->create();
+        $screen->products()->attach([$gone->id => ['sort_order' => 0], $live->id => ['sort_order' => 1]]);
+
+        $this->get(route('screen.show', $screen))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->has('products', 1)
+                ->where('products.0.name', 'Classic')
+            );
+    });
+
+    it('keeps a chosen dish whichever menu the screen quotes', function (): void {
+        $deliveryOnly = Product::factory()->create(['title' => 'Family box', 'order_type' => OrderType::Delivery]);
+
+        $screen = DisplayScreen::factory()->handPicked()->create(['order_type' => OrderType::DineIn]);
+        $screen->products()->attach($deliveryOnly);
+
+        $this->get(route('screen.show', $screen))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->has('products', 1)
+            );
+    });
+
+    it('sends no chosen dishes to a screen on any other layout', function (): void {
+        $product = Product::factory()->create();
+
+        $screen = DisplayScreen::factory()->create(['layout' => ScreenLayout::Board]);
+        $screen->products()->attach($product);
+
+        $this->get(route('screen.show', $screen))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->has('products', 0)
+                ->has('categories', 1)
+            );
+    });
+
+    it('saves the dishes from the dashboard in the order they were picked', function (): void {
+        $first = Product::factory()->create();
+        $second = Product::factory()->create();
+        $third = Product::factory()->create();
+
+        $screen = DisplayScreen::factory()->handPicked()->create();
+        $screen->products()->attach([$first->id => ['sort_order' => 0]]);
+
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(EditDisplayScreen::class, ['record' => $screen->getRouteKey()])
+            ->assertSchemaStateSet(['products' => [$first->id]])
+            ->fillForm(['products' => [$third->id, $first->id, $second->id]])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        expect($screen->products()->pluck('products.id')->all())
+            ->toBe([$third->id, $first->id, $second->id]);
     });
 });

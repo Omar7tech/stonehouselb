@@ -30,6 +30,13 @@ enum ScreenLayout: string implements HasDescription, HasIcon, HasLabel
     /** The category travelling sideways, never stopping. */
     case Strip = 'strip';
 
+    /**
+     * The dishes the shop picked by hand, as still square tiles on white. The
+     * one layout that is not fed the deck: it shows its own list and nothing
+     * else, and it never moves.
+     */
+    case Picks = 'picks';
+
     public function getLabel(): string
     {
         return match ($this) {
@@ -38,6 +45,7 @@ enum ScreenLayout: string implements HasDescription, HasIcon, HasLabel
             self::Split => 'Split',
             self::Showcase => 'Wall',
             self::Strip => 'Strip',
+            self::Picks => 'Hand-picked',
         };
     }
 
@@ -49,6 +57,7 @@ enum ScreenLayout: string implements HasDescription, HasIcon, HasLabel
             self::Split => 'A photograph cut across the screen on a slant, the dishes listed on what is left. Reads as a printed poster.',
             self::Showcase => 'A wall of tiles, one dish to each, the first given twice the room. The way the website draws its categories.',
             self::Strip => 'The category travelling sideways, never stopping. For a wide screen people walk past rather than queue at.',
+            self::Picks => 'Only the dishes you choose, as square photographs on a white screen with the price under each. Nothing moves and nothing turns over.',
         };
     }
 
@@ -60,6 +69,7 @@ enum ScreenLayout: string implements HasDescription, HasIcon, HasLabel
             self::Split => Heroicon::OutlinedViewColumns,
             self::Showcase => Heroicon::OutlinedSquares2x2,
             self::Strip => Heroicon::OutlinedArrowsRightLeft,
+            self::Picks => Heroicon::OutlinedCursorArrowRays,
         };
     }
 }

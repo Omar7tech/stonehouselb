@@ -48,6 +48,20 @@ class DisplayScreen extends Model
     }
 
     /**
+     * The dishes a hand-picked screen shows, in the order the shop put them in.
+     * Read only by the layout that draws them; every other layout runs the
+     * categories above.
+     *
+     * @return BelongsToMany<Product, $this>
+     */
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class)
+            ->withPivot('sort_order')
+            ->orderByPivot('sort_order');
+    }
+
+    /**
      * How long the page holds, never below a couple of seconds. A rotation set
      * to nothing by accident would otherwise flicker through the whole menu
      * faster than anyone could read a line of it.
@@ -82,6 +96,7 @@ class DisplayScreen extends Model
             'rotation_seconds' => 'integer',
             'refresh_minutes' => 'integer',
             'show_prices' => 'boolean',
+            'show_names' => 'boolean',
             'show_logo' => 'boolean',
             'show_slides' => 'boolean',
             'show_qr' => 'boolean',
