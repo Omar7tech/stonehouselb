@@ -8,13 +8,16 @@ use App\Models\DisplayScreen;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ReplicateAction;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Js;
 
 class DisplayScreensTable
 {
@@ -38,7 +41,8 @@ class DisplayScreensTable
 
                 TextColumn::make('orientation')
                     ->label('Hung')
-                    ->badge(),
+                    ->badge()
+                    ->toggleable(),
 
                 TextColumn::make('categories_count')
                     ->label('Shows')
@@ -56,7 +60,11 @@ class DisplayScreensTable
 
                 TextColumn::make('rotation_seconds')
                     ->label('Page hold')
-                    ->suffix('s')
+                    // A hand-picked board holds one page for ever, so a number
+                    // of seconds against it would be a setting it ignores.
+                    ->formatStateUsing(fn (int $state, DisplayScreen $record): string => $record->layout === ScreenLayout::Picks
+                        ? 'Still'
+                        : $state.'s')
                     ->sortable()
                     ->toggleable(),
 
@@ -75,22 +83,50 @@ class DisplayScreensTable
                     ->url(fn (DisplayScreen $record): string => route('screen.show', $record))
                     ->openUrlInNewTab(),
 
-                // The plain boards, for a set whose browser cannot run the
-                // other one. Grouped, because most shops will never need them.
-                ActionGroup::make(array_map(
-                    fn (SimpleScreenStyle $style): Action => Action::make('simple_'.$style->value)
-                        ->label($style->getLabel())
-                        ->icon($style->getIcon())
-                        ->url(fn (DisplayScreen $record): string => route('screen.show', $record).'?simple='.$style->value)
-                        ->openUrlInNewTab(),
-                    SimpleScreenStyle::cases(),
-                ))
-                    ->label('Older TV')
-                    ->icon(Heroicon::OutlinedTv)
-                    ->button()
-                    ->color('gray'),
-
                 EditAction::make(),
+
+                // Everything done once in a while, kept off the row so the two
+                // things done every day are the only two buttons on it.
+                ActionGroup::make([
+                    // Copied in the browser, with no trip to the server: the
+                    // address is what gets typed into the set, and reading it
+                    // off the row and across a room is where the typos start.
+                    Action::make('copyAddress')
+                        ->label('Copy address')
+                        ->icon(Heroicon::OutlinedClipboardDocument)
+                        ->alpineClickHandler(fn (DisplayScreen $record): string => 'window.navigator.clipboard.writeText('
+                            .Js::from(route('screen.show', $record))
+                            .'); $tooltip('.Js::from('Address copied').', { timeout: 1500 }); close()'),
+
+                    // A second set that should show what the first one does is
+                    // the commonest reason to make a screen at all.
+                    ReplicateAction::make()
+                        ->label('Duplicate')
+                        ->icon(Heroicon::OutlinedDocumentDuplicate)
+                        ->excludeAttributes(['slug', 'categories_count'])
+                        ->beforeReplicaSaved(function (DisplayScreen $replica): void {
+                            $replica->name .= ' copy';
+                        })
+                        ->afterReplicaSaved(function (DisplayScreen $record, DisplayScreen $replica): void {
+                            $replica->categories()->sync(self::inOrder($record->categories()->pluck('categories.id')->all()));
+                            $replica->products()->sync(self::inOrder($record->products()->pluck('products.id')->all()));
+                        })
+                        ->successNotificationTitle('Screen duplicated'),
+
+                    // The plain boards, for a set whose browser cannot run the
+                    // other one. Most shops will never need them.
+                    ActionGroup::make(array_map(
+                        fn (SimpleScreenStyle $style): Action => Action::make('simple_'.$style->value)
+                            ->label('Older TV — '.$style->getLabel())
+                            ->icon($style->getIcon())
+                            ->url(fn (DisplayScreen $record): string => route('screen.show', $record).'?simple='.$style->value)
+                            ->openUrlInNewTab()
+                            ->hidden(fn (DisplayScreen $record): bool => $record->layout === ScreenLayout::Picks),
+                        SimpleScreenStyle::cases(),
+                    ))->dropdown(false),
+
+                    DeleteAction::make(),
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -99,5 +135,24 @@ class DisplayScreensTable
             ])
             ->emptyStateHeading('No screens yet')
             ->emptyStateDescription('A screen is a menu board with an address of its own: create one, open that address on the television or tablet, and leave it there.');
+    }
+
+    /**
+     * A list of ids as a sync payload that keeps the order they came in.
+     *
+     * @param  array<int, mixed>  $ids
+     * @return array<int, array{sort_order: int}>
+     */
+    private static function inOrder(array $ids): array
+    {
+        $payload = [];
+
+        foreach (array_values($ids) as $position => $id) {
+            if (is_numeric($id)) {
+                $payload[(int) $id] = ['sort_order' => $position];
+            }
+        }
+
+        return $payload;
     }
 }

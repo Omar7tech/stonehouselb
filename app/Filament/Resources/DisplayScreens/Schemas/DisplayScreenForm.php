@@ -10,23 +10,61 @@ use App\Models\Category;
 use App\Models\DisplayScreen;
 use App\Models\Product;
 use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
+/**
+ * The form is asked in the order the decisions are made in: where the screen
+ * hangs, what kind of board it is, what goes on it, and only then the small
+ * print. The layout comes before the content because it decides what the
+ * content is — whole categories turned over on a timer, or a handful of dishes
+ * chosen by hand — and every field that means nothing to the chosen layout is
+ * taken off the page rather than left there to be wondered about.
+ */
 class DisplayScreenForm
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema
             ->components([
+                Section::make('Where to point the set')
+                    ->description('Open this address in the screen\'s browser once and leave it there. Everything below can be changed afterwards without touching the set again.')
+                    ->icon(Heroicon::OutlinedLink)
+                    ->columnSpanFull()
+                    ->visible(fn (?DisplayScreen $record): bool => $record !== null)
+                    ->components([
+                        Text::make(fn (?DisplayScreen $record): string => $record === null
+                            ? ''
+                            : route('screen.show', $record))
+                            ->color('primary')
+                            ->copyable()
+                            ->copyMessage('Address copied')
+                            ->tooltip('Click to copy'),
+
+                        // The plain boards print categories, so they have
+                        // nothing to offer a screen that runs none.
+                        Text::make(fn (?DisplayScreen $record): string => $record === null
+                            ? ''
+                            : 'For an older television that cannot run the full board, add ?simple=still, ?simple=cycle or ?simple=crawl to that address: '
+                                .collect(SimpleScreenStyle::cases())
+                                    ->map(fn (SimpleScreenStyle $style): string => $style->getLabel().' — '.$style->getDescription())
+                                    ->implode(' '))
+                            ->color('gray')
+                            ->hidden(fn (Get $get): bool => self::isHandPicked($get)),
+                    ]),
+
                 Section::make('The screen')
                     ->description('Name it after where it hangs — the name becomes its address, and that address is what you type into the set once.')
+                    ->icon(Heroicon::OutlinedTv)
                     ->columnSpanFull()
                     ->columns(2)
                     ->components([
@@ -35,83 +73,24 @@ class DisplayScreenForm
                             ->required()
                             ->maxLength(80)
                             ->live(onBlur: true)
+                            ->autofocus()
+                            ->placeholder('Counter TV')
                             ->helperText('For example "Counter TV" or "Window tablet".'),
-
-                        Radio::make('order_type')
-                            ->label('Which menu it quotes')
-                            ->options([
-                                OrderType::DineIn->value => OrderType::DineIn->getLabel(),
-                                OrderType::Delivery->value => OrderType::Delivery->getLabel(),
-                            ])
-                            ->descriptions([
-                                OrderType::DineIn->value => 'What can be eaten in. The usual choice for a screen in the room.',
-                                OrderType::Delivery->value => 'What can be sent out. For a screen at the takeaway hatch.',
-                            ])
-                            ->default(OrderType::DineIn->value)
-                            ->required(),
-
-                        Select::make('categories')
-                            ->label('Categories to show')
-                            ->relationship('categories', 'title')
-                            ->multiple()
-                            ->preload()
-                            ->placeholder('The whole menu')
-                            ->helperText('Leave empty and the screen shows every category, in the menu\'s own order. Choose some and it shows only those, in the order you pick them.')
-                            ->hidden(fn (Get $get): bool => self::isHandPicked($get))
-                            ->columnSpanFull(),
-
-                        // Not `->relationship()`: that syncs the ids and
-                        // forgets the order they were picked in, and on this
-                        // board the order is the layout.
-                        Select::make('products')
-                            ->label('Dishes to show')
-                            ->multiple()
-                            ->searchable()
-                            ->options(fn (): array => self::productOptions())
-                            ->placeholder('Choose the dishes for this screen')
-                            ->helperText('The screen shows exactly these, in the order you pick them, all at once. Up to about twelve reads well from across a room; every one you add makes each of them smaller.')
-                            ->visible(fn (Get $get): bool => self::isHandPicked($get))
-                            ->dehydrated(false)
-                            ->loadStateFromRelationshipsUsing(function (Select $component, DisplayScreen $record): void {
-                                $component->state($record->products()->pluck('products.id')->all());
-                            })
-                            ->saveRelationshipsUsing(function (DisplayScreen $record, ?array $state): void {
-                                $record->products()->sync(
-                                    collect($state ?? [])
-                                        ->values()
-                                        ->mapWithKeys(fn (int|string $id, int $position): array => [
-                                            (int) $id => ['sort_order' => $position],
-                                        ])
-                                        ->all(),
-                                );
-                            })
-                            ->columnSpanFull(),
 
                         Toggle::make('is_active')
                             ->label('Live')
                             ->helperText('Turn off and the address stops answering, so a set left on in a back room cannot go on quoting old prices.')
                             ->default(true)
-                            ->columnSpanFull(),
+                            ->inline(false),
                     ]),
 
-                Section::make('How it looks')
-                    ->description('Every layout shows the same dishes at the same prices. What changes is how much room each one gets.')
+                Section::make('Layout')
+                    ->description('Pick the kind of board first: it decides what the rest of this page asks you.')
+                    ->icon(Heroicon::OutlinedSquares2x2)
                     ->columnSpanFull()
-                    ->columns(2)
                     ->components([
-                        Radio::make('orientation')
-                            ->label('How it is hung')
-                            ->options(ScreenOrientation::class)
-                            ->descriptions(collect(ScreenOrientation::cases())
-                                ->mapWithKeys(fn (ScreenOrientation $case): array => [
-                                    $case->value => $case->getDescription(),
-                                ])
-                                ->all())
-                            ->default(ScreenOrientation::Landscape->value)
-                            ->required(),
-
                         Radio::make('layout')
-                            ->label('Layout')
+                            ->hiddenLabel()
                             ->options(ScreenLayout::class)
                             ->descriptions(collect(ScreenLayout::cases())
                                 ->mapWithKeys(fn (ScreenLayout $case): array => [
@@ -119,8 +98,133 @@ class DisplayScreenForm
                                 ])
                                 ->all())
                             ->default(ScreenLayout::Board->value)
+                            ->columns(['md' => 2, 'xl' => 3])
                             ->live()
                             ->required(),
+
+                        // The hand-picked board measures the set itself, so
+                        // it has no use for being told which way up it is.
+                        ToggleButtons::make('orientation')
+                            ->label('How it is hung')
+                            ->options(ScreenOrientation::class)
+                            ->default(ScreenOrientation::Landscape->value)
+                            ->inline()
+                            ->required()
+                            ->hidden(fn (Get $get): bool => self::isHandPicked($get))
+                            ->helperText('A television or tablet on its side is landscape; a screen stood upright, as by a till or a door, is portrait.'),
+                    ]),
+
+                Section::make('What it shows')
+                    ->description(fn (Get $get): string => self::isHandPicked($get)
+                        ? 'Exactly the dishes you list here, all on the screen at once.'
+                        : 'Whole categories, turned over one page at a time.')
+                    ->icon(Heroicon::OutlinedQueueList)
+                    ->columnSpanFull()
+                    ->components([
+                        ToggleButtons::make('order_type')
+                            ->label(fn (Get $get): string => self::isHandPicked($get)
+                                ? 'Which menu the code opens'
+                                : 'Which menu it quotes')
+                            ->options([
+                                OrderType::DineIn->value => OrderType::DineIn->getLabel(),
+                                OrderType::Delivery->value => OrderType::Delivery->getLabel(),
+                            ])
+                            ->icons([
+                                OrderType::DineIn->value => Heroicon::OutlinedBuildingStorefront,
+                                OrderType::Delivery->value => Heroicon::OutlinedTruck,
+                            ])
+                            ->default(OrderType::DineIn->value)
+                            ->inline()
+                            ->required()
+                            ->helperText(fn (Get $get): string => self::isHandPicked($get)
+                                ? 'Only matters if the screen shows a code to scan: this is the menu a customer\'s phone lands on.'
+                                : 'Dine-in is what can be eaten in, the usual choice for a screen in the room. Delivery is what can be sent out, for a screen at the takeaway hatch.'),
+
+                        Select::make('categories')
+                            ->label('Categories')
+                            ->relationship('categories', 'title')
+                            ->multiple()
+                            ->preload()
+                            ->placeholder('The whole menu')
+                            ->helperText('Leave empty and the screen shows every category, in the menu\'s own order. Choose some and it shows only those.')
+                            ->hidden(fn (Get $get): bool => self::isHandPicked($get)),
+
+                        // A list rather than a multi-select, and saved by hand
+                        // rather than through `->relationship()`: on this
+                        // board the order is the layout, so it has to be
+                        // something you can drag, and something that is kept.
+                        Repeater::make('products')
+                            ->label('Dishes')
+                            ->simple(
+                                Select::make('product_id')
+                                    ->options(fn (): array => self::productOptions())
+                                    ->searchable()
+                                    ->required()
+                                    ->placeholder('Choose a dish')
+                                    ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+                            )
+                            ->defaultItems(0)
+                            ->grid(['md' => 2, 'xl' => 3])
+                            ->reorderable()
+                            ->addActionLabel('Add a dish')
+                            ->helperText('Drag to reorder: the screen reads left to right, top to bottom, in this order. Up to about twelve reads well from across a room; every one you add makes each of them smaller.')
+                            ->visible(fn (Get $get): bool => self::isHandPicked($get))
+                            ->dehydrated(false)
+                            ->afterStateHydrated(function (Repeater $component, ?DisplayScreen $record): void {
+                                if ($record?->exists) {
+                                    $component->rawState($record->products()->pluck('products.id')->all());
+                                }
+
+                                $component->hydrateItems();
+                            })
+                            ->saveRelationshipsUsing(function (Repeater $component, DisplayScreen $record): void {
+                                $items = $component->getRawState();
+                                $chosen = [];
+
+                                foreach (is_array($items) ? $items : [] as $item) {
+                                    $id = is_array($item) ? ($item['product_id'] ?? null) : $item;
+
+                                    // A row left blank is skipped, and a dish
+                                    // listed twice keeps its first place.
+                                    if (is_numeric($id) && ! isset($chosen[(int) $id])) {
+                                        $chosen[(int) $id] = ['sort_order' => count($chosen)];
+                                    }
+                                }
+
+                                $record->products()->sync($chosen);
+                            }),
+                    ]),
+
+                Section::make('Details')
+                    ->description('What is printed on the board besides the dishes, and how often it changes.')
+                    ->icon(Heroicon::OutlinedAdjustmentsHorizontal)
+                    ->columnSpanFull()
+                    ->columns(['md' => 2, 'xl' => 4])
+                    ->components([
+                        Toggle::make('show_prices')
+                            ->label('Prices')
+                            ->default(true),
+
+                        Toggle::make('show_names')
+                            ->label('Dish names')
+                            ->helperText('Off, and each tile is the photograph and its price alone.')
+                            ->visible(fn (Get $get): bool => self::isHandPicked($get))
+                            ->default(true),
+
+                        Toggle::make('show_logo')
+                            ->label('Logo')
+                            ->default(true),
+
+                        Toggle::make('show_slides')
+                            ->label('Slider offers')
+                            ->helperText('The slides from above the online menu, dealt in between the categories.')
+                            ->hidden(fn (Get $get): bool => self::isHandPicked($get))
+                            ->default(true),
+
+                        Toggle::make('show_qr')
+                            ->label('Code to scan')
+                            ->helperText('A QR that opens the menu on a phone.')
+                            ->default(false),
 
                         TextInput::make('rotation_seconds')
                             ->label('Seconds per page')
@@ -128,63 +232,31 @@ class DisplayScreenForm
                             ->minValue(3)
                             ->maxValue(600)
                             ->default(12)
+                            ->suffix('sec')
                             ->required()
                             ->hidden(fn (Get $get): bool => self::isHandPicked($get))
-                            ->helperText('How long one page holds before the next takes its place. Ten to fifteen suits a queue; longer suits a table.'),
+                            ->helperText('How long one page holds before the next takes its place. Ten to fifteen suits a queue; longer suits a table.')
+                            ->columnSpan(['md' => 1, 'xl' => 2]),
 
                         TextInput::make('refresh_minutes')
-                            ->label('Reload every (minutes)')
+                            ->label('Reload every')
                             ->numeric()
                             ->minValue(1)
                             ->maxValue(1440)
                             ->default(30)
+                            ->suffix('min')
                             ->placeholder('Never')
                             ->hidden(fn (Get $get): bool => self::isHandPicked($get))
-                            ->helperText('How often the screen fetches the menu again, so a price you change here reaches it on its own. Leave empty to leave the set alone.'),
+                            ->helperText('How often the screen fetches the menu again, so a price you change here reaches it on its own. Leave empty to leave the set alone.')
+                            ->columnSpan(['md' => 1, 'xl' => 2]),
 
-                        Toggle::make('show_prices')
-                            ->label('Show prices')
-                            ->default(true),
-
-                        Toggle::make('show_names')
-                            ->label('Show names')
-                            ->helperText('Turn off and each tile is the photograph and its price alone.')
+                        // Said here, where the reload setting would have been,
+                        // so nobody changes a price and waits for a board that
+                        // is not going to notice.
+                        Text::make('This board never reloads on its own. After changing its dishes or a price, refresh the screen once by hand.')
+                            ->color('gray')
                             ->visible(fn (Get $get): bool => self::isHandPicked($get))
-                            ->default(true),
-
-                        Toggle::make('show_logo')
-                            ->label('Show the logo')
-                            ->default(true),
-
-                        Toggle::make('show_slides')
-                            ->label('Deal in the slider\'s offers')
-                            ->helperText('The same slides that run above the online menu, spread through the categories.')
-                            ->hidden(fn (Get $get): bool => self::isHandPicked($get))
-                            ->default(true),
-
-                        Toggle::make('show_qr')
-                            ->label('Show a code to scan')
-                            ->helperText('Puts a QR in the corner that opens this menu on a phone.')
-                            ->default(false),
-                    ]),
-
-                Section::make('Where to point the set')
-                    ->description('Open this address in the screen\'s browser once and leave it there. Everything above can be changed afterwards without touching the set again.')
-                    ->columnSpanFull()
-                    ->visible(fn (?DisplayScreen $record): bool => $record !== null)
-                    ->components([
-                        Text::make(fn (?DisplayScreen $record): string => $record === null
-                            ? ''
-                            : route('screen.show', $record))
-                            ->color('primary'),
-
-                        Text::make(fn (?DisplayScreen $record): string => $record === null
-                            ? ''
-                            : 'For an older television that cannot run the full board, add ?simple=still, ?simple=cycle or ?simple=crawl to that address: '
-                                .collect(SimpleScreenStyle::cases())
-                                    ->map(fn (SimpleScreenStyle $style): string => $style->getLabel().' — '.$style->getDescription())
-                                    ->implode(' '))
-                            ->color('gray'),
+                            ->columnSpanFull(),
                     ]),
             ]);
     }

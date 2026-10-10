@@ -2,12 +2,15 @@
 
 use App\Enums\OrderType;
 use App\Enums\ScreenLayout;
+use App\Filament\Resources\DisplayScreens\Pages\CreateDisplayScreen;
 use App\Filament\Resources\DisplayScreens\Pages\EditDisplayScreen;
+use App\Filament\Resources\DisplayScreens\Pages\ListDisplayScreens;
 use App\Models\Category;
 use App\Models\DisplayScreen;
 use App\Models\Product;
 use App\Models\Slide;
 use App\Models\User;
+use Filament\Actions\Testing\TestAction;
 use Inertia\Testing\AssertableInertia;
 use Livewire\Livewire;
 
@@ -325,17 +328,96 @@ describe('the hand-picked board', function (): void {
         $third = Product::factory()->create();
 
         $screen = DisplayScreen::factory()->handPicked()->create();
-        $screen->products()->attach([$first->id => ['sort_order' => 0]]);
+        $screen->products()->attach([
+            $second->id => ['sort_order' => 0],
+            $first->id => ['sort_order' => 1],
+        ]);
 
         $this->actingAs(User::factory()->create());
 
-        Livewire::test(EditDisplayScreen::class, ['record' => $screen->getRouteKey()])
-            ->assertSchemaStateSet(['products' => [$first->id]])
-            ->fillForm(['products' => [$third->id, $first->id, $second->id]])
+        $page = Livewire::test(EditDisplayScreen::class, ['record' => $screen->getRouteKey()]);
+
+        // The list opens on what was saved, in the order it was saved in.
+        expect(array_column(array_values($page->get('data.products')), 'product_id'))
+            ->toBe([$second->id, $first->id]);
+
+        $page
+            ->set('data.products', [
+                'a' => ['product_id' => $third->id],
+                'b' => ['product_id' => $first->id],
+                'c' => ['product_id' => $second->id],
+            ])
             ->call('save')
             ->assertHasNoFormErrors();
 
         expect($screen->products()->pluck('products.id')->all())
             ->toBe([$third->id, $first->id, $second->id]);
+    });
+
+    it('creates a hand-picked screen with its dishes from the dashboard', function (): void {
+        $first = Product::factory()->create();
+        $second = Product::factory()->create();
+
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(CreateDisplayScreen::class)
+            ->fillForm(['name' => 'Counter shelf', 'layout' => ScreenLayout::Picks->value])
+            ->set('data.products', [
+                'a' => ['product_id' => $second->id],
+                'b' => ['product_id' => $first->id],
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $screen = DisplayScreen::query()->where('name', 'Counter shelf')->sole();
+
+        expect($screen->layout)->toBe(ScreenLayout::Picks)
+            ->and($screen->products()->pluck('products.id')->all())->toBe([$second->id, $first->id]);
+    });
+});
+
+describe('the screens in the dashboard', function (): void {
+    it('saves a board that turns pages, with the categories chosen for it', function (): void {
+        $category = Category::factory()->create();
+
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(CreateDisplayScreen::class)
+            ->fillForm([
+                'name' => 'Counter TV',
+                'layout' => ScreenLayout::Showcase->value,
+                'categories' => [$category->id],
+                'rotation_seconds' => 20,
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $screen = DisplayScreen::query()->where('name', 'Counter TV')->sole();
+
+        expect($screen->layout)->toBe(ScreenLayout::Showcase)
+            ->and($screen->rotation_seconds)->toBe(20)
+            ->and($screen->categories()->pluck('categories.id')->all())->toBe([$category->id]);
+    });
+
+    it('duplicates a screen with everything chosen for it, at an address of its own', function (): void {
+        $category = Category::factory()->create();
+        $product = Product::factory()->for($category)->create();
+
+        $screen = DisplayScreen::factory()->handPicked()->create(['name' => 'Counter TV']);
+        $screen->categories()->attach($category, ['sort_order' => 0]);
+        $screen->products()->attach($product, ['sort_order' => 0]);
+
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(ListDisplayScreens::class)
+            ->callAction(TestAction::make('replicate')->table($screen))
+            ->assertHasNoErrors();
+
+        $copy = DisplayScreen::query()->where('name', 'Counter TV copy')->sole();
+
+        expect($copy->slug)->toBe('counter-tv-copy')
+            ->and($copy->layout)->toBe(ScreenLayout::Picks)
+            ->and($copy->categories()->pluck('categories.id')->all())->toBe([$category->id])
+            ->and($copy->products()->pluck('products.id')->all())->toBe([$product->id]);
     });
 });
