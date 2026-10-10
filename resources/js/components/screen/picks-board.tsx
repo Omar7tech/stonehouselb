@@ -13,6 +13,13 @@ import type { Screen } from '@/types/screen';
 const OrderQr = lazy(() => import('@/components/menu/order-qr'));
 
 /**
+ * How far a tile may be pulled off square to take up room the grid would
+ * otherwise leave empty. Small enough that the tile still reads as a square;
+ * anything the screen has left beyond it stays white.
+ */
+const STRETCH = 1.12;
+
+/**
  * The hand-picked board: the dishes the shop chose, and nothing else.
  *
  * Every other layout is a show — pages turning, photographs drifting, tiles
@@ -22,12 +29,13 @@ const OrderQr = lazy(() => import('@/components/menu/order-qr'));
  * on purpose: it is the board for the counter where somebody is deciding, not
  * for the wall somebody is walking past.
  *
- * The photographs take the whole screen between them. The dishes are dealt
- * into rows — as many rows as keeps every tile closest to square on this
- * particular set — and each row is then stretched edge to edge, so five dishes
- * are three over two with no hole where a sixth would have been. The same list
- * therefore fills a wall-mounted fifty-five and a tablet stood upright, with
- * nothing left over on either.
+ * The tiles are square, and as large as this particular set allows. The grid
+ * is not a fixed number of columns: every arrangement is tried and the one
+ * giving the biggest square is kept, with the dishes spread evenly over its
+ * rows — seven go four over three, never four, two and one — and a short row
+ * centred under the others. Where the screen has a little room left over, the
+ * tiles are let out by a few percent to take it, and no further: a slightly
+ * wide square is still a square, and a stretched one is not.
  */
 export function PicksBoard({
     screen,
@@ -84,13 +92,13 @@ export function PicksBoard({
                 ) : (
                     layout !== null && (
                         <div
-                            className="flex h-full flex-col"
+                            className="flex h-full flex-col items-center justify-center"
                             style={{
-                                gap: 'calc(var(--u) * 1)',
+                                gap: `${layout.gap}px`,
                                 // One em is a tenth of a tile's shorter side,
                                 // so a label is sized against the photograph
                                 // it sits on.
-                                fontSize: `${layout.side / 10}px`,
+                                fontSize: `${Math.min(layout.width, layout.height) / 10}px`,
                             }}
                         >
                             {layout.rows.map((count, row) => {
@@ -101,8 +109,8 @@ export function PicksBoard({
                                 return (
                                     <ul
                                         key={row}
-                                        className="flex min-h-0 flex-1"
-                                        style={{ gap: 'calc(var(--u) * 1)' }}
+                                        className="flex justify-center"
+                                        style={{ gap: `${layout.gap}px` }}
                                     >
                                         {products
                                             .slice(start, start + count)
@@ -110,6 +118,8 @@ export function PicksBoard({
                                                 <Tile
                                                     key={product.id}
                                                     product={product}
+                                                    width={layout.width}
+                                                    height={layout.height}
                                                     showNames={screen.showNames}
                                                     showPrices={
                                                         screen.showPrices
@@ -190,10 +200,14 @@ export function PicksBoard({
  */
 function Tile({
     product,
+    width,
+    height,
     showNames,
     showPrices,
 }: {
     product: Product;
+    width: number;
+    height: number;
     showNames: boolean;
     showPrices: boolean;
 }) {
@@ -202,7 +216,10 @@ function Tile({
     const art = product.image ?? product.thumbnail;
 
     return (
-        <li className="relative min-w-0 flex-1 overflow-hidden rounded-[0.45em] bg-black/5">
+        <li
+            className="relative shrink-0 overflow-hidden rounded-[0.45em] bg-black/5"
+            style={{ width: `${width}px`, height: `${height}px` }}
+        >
             {art === null ? (
                 // A dish with no photograph still holds its tile, and still
                 // says what it is when the label below is not going to.
@@ -224,10 +241,14 @@ function Tile({
             )}
 
             {(showNames || showPrices) && (
-                <div className="absolute inset-x-0 bottom-[0.55em] flex justify-center px-[0.55em]">
-                    <div className="flex max-w-full flex-col items-center rounded-[0.4em] bg-white px-[0.7em] py-[0.4em] text-center shadow-[0_0.1em_0.6em_rgb(0_0_0/0.18)]">
+                <div className="absolute inset-x-0 bottom-[0.5em] flex justify-center px-[0.5em]">
+                    {/* A label, not a banner: it takes a corner of the
+                        photograph's attention and leaves the dish the rest.
+                        Never smaller than a figure can be read at, however
+                        many tiles the screen is carrying. */}
+                    <div className="flex max-w-full flex-col items-center rounded-[0.45em] bg-white px-[0.7em] py-[0.4em] text-center text-[max(0.72em,13px)] shadow-[0_0.1em_0.5em_rgb(0_0_0/0.18)]">
                         {showNames && (
-                            <span className="max-w-full truncate text-[0.62em] leading-[1.4] font-semibold tracking-wide text-black/60 uppercase">
+                            <span className="max-w-full truncate text-[0.6em] leading-[1.5] font-semibold tracking-wide text-black/60 uppercase">
                                 {product.name}
                             </span>
                         )}
@@ -236,7 +257,7 @@ function Tile({
                             one figure per tile is what reads from across a
                             room. */}
                         {showPrices && (
-                            <span className="flex items-baseline justify-center gap-[0.3em] leading-none tabular-nums">
+                            <span className="flex items-baseline justify-center gap-[0.35em] leading-none tabular-nums">
                                 {lead.from && (
                                     <span className="text-[0.55em] font-semibold text-black/50 uppercase">
                                         from
@@ -244,12 +265,12 @@ function Tile({
                                 )}
 
                                 {lead.was !== null && (
-                                    <span className="text-[0.75em] text-black/40 line-through">
+                                    <span className="text-[0.7em] text-black/40 line-through">
                                         {pricing.usd(lead.was)}
                                     </span>
                                 )}
 
-                                <span className="text-[1.35em] font-bold text-black">
+                                <span className="font-bold text-black">
                                     {pricing.usd(lead.price)}
                                 </span>
                             </span>
@@ -262,40 +283,46 @@ function Tile({
 }
 
 /**
- * Deal this many dishes into rows for this much room.
+ * Deal this many dishes into rows for this much room, and size the tiles.
  *
- * Every row count is tried, and the one kept is the one whose least square
- * tile is still the most square — judged on the least, because an arrangement
- * is only as good as its worst tile. The dishes are then spread evenly over
- * the rows, so seven go four over three rather than four, two and one.
+ * Every row count is tried and the one that gives the largest square tile is
+ * kept. The dishes are then spread evenly over the rows, and the tile is let
+ * out towards whichever edge still has room, up to `STRETCH` and no further.
  */
 function dealRows(
     count: number,
     room: { width: number; height: number },
-): { rows: number[]; side: number } | null {
+): { rows: number[]; width: number; height: number; gap: number } | null {
     if (count === 0 || room.width <= 0 || room.height <= 0) {
         return null;
     }
 
-    /** How near a tile of this shape is to square: 1 is square, 0 is a line. */
-    const squareness = (width: number, height: number): number =>
-        Math.min(width, height) / Math.max(width, height);
+    // Scaled to the set, so the gutters on a tablet are not the gutters of a
+    // television.
+    const gap = Math.round(Math.min(room.width, room.height) * 0.018);
 
-    let best = { rows: 1, score: 0 };
+    /** The room one tile has in each direction, for this many rows. */
+    const cell = (rows: number): { width: number; height: number } => {
+        const columns = Math.ceil(count / rows);
+
+        return {
+            width: (room.width - gap * (columns - 1)) / columns,
+            height: (room.height - gap * (rows - 1)) / rows,
+        };
+    };
+
+    let best = { rows: 1, side: 0 };
 
     for (let rows = 1; rows <= count; rows++) {
-        const height = room.height / rows;
+        const { width, height } = cell(rows);
+        const side = Math.min(width, height);
 
-        const score = Math.min(
-            squareness(room.width / Math.ceil(count / rows), height),
-            squareness(room.width / Math.floor(count / rows), height),
-        );
-
-        if (score > best.score) {
-            best = { rows, score };
+        if (side > best.side) {
+            best = { rows, side };
         }
     }
 
+    const { width, height } = cell(best.rows);
     const base = Math.floor(count / best.rows);
     const extra = count % best.rows;
 
@@ -305,10 +332,11 @@ function dealRows(
         rows: Array.from({ length: best.rows }, (_, row) =>
             row < extra ? base + 1 : base,
         ),
-        side: Math.min(
-            room.width / Math.ceil(count / best.rows),
-            room.height / best.rows,
-        ),
+        // Whole pixels, rounded down: a tile a fraction too large pushes the
+        // last row off the bottom of the screen.
+        width: Math.floor(Math.min(width, best.side * STRETCH)),
+        height: Math.floor(Math.min(height, best.side * STRETCH)),
+        gap,
     };
 }
 
