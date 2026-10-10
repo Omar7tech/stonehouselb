@@ -252,14 +252,14 @@ function Tile({
                         carrying. `--r` is the one radius the tab's crown and
                         its two shoulders are all drawn with. */}
                     <div
-                        className="relative flex max-w-full min-w-0 flex-col items-center rounded-t-(--r) bg-white px-[0.85em] pt-[0.45em] pb-[0.3em] text-center text-[max(0.74em,13px)] text-black"
+                        className="relative flex max-w-full min-w-0 flex-col items-center rounded-t-(--r) bg-white px-[0.85em] pt-[0.45em] pb-[0.3em] text-center text-[max(0.92em,14px)] text-black"
                         style={{ ['--r' as string]: '0.6em' }}
                     >
                         <Shoulder side="left" />
                         <Shoulder side="right" />
 
                         {showNames && (
-                            <span className="max-w-full truncate text-[0.52em] leading-[1.7] font-semibold tracking-[0.14em] text-black/55 uppercase">
+                            <span className="max-w-full truncate text-[0.44em] leading-[1.7] font-semibold tracking-[0.14em] text-black/55 uppercase">
                                 {product.name}
                             </span>
                         )}
@@ -315,8 +315,8 @@ function Shoulder({ side }: { side: 'left' | 'right' }) {
 }
 
 /**
- * A price set the way a menu sets one: the dollars large, the sign and the
- * cents small and raised beside them, and no cents at all on a round figure.
+ * A price set the way a menu sets one: the figure large, the sign small and
+ * raised beside it, and no cents at all on a round figure.
  * "$4" is read at a glance from across a room; "$4.00" is read as four digits.
  *
  * Dollars only, whatever the storefront quotes in: one figure per tile.
@@ -332,12 +332,9 @@ function Figure({ amount }: { amount: number }) {
             <span aria-hidden className="pt-[0.12em] text-[0.5em]">
                 $
             </span>
-            <span aria-hidden>{dollars}</span>
-            {cents !== null && (
-                <span aria-hidden className="pt-[0.12em] text-[0.5em]">
-                    {cents}
-                </span>
-            )}
+            <span aria-hidden>
+                {cents === null ? dollars : `${dollars}.${cents}`}
+            </span>
         </span>
     );
 }
