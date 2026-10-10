@@ -2,12 +2,20 @@ import { Maximize, Minimize } from 'lucide-react';
 import type { ReactNode, RefObject } from 'react';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 
+import { ScreenMarks } from '@/components/screen/screen-marks';
 import { StoneHouseLogo } from '@/components/stone-house-logo';
 import { leadPrice } from '@/lib/screen-deck';
 import { useFullscreen, useIdleChrome } from '@/lib/use-screen';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
-import type { Screen, ScreenLabelStyle } from '@/types/screen';
+import type {
+    Screen,
+    ScreenLabelSize,
+    ScreenLabelStyle,
+    ScreenTileCorners,
+    ScreenTileSpacing,
+    ScreenTone,
+} from '@/types/screen';
 
 const OrderQr = lazy(() => import('@/components/menu/order-qr'));
 
@@ -17,6 +25,36 @@ const OrderQr = lazy(() => import('@/components/menu/order-qr'));
  * anything the screen has left beyond it stays white.
  */
 const STRETCH = 1.12;
+
+/**
+ * The two inks a board is drawn in. The labels are cut from the paper and
+ * printed in the ink, so the whole board flips together and stays one object.
+ */
+const TONES: Record<ScreenTone, { paper: string; ink: string }> = {
+    light: { paper: '#ffffff', ink: '#000000' },
+    dark: { paper: '#0b0b0b', ink: '#ffffff' },
+};
+
+/** The gutter between two photographs, as a share of the set's shorter side. */
+const SPACING: Record<ScreenTileSpacing, number> = {
+    tight: 0.007,
+    regular: 0.018,
+    airy: 0.036,
+};
+
+/** A photograph's corner radius, in tenths of the tile's shorter side. */
+const CORNERS: Record<ScreenTileCorners, string> = {
+    square: '0',
+    soft: '0.35em',
+    round: '1em',
+};
+
+/** A label's type size, against the tile it sits on. */
+const LABEL_SIZES: Record<ScreenLabelSize, string> = {
+    small: '0.76em',
+    regular: '0.92em',
+    large: '1.12em',
+};
 
 /**
  * The hand-picked board: the dishes the shop chose, and nothing else.
@@ -49,40 +87,63 @@ export function PicksBoard({
     const stage = useRef<HTMLDivElement>(null);
     const room = useRoom(stage);
 
-    const layout = room === null ? null : dealRows(products.length, room);
+    const tone = TONES[screen.tone];
+
+    const layout =
+        room === null
+            ? null
+            : dealRows(products.length, room, SPACING[screen.tileSpacing]);
 
     return (
         <div
             className={cn(
-                'relative flex h-[100dvh] w-screen flex-col overflow-hidden bg-white text-black select-none',
+                'relative flex h-[100dvh] w-screen flex-col overflow-hidden bg-(--paper) text-(--ink) select-none',
                 chrome ? 'cursor-default' : 'cursor-none',
             )}
             style={{
                 // The same unit the other boards are sized in, so the mark and
                 // the code are the size they are everywhere else.
                 ['--u' as string]: 'calc(0.6vw + 0.4vh)',
+                ['--paper' as string]: tone.paper,
+                ['--ink' as string]: tone.ink,
+                ['--label' as string]: LABEL_SIZES[screen.labelSize],
+                ['--corner' as string]: CORNERS[screen.tileCorners],
                 padding: 'calc(var(--u) * 1.4)',
                 gap: 'calc(var(--u) * 1.4)',
             }}
         >
-            {screen.showLogo && (
-                <header className="flex shrink-0 justify-center">
-                    <span
-                        className="block"
-                        style={{ width: 'calc(var(--u) * 9)' }}
-                    >
-                        {/* The mark draws itself in everywhere else. Here it
-                            is simply there, like everything else on the
-                            board. */}
-                        <StoneHouseLogo className="w-full animate-none [&_*]:animate-none!" />
-                    </span>
+            {(screen.showLogo || screen.heading !== null) && (
+                <header
+                    className="flex shrink-0 items-center justify-center"
+                    style={{ gap: 'calc(var(--u) * 2)' }}
+                >
+                    {screen.showLogo && (
+                        <span
+                            className="block shrink-0"
+                            style={{ width: 'calc(var(--u) * 9)' }}
+                        >
+                            {/* The mark draws itself in everywhere else. Here
+                                it is simply there, like everything else on
+                                the board. */}
+                            <StoneHouseLogo className="w-full animate-none [&_*]:animate-none!" />
+                        </span>
+                    )}
+
+                    {screen.heading !== null && (
+                        <h1
+                            className="min-w-0 truncate leading-none font-semibold tracking-wide uppercase"
+                            style={{ fontSize: 'calc(var(--u) * 2.4)' }}
+                        >
+                            {screen.heading}
+                        </h1>
+                    )}
                 </header>
             )}
 
             <main ref={stage} className="min-h-0 flex-1">
                 {products.length === 0 ? (
                     <p
-                        className="grid h-full place-items-center text-center text-black/50"
+                        className="grid h-full place-items-center text-center text-(--ink)/50"
                         style={{ fontSize: 'calc(var(--u) * 1.4)' }}
                     >
                         Nothing chosen yet — pick the dishes for this screen in
@@ -122,6 +183,7 @@ export function PicksBoard({
                                                     labelStyle={
                                                         screen.labelStyle
                                                     }
+                                                    showMarks={screen.showMarks}
                                                     showNames={screen.showNames}
                                                     showPrices={
                                                         screen.showPrices
@@ -141,7 +203,7 @@ export function PicksBoard({
                     <Suspense
                         fallback={
                             <span
-                                className="block bg-black/5"
+                                className="block bg-(--ink)/5"
                                 style={{
                                     width: 'calc(var(--u) * 5)',
                                     height: 'calc(var(--u) * 5)',
@@ -178,7 +240,7 @@ export function PicksBoard({
                             ? 'Leave fullscreen'
                             : 'Show fullscreen'
                     }
-                    className="absolute rounded-full bg-white text-black shadow-md [&>svg]:size-[calc(var(--u)*1.6)]"
+                    className="absolute rounded-full bg-(--paper) text-(--ink) shadow-md [&>svg]:size-[calc(var(--u)*1.6)]"
                     style={{
                         top: 'calc(var(--u) * 2)',
                         right: 'calc(var(--u) * 2)',
@@ -205,6 +267,7 @@ function Tile({
     width,
     height,
     labelStyle,
+    showMarks,
     showNames,
     showPrices,
 }: {
@@ -212,6 +275,7 @@ function Tile({
     width: number;
     height: number;
     labelStyle: ScreenLabelStyle;
+    showMarks: boolean;
     showNames: boolean;
     showPrices: boolean;
 }) {
@@ -219,14 +283,14 @@ function Tile({
 
     return (
         <li
-            className="relative shrink-0 overflow-hidden rounded-[0.35em] bg-black/5"
+            className="relative shrink-0 overflow-hidden rounded-(--corner) bg-(--ink)/5"
             style={{ width: `${width}px`, height: `${height}px` }}
         >
             {art === null ? (
                 // A dish with no photograph still holds its tile, and still
                 // says what it is when the label below is not going to.
                 !showNames && (
-                    <span className="absolute inset-0 grid place-items-center p-[1em] text-center text-[0.9em] leading-tight font-semibold text-black/40 uppercase">
+                    <span className="absolute inset-0 grid place-items-center p-[1em] text-center text-[0.9em] leading-tight font-semibold text-(--ink)/40 uppercase">
                         {product.name}
                     </span>
                 )
@@ -241,6 +305,20 @@ function Tile({
                     className="absolute inset-0 size-full object-cover"
                 />
             )}
+
+            {/* On a chip of the board's own paper, for the same reason the
+                price is: an icon laid straight on a photograph is lost on half
+                of them. The marks are sized in the board's unit, so the chip
+                hands them the tile's instead. */}
+            {showMarks &&
+                (product.isFeatured || product.isSpicy || product.isVegan) && (
+                    <span
+                        className="absolute top-[0.45em] left-[0.45em] flex rounded-full bg-(--paper) px-[0.45em] py-[0.35em]"
+                        style={{ ['--u' as string]: 'max(0.62em, 12px)' }}
+                    >
+                        <ScreenMarks product={product} />
+                    </span>
+                )}
 
             {(showNames || showPrices) && (
                 <Label
@@ -277,7 +355,7 @@ function Label({
         return (
             <div
                 className={cn(
-                    'absolute inset-x-0 bottom-0 flex items-center gap-[0.8em] bg-white px-[0.75em] py-[0.4em] text-[max(0.92em,14px)] text-black',
+                    'absolute inset-x-0 bottom-0 flex items-center gap-[0.8em] bg-(--paper) px-[0.75em] py-[0.4em] text-[max(var(--label),14px)] text-(--ink)',
                     name !== null && price !== null
                         ? 'justify-between'
                         : 'justify-center',
@@ -294,7 +372,7 @@ function Label({
     if (style === 'pill') {
         return (
             <div className="absolute inset-x-0 bottom-[0.55em] flex justify-center px-[0.55em]">
-                <div className="flex max-w-full min-w-0 flex-col items-center rounded-[1.1em] bg-white px-[1em] py-[0.38em] text-center text-[max(0.92em,14px)] text-black shadow-[0_0.08em_0.45em_rgb(0_0_0/0.22)]">
+                <div className="flex max-w-full min-w-0 flex-col items-center rounded-[1.1em] bg-(--paper) px-[1em] py-[0.38em] text-center text-[max(var(--label),14px)] text-(--ink) shadow-[0_0.08em_0.45em_rgb(0_0_0/0.22)]">
                     {name}
                     {price}
                 </div>
@@ -310,7 +388,7 @@ function Label({
     return (
         <div className="absolute inset-x-0 bottom-0 flex justify-center px-[0.9em]">
             <div
-                className="relative flex max-w-full min-w-0 flex-col items-center rounded-t-(--r) bg-white px-[0.85em] pt-[0.45em] pb-[0.3em] text-center text-[max(0.92em,14px)] text-black"
+                className="relative flex max-w-full min-w-0 flex-col items-center rounded-t-(--r) bg-(--paper) px-[0.85em] pt-[0.45em] pb-[0.3em] text-center text-[max(var(--label),14px)] text-(--ink)"
                 style={{ ['--r' as string]: '0.6em' }}
             >
                 <Shoulder side="left" />
@@ -326,7 +404,7 @@ function Label({
 /** What the dish is called, small and spaced, cut short rather than wrapped. */
 function Name({ product }: { product: Product }) {
     return (
-        <span className="max-w-full min-w-0 truncate text-[0.44em] leading-[1.7] font-semibold tracking-[0.14em] text-black/55 uppercase">
+        <span className="max-w-full min-w-0 truncate text-[0.44em] leading-[1.7] font-semibold tracking-[0.14em] text-(--ink)/55 uppercase">
             {product.name}
         </span>
     );
@@ -339,13 +417,13 @@ function Price({ product }: { product: Product }) {
     return (
         <span className="flex shrink-0 items-start justify-center gap-[0.4em] leading-none tabular-nums">
             {lead.from && (
-                <span className="self-end pb-[0.2em] text-[0.42em] font-semibold tracking-[0.14em] text-black/50 uppercase">
+                <span className="self-end pb-[0.2em] text-[0.42em] font-semibold tracking-[0.14em] text-(--ink)/50 uppercase">
                     from
                 </span>
             )}
 
             {lead.was !== null && (
-                <span className="self-end pb-[0.12em] text-[0.6em] font-medium text-black/40 line-through">
+                <span className="self-end pb-[0.12em] text-[0.6em] font-medium text-(--ink)/40 line-through">
                     {formatFigure(lead.was)}
                 </span>
             )}
@@ -375,7 +453,7 @@ function Shoulder({ side }: { side: 'left' | 'right' }) {
                 // Tucked half a pixel under the tab, so no hairline of
                 // photograph shows between the two at an odd zoom.
                 [side === 'left' ? 'right' : 'left']: 'calc(100% - 0.5px)',
-                background: `radial-gradient(circle at ${corner}, transparent calc(var(--r) - 0.5px), #fff var(--r))`,
+                background: `radial-gradient(circle at ${corner}, transparent calc(var(--r) - 0.5px), var(--paper) var(--r))`,
             }}
         />
     );
@@ -437,6 +515,7 @@ function formatFigure(amount: number): string {
 function dealRows(
     count: number,
     room: { width: number; height: number },
+    spacing: number,
 ): { rows: number[]; width: number; height: number; gap: number } | null {
     if (count === 0 || room.width <= 0 || room.height <= 0) {
         return null;
@@ -444,7 +523,7 @@ function dealRows(
 
     // Scaled to the set, so the gutters on a tablet are not the gutters of a
     // television.
-    const gap = Math.round(Math.min(room.width, room.height) * 0.018);
+    const gap = Math.round(Math.min(room.width, room.height) * spacing);
 
     /** The room one tile has in each direction, for this many rows. */
     const cell = (rows: number): { width: number; height: number } => {

@@ -1,8 +1,12 @@
 <?php
 
 use App\Enums\OrderType;
+use App\Enums\ScreenLabelSize;
 use App\Enums\ScreenLabelStyle;
 use App\Enums\ScreenLayout;
+use App\Enums\ScreenTileCorners;
+use App\Enums\ScreenTileSpacing;
+use App\Enums\ScreenTone;
 use App\Filament\Resources\DisplayScreens\Pages\CreateDisplayScreen;
 use App\Filament\Resources\DisplayScreens\Pages\EditDisplayScreen;
 use App\Filament\Resources\DisplayScreens\Pages\ListDisplayScreens;
@@ -416,6 +420,62 @@ describe('the label on a hand-picked tile', function (): void {
             ->assertDontSee(ScreenLabelStyle::Band->getDescription())
             ->fillForm(['layout' => ScreenLayout::Picks->value])
             ->assertSee(ScreenLabelStyle::Band->getDescription());
+    });
+});
+
+describe('the look of a hand-picked board', function (): void {
+    it('is drawn the way it always was until the shop changes it', function (): void {
+        $screen = DisplayScreen::factory()->handPicked()->create();
+
+        $this->get(route('screen.show', $screen))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->where('screen.heading', null)
+                ->where('screen.tone', ScreenTone::Light->value)
+                ->where('screen.tileCorners', ScreenTileCorners::Soft->value)
+                ->where('screen.tileSpacing', ScreenTileSpacing::Regular->value)
+                ->where('screen.labelSize', ScreenLabelSize::Regular->value)
+                ->where('screen.showMarks', false)
+            );
+    });
+
+    it('takes every setting from the dashboard to the screen', function (): void {
+        $screen = DisplayScreen::factory()->handPicked()->create();
+
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(EditDisplayScreen::class, ['record' => $screen->getRouteKey()])
+            ->fillForm([
+                'heading' => 'Today\'s specials',
+                'tone' => ScreenTone::Dark->value,
+                'tile_corners' => ScreenTileCorners::Round->value,
+                'tile_spacing' => ScreenTileSpacing::Airy->value,
+                'label_size' => ScreenLabelSize::Large->value,
+                'show_marks' => true,
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->get(route('screen.show', $screen))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->where('screen.heading', 'Today\'s specials')
+                ->where('screen.tone', ScreenTone::Dark->value)
+                ->where('screen.tileCorners', ScreenTileCorners::Round->value)
+                ->where('screen.tileSpacing', ScreenTileSpacing::Airy->value)
+                ->where('screen.labelSize', ScreenLabelSize::Large->value)
+                ->where('screen.showMarks', true)
+            );
+    });
+
+    it('treats a heading of nothing but spaces as no heading', function (): void {
+        $screen = DisplayScreen::factory()->handPicked()->create(['heading' => '   ']);
+
+        $this->get(route('screen.show', $screen))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->where('screen.heading', null)
+            );
     });
 });
 

@@ -3,9 +3,13 @@
 namespace App\Filament\Resources\DisplayScreens\Schemas;
 
 use App\Enums\OrderType;
+use App\Enums\ScreenLabelSize;
 use App\Enums\ScreenLabelStyle;
 use App\Enums\ScreenLayout;
 use App\Enums\ScreenOrientation;
+use App\Enums\ScreenTileCorners;
+use App\Enums\ScreenTileSpacing;
+use App\Enums\ScreenTone;
 use App\Enums\SimpleScreenStyle;
 use App\Models\Category;
 use App\Models\DisplayScreen;
@@ -191,14 +195,53 @@ class DisplayScreenForm
                 // Its own section, and only on the board that has labels: the
                 // other layouts set their names and prices in the layout
                 // itself, and have nothing here to choose between.
-                Section::make('Label')
-                    ->description('How the name and the price are set on each photo. All three are white with black figures; pick the one that suits your photographs.')
-                    ->icon(Heroicon::OutlinedTag)
+                Section::make('Look')
+                    ->description('How the board is dressed. None of this changes which dishes it shows, only how they are set out.')
+                    ->icon(Heroicon::OutlinedPaintBrush)
                     ->columnSpanFull()
+                    ->columns(['md' => 2, 'xl' => 4])
                     ->visible(fn (Get $get): bool => self::isHandPicked($get))
                     ->components([
+                        TextInput::make('heading')
+                            ->label('Heading')
+                            ->maxLength(60)
+                            ->placeholder('Today\'s specials')
+                            ->helperText('A line across the top of the board. Leave empty for no heading.')
+                            ->columnSpanFull(),
+
+                        ToggleButtons::make('tone')
+                            ->label('Board colour')
+                            ->options(ScreenTone::class)
+                            ->default(ScreenTone::Light->value)
+                            ->inline()
+                            ->required()
+                            ->helperText('The labels take the same colour, with the figures in the other.'),
+
+                        ToggleButtons::make('tile_corners')
+                            ->label('Photo corners')
+                            ->options(ScreenTileCorners::class)
+                            ->default(ScreenTileCorners::Soft->value)
+                            ->inline()
+                            ->required(),
+
+                        ToggleButtons::make('tile_spacing')
+                            ->label('Space between photos')
+                            ->options(ScreenTileSpacing::class)
+                            ->default(ScreenTileSpacing::Regular->value)
+                            ->inline()
+                            ->required()
+                            ->helperText('Tighter makes the photos larger.'),
+
+                        ToggleButtons::make('label_size')
+                            ->label('Label size')
+                            ->options(ScreenLabelSize::class)
+                            ->default(ScreenLabelSize::Regular->value)
+                            ->inline()
+                            ->required(),
+
                         Radio::make('label_style')
-                            ->hiddenLabel()
+                            ->label('Label style')
+                            ->columnSpanFull()
                             ->options(ScreenLabelStyle::class)
                             ->descriptions(collect(ScreenLabelStyle::cases())
                                 ->mapWithKeys(fn (ScreenLabelStyle $case): array => [
@@ -225,6 +268,12 @@ class DisplayScreenForm
                             ->helperText('Off, and each tile is the photograph and its price alone.')
                             ->visible(fn (Get $get): bool => self::isHandPicked($get))
                             ->default(true),
+
+                        Toggle::make('show_marks')
+                            ->label('Dish marks')
+                            ->helperText('The house-favourite, spicy and vegan icons, in the corner of the photo.')
+                            ->visible(fn (Get $get): bool => self::isHandPicked($get))
+                            ->default(false),
 
                         Toggle::make('show_logo')
                             ->label('Logo')

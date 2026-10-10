@@ -17,6 +17,18 @@ export type DeckLayout = Exclude<ScreenLayout, 'picks'>;
  */
 export type ScreenLabelStyle = 'notch' | 'pill' | 'band';
 
+/** Mirrors `App\Enums\ScreenTone` — the sheet a hand-picked board is drawn on. */
+export type ScreenTone = 'light' | 'dark';
+
+/** Mirrors `App\Enums\ScreenTileCorners`. */
+export type ScreenTileCorners = 'square' | 'soft' | 'round';
+
+/** Mirrors `App\Enums\ScreenTileSpacing`. */
+export type ScreenTileSpacing = 'tight' | 'regular' | 'airy';
+
+/** Mirrors `App\Enums\ScreenLabelSize`. */
+export type ScreenLabelSize = 'small' | 'regular' | 'large';
+
 /** One screen in the shop, as the board page reads it. */
 export type Screen = {
     /** The shop's own name for it, shown only where the logo is not. */
@@ -30,6 +42,18 @@ export type Screen = {
     showNames: boolean;
     /** How a hand-picked tile draws its label. Read by that layout only. */
     labelStyle: ScreenLabelStyle;
+    /**
+     * The rest of a hand-picked board's dress: a line across the top, the
+     * sheet it is drawn on, and how its photographs and labels are cut. Read
+     * by that layout only.
+     */
+    heading: string | null;
+    tone: ScreenTone;
+    tileCorners: ScreenTileCorners;
+    tileSpacing: ScreenTileSpacing;
+    labelSize: ScreenLabelSize;
+    /** Whether the favourite, spicy and vegan marks are drawn on a tile. */
+    showMarks: boolean;
     showLogo: boolean;
     /** Whether a code to open the menu on a phone is drawn in the corner. */
     showQr: boolean;

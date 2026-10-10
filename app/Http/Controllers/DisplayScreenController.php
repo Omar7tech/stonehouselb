@@ -67,6 +67,13 @@ class DisplayScreenController extends Controller
                 'showPrices' => $displayScreen->show_prices,
                 'showNames' => $displayScreen->show_names,
                 'labelStyle' => $displayScreen->label_style->value,
+                // A heading of nothing but spaces is no heading.
+                'heading' => filled($displayScreen->heading) ? trim($displayScreen->heading) : null,
+                'tone' => $displayScreen->tone->value,
+                'tileCorners' => $displayScreen->tile_corners->value,
+                'tileSpacing' => $displayScreen->tile_spacing->value,
+                'labelSize' => $displayScreen->label_size->value,
+                'showMarks' => $displayScreen->show_marks,
                 'showLogo' => $displayScreen->show_logo,
                 'showQr' => $displayScreen->show_qr,
                 // Where a customer's phone lands when they scan the code. The

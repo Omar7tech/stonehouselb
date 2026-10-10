@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use App\Enums\OrderType;
+use App\Enums\ScreenLabelSize;
 use App\Enums\ScreenLabelStyle;
 use App\Enums\ScreenLayout;
 use App\Enums\ScreenOrientation;
+use App\Enums\ScreenTileCorners;
+use App\Enums\ScreenTileSpacing;
+use App\Enums\ScreenTone;
 use Database\Factories\DisplayScreenFactory;
 use Illuminate\Database\Eloquent\Attributes\Guarded;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -99,6 +103,11 @@ class DisplayScreen extends Model
             'show_prices' => 'boolean',
             'show_names' => 'boolean',
             'label_style' => ScreenLabelStyle::class,
+            'tone' => ScreenTone::class,
+            'tile_corners' => ScreenTileCorners::class,
+            'tile_spacing' => ScreenTileSpacing::class,
+            'label_size' => ScreenLabelSize::class,
+            'show_marks' => 'boolean',
             'show_logo' => 'boolean',
             'show_slides' => 'boolean',
             'show_qr' => 'boolean',

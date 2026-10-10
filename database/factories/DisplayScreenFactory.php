@@ -3,9 +3,13 @@
 namespace Database\Factories;
 
 use App\Enums\OrderType;
+use App\Enums\ScreenLabelSize;
 use App\Enums\ScreenLabelStyle;
 use App\Enums\ScreenLayout;
 use App\Enums\ScreenOrientation;
+use App\Enums\ScreenTileCorners;
+use App\Enums\ScreenTileSpacing;
+use App\Enums\ScreenTone;
 use App\Models\DisplayScreen;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -28,6 +32,12 @@ class DisplayScreenFactory extends Factory
             'show_prices' => true,
             'show_names' => true,
             'label_style' => ScreenLabelStyle::Notch,
+            'heading' => null,
+            'tone' => ScreenTone::Light,
+            'tile_corners' => ScreenTileCorners::Soft,
+            'tile_spacing' => ScreenTileSpacing::Regular,
+            'label_size' => ScreenLabelSize::Regular,
+            'show_marks' => false,
             'show_logo' => true,
             'show_slides' => true,
             'show_qr' => false,
