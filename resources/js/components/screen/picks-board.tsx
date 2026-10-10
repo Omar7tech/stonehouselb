@@ -4,7 +4,6 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 
 import { StoneHouseLogo } from '@/components/stone-house-logo';
 import { leadPrice } from '@/lib/screen-deck';
-import { usePricing } from '@/lib/use-pricing';
 import { useFullscreen, useIdleChrome } from '@/lib/use-screen';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
@@ -191,12 +190,19 @@ export function PicksBoard({
 }
 
 /**
- * One dish: its photograph, with what it costs set into the foot of it.
+ * One dish: its photograph, with what it costs cut into the foot of it.
  *
- * The price stands on a white label rather than straight on the picture. A
- * figure laid over a photograph is only readable where the photograph happens
- * to be dark, and a price is the one thing on this board that has to be
- * readable on every tile.
+ * The price is not a badge laid over the picture. It stands on a tab of the
+ * board's own white that rises out of the gutter under the tile, its shoulders
+ * curving back into the photograph — so it reads as a notch cut out of the
+ * picture rather than as a sticker stuck onto it, the way a price is cut into
+ * a shelf-edge card. It needs no shadow to lift it off the photograph, because
+ * it is not on the photograph: it is the page showing through.
+ *
+ * White with black figures, on every tile, whatever is in the picture. A figure
+ * laid straight over a photograph is only readable where the photograph happens
+ * to be dark, and the price is the one thing here that has to be readable on
+ * all of them.
  */
 function Tile({
     product,
@@ -211,18 +217,17 @@ function Tile({
     showNames: boolean;
     showPrices: boolean;
 }) {
-    const pricing = usePricing();
     const lead = leadPrice(product);
     const art = product.image ?? product.thumbnail;
 
     return (
         <li
-            className="relative shrink-0 overflow-hidden rounded-[0.45em] bg-black/5"
+            className="relative shrink-0 overflow-hidden rounded-[0.35em] bg-black/5"
             style={{ width: `${width}px`, height: `${height}px` }}
         >
             {art === null ? (
                 // A dish with no photograph still holds its tile, and still
-                // says what it is when the label below is not going to.
+                // says what it is when the tab below is not going to.
                 !showNames && (
                     <span className="absolute inset-0 grid place-items-center p-[1em] text-center text-[0.9em] leading-tight font-semibold text-black/40 uppercase">
                         {product.name}
@@ -241,38 +246,39 @@ function Tile({
             )}
 
             {(showNames || showPrices) && (
-                <div className="absolute inset-x-0 bottom-[0.5em] flex justify-center px-[0.5em]">
-                    {/* A label, not a banner: it takes a corner of the
-                        photograph's attention and leaves the dish the rest.
-                        Never smaller than a figure can be read at, however
-                        many tiles the screen is carrying. */}
-                    <div className="flex max-w-full flex-col items-center rounded-[0.45em] bg-white px-[0.7em] py-[0.4em] text-center text-[max(0.72em,13px)] shadow-[0_0.1em_0.5em_rgb(0_0_0/0.18)]">
+                <div className="absolute inset-x-0 bottom-0 flex justify-center px-[0.9em]">
+                    {/* Sized against the tile, but never below what a figure
+                        can be read at, however many tiles the screen is
+                        carrying. `--r` is the one radius the tab's crown and
+                        its two shoulders are all drawn with. */}
+                    <div
+                        className="relative flex max-w-full min-w-0 flex-col items-center rounded-t-(--r) bg-white px-[0.85em] pt-[0.45em] pb-[0.3em] text-center text-[max(0.74em,13px)] text-black"
+                        style={{ ['--r' as string]: '0.6em' }}
+                    >
+                        <Shoulder side="left" />
+                        <Shoulder side="right" />
+
                         {showNames && (
-                            <span className="max-w-full truncate text-[0.6em] leading-[1.5] font-semibold tracking-wide text-black/60 uppercase">
+                            <span className="max-w-full truncate text-[0.52em] leading-[1.7] font-semibold tracking-[0.14em] text-black/55 uppercase">
                                 {product.name}
                             </span>
                         )}
 
-                        {/* Dollars only, whatever the storefront quotes in:
-                            one figure per tile is what reads from across a
-                            room. */}
                         {showPrices && (
-                            <span className="flex items-baseline justify-center gap-[0.35em] leading-none tabular-nums">
+                            <span className="flex items-start justify-center gap-[0.4em] leading-none tabular-nums">
                                 {lead.from && (
-                                    <span className="text-[0.55em] font-semibold text-black/50 uppercase">
+                                    <span className="self-end pb-[0.2em] text-[0.42em] font-semibold tracking-[0.14em] text-black/50 uppercase">
                                         from
                                     </span>
                                 )}
 
                                 {lead.was !== null && (
-                                    <span className="text-[0.7em] text-black/40 line-through">
-                                        {pricing.usd(lead.was)}
+                                    <span className="self-end pb-[0.12em] text-[0.6em] font-medium text-black/40 line-through">
+                                        {formatFigure(lead.was)}
                                     </span>
                                 )}
 
-                                <span className="font-bold text-black">
-                                    {pricing.usd(lead.price)}
-                                </span>
+                                <Figure amount={lead.price} />
                             </span>
                         )}
                     </div>
@@ -280,6 +286,81 @@ function Tile({
             )}
         </li>
     );
+}
+
+/**
+ * One of the two curves that run the tab back into the photograph.
+ *
+ * A square of white standing beside the tab at the foot of the tile, with a
+ * quarter circle taken out of it — which leaves exactly the sliver between the
+ * tab's side and the tile's bottom edge. A gradient rather than a mask or a
+ * clip-path: it is the one way to draw this that a ten-year-old television
+ * draws too.
+ */
+function Shoulder({ side }: { side: 'left' | 'right' }) {
+    const corner = side === 'left' ? '0 0' : '100% 0';
+
+    return (
+        <span
+            aria-hidden
+            className="absolute bottom-0 size-(--r)"
+            style={{
+                // Tucked half a pixel under the tab, so no hairline of
+                // photograph shows between the two at an odd zoom.
+                [side === 'left' ? 'right' : 'left']: 'calc(100% - 0.5px)',
+                background: `radial-gradient(circle at ${corner}, transparent calc(var(--r) - 0.5px), #fff var(--r))`,
+            }}
+        />
+    );
+}
+
+/**
+ * A price set the way a menu sets one: the dollars large, the sign and the
+ * cents small and raised beside them, and no cents at all on a round figure.
+ * "$4" is read at a glance from across a room; "$4.00" is read as four digits.
+ *
+ * Dollars only, whatever the storefront quotes in: one figure per tile.
+ */
+function Figure({ amount }: { amount: number }) {
+    const { dollars, cents } = splitFigure(amount);
+
+    return (
+        <span
+            className="flex items-start font-extrabold tracking-tight"
+            aria-label={formatFigure(amount)}
+        >
+            <span aria-hidden className="pt-[0.12em] text-[0.5em]">
+                $
+            </span>
+            <span aria-hidden>{dollars}</span>
+            {cents !== null && (
+                <span aria-hidden className="pt-[0.12em] text-[0.5em]">
+                    {cents}
+                </span>
+            )}
+        </span>
+    );
+}
+
+/** A price as whole dollars and, unless it is a round figure, its cents. */
+function splitFigure(amount: number): {
+    dollars: string;
+    cents: string | null;
+} {
+    const total = Math.round(amount * 100);
+    const cents = total % 100;
+
+    return {
+        dollars: Math.floor(total / 100).toLocaleString('en-US'),
+        cents: cents === 0 ? null : String(cents).padStart(2, '0'),
+    };
+}
+
+/** The same figure on one line, for the struck-through price and for readers. */
+function formatFigure(amount: number): string {
+    const { dollars, cents } = splitFigure(amount);
+
+    return cents === null ? `$${dollars}` : `$${dollars}.${cents}`;
 }
 
 /**
