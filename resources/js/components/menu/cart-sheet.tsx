@@ -54,7 +54,7 @@ export function CartSheet({
     /** A line about where this basket came from, e.g. a shared link. */
     notice?: string | null;
 }) {
-    const { items, open, setOpen, subtotalUsd } = useCart();
+    const { items, open, setOpen, subtotalUsd, clear } = useCart();
     const pricing = usePricing();
     // Only read when the shop is shut, but a hook cannot be called by halves.
     const opensLabel = nextOpeningLabel(useShop());
@@ -68,6 +68,9 @@ export function CartSheet({
         subtotalUsd,
         deliveryFeeUsd,
         totalUsd,
+        // Empty the cart as soon as the order leaves for WhatsApp, so coming
+        // back to the menu doesn't carry the last order's items.
+        onSent: clear,
     });
 
     // Whether the basket has been handed over to the share screen. Held here
