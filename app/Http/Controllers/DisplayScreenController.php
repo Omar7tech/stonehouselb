@@ -66,6 +66,7 @@ class DisplayScreenController extends Controller
                 'holdSeconds' => $displayScreen->holdSeconds(),
                 'showPrices' => $displayScreen->show_prices,
                 'showNames' => $displayScreen->show_names,
+                'labelStyle' => $displayScreen->label_style->value,
                 'showLogo' => $displayScreen->show_logo,
                 'showQr' => $displayScreen->show_qr,
                 // Where a customer's phone lands when they scan the code. The

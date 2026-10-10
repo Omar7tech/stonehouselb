@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\DisplayScreens\Schemas;
 
 use App\Enums\OrderType;
+use App\Enums\ScreenLabelStyle;
 use App\Enums\ScreenLayout;
 use App\Enums\ScreenOrientation;
 use App\Enums\SimpleScreenStyle;
@@ -183,6 +184,28 @@ class DisplayScreenForm
 
                                 $record->products()->sync($chosen);
                             }),
+                    ]),
+
+                // Its own section, and only on the board that has labels: the
+                // other layouts set their names and prices in the layout
+                // itself, and have nothing here to choose between.
+                Section::make('Label')
+                    ->description('How the name and the price are set on each photo. All three are white with black figures; pick the one that suits your photographs.')
+                    ->icon(Heroicon::OutlinedTag)
+                    ->columnSpanFull()
+                    ->visible(fn (Get $get): bool => self::isHandPicked($get))
+                    ->components([
+                        Radio::make('label_style')
+                            ->hiddenLabel()
+                            ->options(ScreenLabelStyle::class)
+                            ->descriptions(collect(ScreenLabelStyle::cases())
+                                ->mapWithKeys(fn (ScreenLabelStyle $case): array => [
+                                    $case->value => $case->getDescription(),
+                                ])
+                                ->all())
+                            ->default(ScreenLabelStyle::Notch->value)
+                            ->columns(['md' => 3])
+                            ->required(),
                     ]),
 
                 Section::make('Details')

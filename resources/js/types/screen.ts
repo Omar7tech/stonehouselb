@@ -11,6 +11,12 @@ export type ScreenLayout =
  */
 export type DeckLayout = Exclude<ScreenLayout, 'picks'>;
 
+/**
+ * Mirrors `App\Enums\ScreenLabelStyle` — how a hand-picked tile sets its name
+ * and price on the photograph.
+ */
+export type ScreenLabelStyle = 'notch' | 'pill' | 'band';
+
 /** One screen in the shop, as the board page reads it. */
 export type Screen = {
     /** The shop's own name for it, shown only where the logo is not. */
@@ -22,6 +28,8 @@ export type Screen = {
     showPrices: boolean;
     /** Whether a hand-picked tile names its dish. Read by that layout only. */
     showNames: boolean;
+    /** How a hand-picked tile draws its label. Read by that layout only. */
+    labelStyle: ScreenLabelStyle;
     showLogo: boolean;
     /** Whether a code to open the menu on a phone is drawn in the corner. */
     showQr: boolean;

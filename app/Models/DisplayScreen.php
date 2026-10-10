@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\OrderType;
+use App\Enums\ScreenLabelStyle;
 use App\Enums\ScreenLayout;
 use App\Enums\ScreenOrientation;
 use Database\Factories\DisplayScreenFactory;
@@ -97,6 +98,7 @@ class DisplayScreen extends Model
             'refresh_minutes' => 'integer',
             'show_prices' => 'boolean',
             'show_names' => 'boolean',
+            'label_style' => ScreenLabelStyle::class,
             'show_logo' => 'boolean',
             'show_slides' => 'boolean',
             'show_qr' => 'boolean',

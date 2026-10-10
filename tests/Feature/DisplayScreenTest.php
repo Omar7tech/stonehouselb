@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\OrderType;
+use App\Enums\ScreenLabelStyle;
 use App\Enums\ScreenLayout;
 use App\Filament\Resources\DisplayScreens\Pages\CreateDisplayScreen;
 use App\Filament\Resources\DisplayScreens\Pages\EditDisplayScreen;
@@ -373,6 +374,48 @@ describe('the hand-picked board', function (): void {
 
         expect($screen->layout)->toBe(ScreenLayout::Picks)
             ->and($screen->products()->pluck('products.id')->all())->toBe([$second->id, $first->id]);
+    });
+});
+
+describe('the label on a hand-picked tile', function (): void {
+    it('is the notch unless the shop chose otherwise', function (): void {
+        $screen = DisplayScreen::factory()->handPicked()->create();
+
+        $this->get(route('screen.show', $screen))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->where('screen.labelStyle', ScreenLabelStyle::Notch->value)
+            );
+    });
+
+    it('is drawn in whichever style the shop chose in the dashboard', function (ScreenLabelStyle $style): void {
+        $screen = DisplayScreen::factory()->handPicked()->create();
+
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(EditDisplayScreen::class, ['record' => $screen->getRouteKey()])
+            ->fillForm(['label_style' => $style->value])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        expect($screen->refresh()->label_style)->toBe($style);
+
+        $this->get(route('screen.show', $screen))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->where('screen.labelStyle', $style->value)
+            );
+    })->with(ScreenLabelStyle::cases());
+
+    it('is not offered to a board that has no labels to style', function (): void {
+        $screen = DisplayScreen::factory()->create(['layout' => ScreenLayout::Board]);
+
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(EditDisplayScreen::class, ['record' => $screen->getRouteKey()])
+            ->assertDontSee(ScreenLabelStyle::Band->getDescription())
+            ->fillForm(['layout' => ScreenLayout::Picks->value])
+            ->assertSee(ScreenLabelStyle::Band->getDescription());
     });
 });
 

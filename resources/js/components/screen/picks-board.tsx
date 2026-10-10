@@ -1,5 +1,5 @@
 import { Maximize, Minimize } from 'lucide-react';
-import type { RefObject } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 
 import { StoneHouseLogo } from '@/components/stone-house-logo';
@@ -7,7 +7,7 @@ import { leadPrice } from '@/lib/screen-deck';
 import { useFullscreen, useIdleChrome } from '@/lib/use-screen';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
-import type { Screen } from '@/types/screen';
+import type { Screen, ScreenLabelStyle } from '@/types/screen';
 
 const OrderQr = lazy(() => import('@/components/menu/order-qr'));
 
@@ -119,6 +119,9 @@ export function PicksBoard({
                                                     product={product}
                                                     width={layout.width}
                                                     height={layout.height}
+                                                    labelStyle={
+                                                        screen.labelStyle
+                                                    }
                                                     showNames={screen.showNames}
                                                     showPrices={
                                                         screen.showPrices
@@ -190,34 +193,28 @@ export function PicksBoard({
 }
 
 /**
- * One dish: its photograph, with what it costs cut into the foot of it.
+ * One dish: its photograph, labelled with what it is and what it costs.
  *
- * The price is not a badge laid over the picture. It stands on a tab of the
- * board's own white that rises out of the gutter under the tile, its shoulders
- * curving back into the photograph — so it reads as a notch cut out of the
- * picture rather than as a sticker stuck onto it, the way a price is cut into
- * a shelf-edge card. It needs no shadow to lift it off the photograph, because
- * it is not on the photograph: it is the page showing through.
- *
- * White with black figures, on every tile, whatever is in the picture. A figure
- * laid straight over a photograph is only readable where the photograph happens
- * to be dark, and the price is the one thing here that has to be readable on
- * all of them.
+ * The label is always white with black figures, whatever is in the picture and
+ * whichever of the three styles the shop chose. A figure laid straight over a
+ * photograph is only readable where the photograph happens to be dark, and the
+ * price is the one thing here that has to be readable on every tile.
  */
 function Tile({
     product,
     width,
     height,
+    labelStyle,
     showNames,
     showPrices,
 }: {
     product: Product;
     width: number;
     height: number;
+    labelStyle: ScreenLabelStyle;
     showNames: boolean;
     showPrices: boolean;
 }) {
-    const lead = leadPrice(product);
     const art = product.image ?? product.thumbnail;
 
     return (
@@ -227,7 +224,7 @@ function Tile({
         >
             {art === null ? (
                 // A dish with no photograph still holds its tile, and still
-                // says what it is when the tab below is not going to.
+                // says what it is when the label below is not going to.
                 !showNames && (
                     <span className="absolute inset-0 grid place-items-center p-[1em] text-center text-[0.9em] leading-tight font-semibold text-black/40 uppercase">
                         {product.name}
@@ -246,45 +243,115 @@ function Tile({
             )}
 
             {(showNames || showPrices) && (
-                <div className="absolute inset-x-0 bottom-0 flex justify-center px-[0.9em]">
-                    {/* Sized against the tile, but never below what a figure
-                        can be read at, however many tiles the screen is
-                        carrying. `--r` is the one radius the tab's crown and
-                        its two shoulders are all drawn with. */}
-                    <div
-                        className="relative flex max-w-full min-w-0 flex-col items-center rounded-t-(--r) bg-white px-[0.85em] pt-[0.45em] pb-[0.3em] text-center text-[max(0.92em,14px)] text-black"
-                        style={{ ['--r' as string]: '0.6em' }}
-                    >
-                        <Shoulder side="left" />
-                        <Shoulder side="right" />
-
-                        {showNames && (
-                            <span className="max-w-full truncate text-[0.44em] leading-[1.7] font-semibold tracking-[0.14em] text-black/55 uppercase">
-                                {product.name}
-                            </span>
-                        )}
-
-                        {showPrices && (
-                            <span className="flex items-start justify-center gap-[0.4em] leading-none tabular-nums">
-                                {lead.from && (
-                                    <span className="self-end pb-[0.2em] text-[0.42em] font-semibold tracking-[0.14em] text-black/50 uppercase">
-                                        from
-                                    </span>
-                                )}
-
-                                {lead.was !== null && (
-                                    <span className="self-end pb-[0.12em] text-[0.6em] font-medium text-black/40 line-through">
-                                        {formatFigure(lead.was)}
-                                    </span>
-                                )}
-
-                                <Figure amount={lead.price} />
-                            </span>
-                        )}
-                    </div>
-                </div>
+                <Label
+                    style={labelStyle}
+                    name={showNames ? <Name product={product} /> : null}
+                    price={showPrices ? <Price product={product} /> : null}
+                />
             )}
         </li>
+    );
+}
+
+/**
+ * The label, in whichever of the three styles the shop chose.
+ *
+ * Every one of them is sized against the tile but never below what a figure
+ * can be read at, however many tiles the screen is carrying — and every one of
+ * them sits inside the photograph, so changing the style never changes how
+ * large the tiles are drawn.
+ */
+function Label({
+    style,
+    name,
+    price,
+}: {
+    style: ScreenLabelStyle;
+    name: ReactNode;
+    price: ReactNode;
+}) {
+    // A strip across the whole foot of the photograph, the two halves of the
+    // label pushed to its two ends. With only one of them to print, that one
+    // takes the middle rather than sitting against an edge on its own.
+    if (style === 'band') {
+        return (
+            <div
+                className={cn(
+                    'absolute inset-x-0 bottom-0 flex items-center gap-[0.8em] bg-white px-[0.75em] py-[0.4em] text-[max(0.92em,14px)] text-black',
+                    name !== null && price !== null
+                        ? 'justify-between'
+                        : 'justify-center',
+                )}
+            >
+                {name}
+                {price}
+            </div>
+        );
+    }
+
+    // A badge floating just inside the photograph. The one style with a
+    // shadow, because it is the one that really is lying on the picture.
+    if (style === 'pill') {
+        return (
+            <div className="absolute inset-x-0 bottom-[0.55em] flex justify-center px-[0.55em]">
+                <div className="flex max-w-full min-w-0 flex-col items-center rounded-[1.1em] bg-white px-[1em] py-[0.38em] text-center text-[max(0.92em,14px)] text-black shadow-[0_0.08em_0.45em_rgb(0_0_0/0.22)]">
+                    {name}
+                    {price}
+                </div>
+            </div>
+        );
+    }
+
+    // A tab of the board's own white that rises out of the gutter under the
+    // tile, its shoulders curving back into the photograph — so it reads as a
+    // notch cut out of the picture rather than as a sticker stuck onto it, the
+    // way a price is cut into a shelf-edge card. `--r` is the one radius its
+    // crown and its two shoulders are all drawn with.
+    return (
+        <div className="absolute inset-x-0 bottom-0 flex justify-center px-[0.9em]">
+            <div
+                className="relative flex max-w-full min-w-0 flex-col items-center rounded-t-(--r) bg-white px-[0.85em] pt-[0.45em] pb-[0.3em] text-center text-[max(0.92em,14px)] text-black"
+                style={{ ['--r' as string]: '0.6em' }}
+            >
+                <Shoulder side="left" />
+                <Shoulder side="right" />
+
+                {name}
+                {price}
+            </div>
+        </div>
+    );
+}
+
+/** What the dish is called, small and spaced, cut short rather than wrapped. */
+function Name({ product }: { product: Product }) {
+    return (
+        <span className="max-w-full min-w-0 truncate text-[0.44em] leading-[1.7] font-semibold tracking-[0.14em] text-black/55 uppercase">
+            {product.name}
+        </span>
+    );
+}
+
+/** What the dish costs: the figure, and beside it what it was or starts at. */
+function Price({ product }: { product: Product }) {
+    const lead = leadPrice(product);
+
+    return (
+        <span className="flex shrink-0 items-start justify-center gap-[0.4em] leading-none tabular-nums">
+            {lead.from && (
+                <span className="self-end pb-[0.2em] text-[0.42em] font-semibold tracking-[0.14em] text-black/50 uppercase">
+                    from
+                </span>
+            )}
+
+            {lead.was !== null && (
+                <span className="self-end pb-[0.12em] text-[0.6em] font-medium text-black/40 line-through">
+                    {formatFigure(lead.was)}
+                </span>
+            )}
+
+            <Figure amount={lead.price} />
+        </span>
     );
 }
 

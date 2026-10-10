@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\OrderType;
+use App\Enums\ScreenLabelStyle;
 use App\Enums\ScreenLayout;
 use App\Enums\ScreenOrientation;
 use App\Models\DisplayScreen;
@@ -26,6 +27,7 @@ class DisplayScreenFactory extends Factory
             'rotation_seconds' => 12,
             'show_prices' => true,
             'show_names' => true,
+            'label_style' => ScreenLabelStyle::Notch,
             'show_logo' => true,
             'show_slides' => true,
             'show_qr' => false,
