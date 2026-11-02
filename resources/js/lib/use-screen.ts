@@ -7,7 +7,9 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
  * table dims itself after a minute and sleeps after two, which is a menu board
  * that goes black between customers. The wake lock is dropped by the browser
  * whenever the page is hidden (another tab, the home screen, the lid closing),
- * so it is taken again every time the page comes back.
+ * and the system can take it back at any time (a battery saver, a dimmed set),
+ * so it is taken again whenever it goes and asked for again every minute after
+ * a refusal: a board runs for weeks, and one early no should not last that long.
  *
  * Unsupported browsers and refused requests are not failures worth reporting:
  * the board simply behaves the way it did before the lock existed.
@@ -17,9 +19,7 @@ export function useWakeLock(): void {
         const api = (
             navigator as Navigator & {
                 wakeLock?: {
-                    request: (
-                        kind: 'screen',
-                    ) => Promise<{ release: () => Promise<void> }>;
+                    request: (kind: 'screen') => Promise<WakeSentinel>;
                 };
             }
         ).wakeLock;
@@ -28,16 +28,26 @@ export function useWakeLock(): void {
             return;
         }
 
-        let sentinel: { release: () => Promise<void> } | null = null;
+        let sentinel: WakeSentinel | null = null;
         let dropped = false;
 
         const take = async (): Promise<void> => {
-            if (document.visibilityState !== 'visible' || dropped) {
+            if (
+                document.visibilityState !== 'visible' ||
+                dropped ||
+                sentinel !== null
+            ) {
                 return;
             }
 
             try {
-                sentinel = await api.request('screen');
+                const held = await api.request('screen');
+
+                sentinel = held;
+                held.addEventListener('release', () => {
+                    sentinel = null;
+                    void take();
+                });
             } catch {
                 // Refused — a battery saver, a policy, an older implementation.
             }
@@ -45,11 +55,73 @@ export function useWakeLock(): void {
 
         void take();
         document.addEventListener('visibilitychange', take);
+        const retry = window.setInterval(take, 60_000);
 
         return () => {
             dropped = true;
+            window.clearInterval(retry);
             document.removeEventListener('visibilitychange', take);
             void sentinel?.release().catch(() => undefined);
+        };
+    }, []);
+}
+
+/** The part of the browser's wake lock this board uses. */
+type WakeSentinel = {
+    release: () => Promise<void>;
+    addEventListener: (type: 'release', listener: () => void) => void;
+};
+
+/**
+ * Keep a tiny silent video looping for as long as the board is on the set.
+ *
+ * Most television browsers have no wake lock to ask for, but nearly all of them
+ * treat a playing video as somebody watching, and hold off their screen saver
+ * and their idle timers while one runs. It is a black square a pixel across,
+ * barely a kilobyte, and it runs beside the wake lock rather than instead of it
+ * because a set can offer the lock and then ignore it.
+ *
+ * It is nudged every so often, because a set that loses the picture for a moment
+ * — an input change, a screen saver that did get through — leaves it paused with
+ * nothing to start it again. A browser that wants a touch before it plays
+ * anything gets one the first time somebody reaches for the set.
+ *
+ * This cannot beat a television's own power-off timer, which lives below the
+ * browser and answers only to the set's settings menu.
+ */
+export function useAwakeVideo(): void {
+    useEffect(() => {
+        const video = document.createElement('video');
+
+        video.src = '/cover/keep-awake.mp4';
+        video.muted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.setAttribute('aria-hidden', 'true');
+        video.style.cssText =
+            'position:fixed;right:0;bottom:0;width:1px;height:1px;opacity:0.01;pointer-events:none';
+
+        document.body.appendChild(video);
+
+        const play = (): void => {
+            if (video.paused && document.visibilityState === 'visible') {
+                void video.play().catch(() => undefined);
+            }
+        };
+
+        play();
+
+        const nudge = window.setInterval(play, 30_000);
+        document.addEventListener('visibilitychange', play);
+        window.addEventListener('pointerdown', play);
+        window.addEventListener('keydown', play);
+
+        return () => {
+            window.clearInterval(nudge);
+            document.removeEventListener('visibilitychange', play);
+            window.removeEventListener('pointerdown', play);
+            window.removeEventListener('keydown', play);
+            video.remove();
         };
     }, []);
 }

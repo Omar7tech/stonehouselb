@@ -107,5 +107,7 @@
             setInterval(tick, hold);
         })();
     </script>
+
+    @include('screens.partials.keep-awake')
 </body>
 </html>

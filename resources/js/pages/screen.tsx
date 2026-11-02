@@ -15,6 +15,7 @@ import { StoneHouseLogo } from '@/components/stone-house-logo';
 import { buildDeck } from '@/lib/screen-deck';
 import type { ScreenPage } from '@/lib/screen-deck';
 import {
+    useAwakeVideo,
     useBoardTheme,
     useClock,
     useFullscreen,
@@ -86,6 +87,7 @@ export default function ScreenBoard({
     };
 
     useWakeLock();
+    useAwakeVideo();
     useTimedReload(screen.refreshMinutes);
 
     return (

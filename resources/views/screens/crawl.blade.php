@@ -132,5 +132,7 @@
             }
         })();
     </script>
+
+    @include('screens.partials.keep-awake')
 </body>
 </html>

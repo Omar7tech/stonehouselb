@@ -32,5 +32,7 @@
             <p class="empty">Nothing on the menu yet.</p>
         @endforelse
     </div>
+
+    @include('screens.partials.keep-awake')
 </body>
 </html>

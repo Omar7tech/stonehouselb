@@ -204,6 +204,17 @@ describe('the plain boards for older televisions', function (): void {
             ->not->toContain('/build/assets');
     })->with(['still', 'cycle', 'crawl']);
 
+    it('loops the silent video that keeps an idle television awake', function (string $style): void {
+        $screen = DisplayScreen::factory()->create();
+
+        expect(public_path('cover/keep-awake.mp4'))->toBeFile();
+
+        $this->get(route('screen.show', $screen).'?simple='.$style)
+            ->assertOk()
+            ->assertSee('cover/keep-awake.mp4')
+            ->assertSee('autoplay loop muted', escape: false);
+    })->with(['still', 'cycle', 'crawl']);
+
     it('reloads itself on the shop schedule', function (): void {
         $screen = DisplayScreen::factory()->create(['refresh_minutes' => 15]);
 
