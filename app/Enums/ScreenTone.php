@@ -10,7 +10,8 @@ use Filament\Support\Icons\Heroicon;
 /**
  * The sheet a hand-picked screen is drawn on. The labels take the same colour
  * as the sheet and print in the other one, so the board is one thing in two
- * inks whichever is chosen.
+ * inks whichever is chosen. On the brick board it picks the wall instead: white
+ * or charcoal, under the same orange labels.
  */
 enum ScreenTone: string implements HasIcon, HasLabel
 {

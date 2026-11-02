@@ -15,9 +15,34 @@ import {
 } from '@/lib/use-screen';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
-import type { Screen } from '@/types/screen';
+import type { Screen, ScreenTone } from '@/types/screen';
 
 const OrderQr = lazy(() => import('@/components/menu/order-qr'));
+
+/**
+ * The two walls the board can be put up on: the same bricks, whitewashed or
+ * painted charcoal. The orange does not change, because the labels and the brush
+ * work are what make it this board; only what they sit on does.
+ */
+const WALLS: Record<
+    ScreenTone,
+    { image: string; sheet: string; photo: string; track: string; note: string }
+> = {
+    light: {
+        image: '/cover/brick-wall.webp',
+        sheet: 'bg-[#f2eee4] text-neutral-900',
+        photo: 'bg-[#ece9f0]',
+        track: 'bg-black/10',
+        note: 'text-neutral-500',
+    },
+    dark: {
+        image: '/cover/brick-wall-dark.webp',
+        sheet: 'bg-[#2c2a28] text-white',
+        photo: 'bg-[#1d1b1a]',
+        track: 'bg-white/15',
+        note: 'text-white/55',
+    },
+};
 
 /** How many dishes a page is drawn for, which is what sizes everything on it. */
 type Density = 'six' | 'four' | 'two';
@@ -111,25 +136,30 @@ export function BrickBoard({
     const chrome = useIdleChrome();
     const fullscreen = useFullscreen();
     const portrait = useIsPortrait();
+    const wall = WALLS[screen.tone];
 
     return (
         <div
             className={cn(
-                'relative flex h-[100dvh] w-screen flex-col overflow-hidden bg-[#f2eee4] bg-cover bg-center text-neutral-900 select-none',
+                'relative flex h-[100dvh] w-screen flex-col overflow-hidden bg-cover bg-center select-none',
+                wall.sheet,
                 chrome ? 'cursor-default' : 'cursor-none',
             )}
             style={{
                 // The same unit the other boards are sized in, so the code and
                 // the controls are the size they are everywhere else.
                 ['--u' as string]: 'calc(0.6vw + 0.4vh)',
-                backgroundImage: "url('/cover/brick-wall.webp')",
+                backgroundImage: `url('${wall.image}')`,
                 fontSize: 'var(--u)',
             }}
         >
             <main className="relative min-h-0 flex-1">
                 {dishes.length === 0 ? (
                     <p
-                        className="relative grid h-full place-items-center text-center text-neutral-500"
+                        className={cn(
+                            'relative grid h-full place-items-center text-center',
+                            wall.note,
+                        )}
                         style={{ fontSize: 'calc(var(--u) * 1.4)' }}
                     >
                         Nothing chosen yet — pick the dishes for this screen in
@@ -154,7 +184,7 @@ export function BrickBoard({
                     className="absolute z-20 block"
                     style={{ top: '2.6vh', right: '1.6vw', width: '8vw' }}
                 >
-                    <StoneHouseLogo className="w-full animate-none text-neutral-900 [&_*]:animate-none!" />
+                    <StoneHouseLogo className="w-full animate-none text-current [&_*]:animate-none!" />
                 </span>
             )}
 
@@ -190,7 +220,12 @@ export function BrickBoard({
 
             {/* How long is left on the page, for a board with more than one. */}
             {pages.length > 1 && (
-                <div className="relative z-10 h-[0.35em] w-full shrink-0 bg-black/10">
+                <div
+                    className={cn(
+                        'relative z-10 h-[0.35em] w-full shrink-0',
+                        wall.track,
+                    )}
+                >
                     <div
                         className="h-full bg-primary"
                         style={{ width: `${Math.round(progress * 100)}%` }}
@@ -343,7 +378,8 @@ function Tile({
         >
             <div
                 className={cn(
-                    'overflow-hidden rounded-[1.5em] border border-primary/25 bg-[#ece9f0]',
+                    'overflow-hidden rounded-[1.5em] border border-primary/25',
+                    WALLS[screen.tone].photo,
                     !labelled && 'absolute inset-0',
                     labelled &&
                         (stacked
@@ -407,13 +443,18 @@ function Tile({
     );
 }
 
-/** What the dish is called, stepped down until a long name sits on two lines. */
+/**
+ * What the dish is called, a little larger than its price because it is what
+ * gets read first, and stepped down until a long name sits on two lines.
+ */
 function Name({ name, size }: { name: string; size: number }) {
     return (
         <StretchText
             as="h2"
-            className="line-clamp-2 max-w-full font-display leading-[1.15] text-balance"
-            style={{ fontSize: `calc(var(--u) * ${size * fitted(name)})` }}
+            className="line-clamp-2 max-w-full font-display leading-[1.25] text-balance"
+            style={{
+                fontSize: `calc(var(--u) * ${size * 1.05 * fitted(name)})`,
+            }}
         >
             {name}
         </StretchText>
@@ -424,7 +465,9 @@ function Name({ name, size }: { name: string; size: number }) {
  * What the dish costs: the same face and white as its name, so the two print
  * as one block.
  *
- * Dollars only, whatever the storefront quotes in: one figure per label.
+ * Dollars only, whatever the storefront quotes in: one figure per label. A dish
+ * sold in sizes quotes its cheapest, with no "from" in front of it: the shop
+ * wants the figure and nothing else.
  */
 function Price({ product, size }: { product: Product; size: number }) {
     const lead = leadPrice(product);
@@ -432,15 +475,6 @@ function Price({ product, size }: { product: Product; size: number }) {
 
     return (
         <span className="flex max-w-full items-baseline gap-[0.5em] font-display leading-none tabular-nums [font-variant-ligatures:none]">
-            {lead.from && (
-                <span
-                    className="text-white/80"
-                    style={{ fontSize: `calc(var(--u) * ${size * 0.42})` }}
-                >
-                    from
-                </span>
-            )}
-
             {lead.was !== null && (
                 <span
                     className="text-white/70 line-through"
@@ -483,8 +517,8 @@ function fitted(text: string): number {
     }
 
     if (text.length <= 18) {
-        return 0.8;
+        return 0.86;
     }
 
-    return text.length <= 28 ? 0.66 : 0.54;
+    return text.length <= 28 ? 0.72 : 0.6;
 }

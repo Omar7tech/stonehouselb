@@ -74,7 +74,7 @@ enum ScreenLayout: string implements HasDescription, HasIcon, HasLabel
             self::Showcase => 'A wall of tiles, one dish to each, the first given twice the room. The way the website draws its categories.',
             self::Strip => 'The category travelling sideways, never stopping. For a wide screen people walk past rather than queue at.',
             self::Picks => 'Only the dishes you choose, as square photographs on a white screen with the price under each. Nothing moves and nothing turns over.',
-            self::Brick => 'Only the dishes you choose, on a white brick wall with orange brush strokes, each photograph joined to an orange label. Six, four or two to a page, and the pages turn when there are more.',
+            self::Brick => 'Only the dishes you choose, on a white or black brick wall with orange brush strokes, each photograph joined to an orange label. Six, four or two to a page, and the pages turn when there are more.',
         };
     }
 

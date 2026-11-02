@@ -207,21 +207,23 @@ class DisplayScreenForm
                             ->helperText('Fewer makes each photograph larger. A page with one or two dishes left on it draws them large whatever is set here.'),
                     ]),
 
-                // Its own section, and only on the board that has labels to
-                // dress: the other layouts set their names and prices in the
-                // layout itself, and have nothing here to choose between.
+                // Its own section, and only on the boards that have something
+                // to dress: the other layouts set their names and prices in the
+                // layout itself, and have nothing here to choose between. The
+                // brick board's labels are fixed, so only its colour is asked.
                 Section::make('Look')
                     ->description('How the board is dressed. None of this changes which dishes it shows, only how they are set out.')
                     ->icon(Heroicon::OutlinedPaintBrush)
                     ->columnSpanFull()
                     ->columns(['md' => 2, 'xl' => 4])
-                    ->visible(fn (Get $get): bool => self::isStillBoard($get))
+                    ->visible(fn (Get $get): bool => self::isHandPicked($get))
                     ->components([
                         TextInput::make('heading')
                             ->label('Heading')
                             ->maxLength(60)
                             ->placeholder('Today\'s specials')
                             ->helperText('A line across the top of the board. Leave empty for no heading.')
+                            ->visible(fn (Get $get): bool => self::isStillBoard($get))
                             ->columnSpanFull(),
 
                         ToggleButtons::make('tone')
@@ -230,14 +232,17 @@ class DisplayScreenForm
                             ->default(ScreenTone::Light->value)
                             ->inline()
                             ->required()
-                            ->helperText('The labels take the same colour, with the figures in the other.'),
+                            ->helperText(fn (Get $get): string => self::isStillBoard($get)
+                                ? 'The labels take the same colour, with the figures in the other.'
+                                : 'A white or a black brick wall. The labels stay orange on both.'),
 
                         ToggleButtons::make('tile_corners')
                             ->label('Photo corners')
                             ->options(ScreenTileCorners::class)
                             ->default(ScreenTileCorners::Soft->value)
                             ->inline()
-                            ->required(),
+                            ->required()
+                            ->visible(fn (Get $get): bool => self::isStillBoard($get)),
 
                         ToggleButtons::make('tile_spacing')
                             ->label('Space between photos')
@@ -245,6 +250,7 @@ class DisplayScreenForm
                             ->default(ScreenTileSpacing::Regular->value)
                             ->inline()
                             ->required()
+                            ->visible(fn (Get $get): bool => self::isStillBoard($get))
                             ->helperText('Tighter makes the photos larger.'),
 
                         ToggleButtons::make('label_size')
@@ -252,7 +258,8 @@ class DisplayScreenForm
                             ->options(ScreenLabelSize::class)
                             ->default(ScreenLabelSize::Regular->value)
                             ->inline()
-                            ->required(),
+                            ->required()
+                            ->visible(fn (Get $get): bool => self::isStillBoard($get)),
 
                         Radio::make('label_style')
                             ->label('Label style')
@@ -265,7 +272,8 @@ class DisplayScreenForm
                                 ->all())
                             ->default(ScreenLabelStyle::Notch->value)
                             ->columns(['md' => 3])
-                            ->required(),
+                            ->required()
+                            ->visible(fn (Get $get): bool => self::isStillBoard($get)),
                     ]),
 
                 Section::make('Details')

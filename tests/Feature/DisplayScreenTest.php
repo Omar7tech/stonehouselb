@@ -464,11 +464,39 @@ describe('the brick board', function (): void {
         Livewire::test(EditDisplayScreen::class, ['record' => $screen->getRouteKey()])
             ->assertSee('Dishes on each page')
             ->assertSee('Seconds per page')
+            ->assertSee('Board colour')
             ->assertDontSee('Label style')
+            ->assertDontSee('Photo corners')
             ->assertDontSee('This board never reloads on its own')
             ->fillForm(['layout' => ScreenLayout::Picks->value])
             ->assertDontSee('Dishes on each page')
-            ->assertDontSee('Seconds per page');
+            ->assertDontSee('Seconds per page')
+            ->assertSee('Label style');
+    });
+
+    it('goes up on a white wall until the shop chooses the black one', function (): void {
+        $screen = DisplayScreen::factory()->brick()->create();
+
+        $this->get(route('screen.show', $screen))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->where('screen.tone', ScreenTone::Light->value)
+            );
+
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(EditDisplayScreen::class, ['record' => $screen->getRouteKey()])
+            ->fillForm(['tone' => ScreenTone::Dark->value])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        expect(public_path('cover/brick-wall-dark.webp'))->toBeFile();
+
+        $this->get(route('screen.show', $screen))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->where('screen.tone', ScreenTone::Dark->value)
+            );
     });
 
     it('counts its chosen dishes in the list of screens', function (): void {

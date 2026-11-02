@@ -45,7 +45,8 @@ export type Screen = {
     /**
      * The rest of a hand-picked board's dress: a line across the top, the
      * sheet it is drawn on, and how its photographs and labels are cut. Read
-     * by that layout only.
+     * by that layout only, but for the sheet, which picks the brick board's
+     * wall too.
      */
     heading: string | null;
     tone: ScreenTone;
