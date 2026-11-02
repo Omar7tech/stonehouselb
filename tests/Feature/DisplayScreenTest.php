@@ -4,6 +4,7 @@ use App\Enums\OrderType;
 use App\Enums\ScreenLabelSize;
 use App\Enums\ScreenLabelStyle;
 use App\Enums\ScreenLayout;
+use App\Enums\ScreenPageSize;
 use App\Enums\ScreenTileCorners;
 use App\Enums\ScreenTileSpacing;
 use App\Enums\ScreenTone;
@@ -141,8 +142,8 @@ it('draws every layout from the same deck', function (string $layout): void {
         );
 })->with(array_map(
     fn (ScreenLayout $layout): string => $layout->value,
-    // The hand-picked board is the one layout not fed the deck.
-    array_values(array_filter(ScreenLayout::cases(), fn (ScreenLayout $layout): bool => $layout !== ScreenLayout::Picks)),
+    // The hand-picked boards are the two layouts not fed the deck.
+    array_values(array_filter(ScreenLayout::cases(), fn (ScreenLayout $layout): bool => ! $layout->showsChosenDishes())),
 ));
 
 it('stops answering once a screen is taken down', function (): void {
@@ -381,6 +382,94 @@ describe('the hand-picked board', function (): void {
     });
 });
 
+describe('the brick board', function (): void {
+    it('shows exactly the dishes chosen for it, and how many go on a page', function (): void {
+        $category = Category::factory()->create();
+        $classic = Product::factory()->for($category)->create(['title' => 'Classic']);
+        $lemonade = Product::factory()->for($category)->create(['title' => 'Lemonade']);
+        Product::factory()->for($category)->create(['title' => 'Not chosen']);
+
+        $screen = DisplayScreen::factory()->brick()->create(['dishes_per_page' => ScreenPageSize::Four]);
+        $screen->products()->attach([
+            $lemonade->id => ['sort_order' => 0],
+            $classic->id => ['sort_order' => 1],
+        ]);
+
+        $this->get(route('screen.show', $screen))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->component('screen')
+                ->where('screen.layout', ScreenLayout::Brick->value)
+                ->where('screen.dishesPerPage', 4)
+                ->has('products', 2)
+                ->where('products.0.name', 'Lemonade')
+                ->where('products.1.name', 'Classic')
+                ->has('categories', 0)
+                ->has('slides', 0)
+            );
+    });
+
+    it('keeps its reload, because unlike the still board it is a screen that runs', function (): void {
+        $screen = DisplayScreen::factory()->brick()->create(['refresh_minutes' => 30]);
+
+        $this->get(route('screen.show', $screen))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->where('screen.refreshMinutes', 30)
+            );
+    });
+
+    it('saves its dishes and its page size from the dashboard', function (ScreenPageSize $size): void {
+        $first = Product::factory()->create();
+        $second = Product::factory()->create();
+
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(CreateDisplayScreen::class)
+            ->fillForm([
+                'name' => 'Poster wall',
+                'layout' => ScreenLayout::Brick->value,
+                'dishes_per_page' => $size->value,
+            ])
+            ->set('data.products', [
+                'a' => ['product_id' => $second->id],
+                'b' => ['product_id' => $first->id],
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $screen = DisplayScreen::query()->where('name', 'Poster wall')->sole();
+
+        expect($screen->layout)->toBe(ScreenLayout::Brick)
+            ->and($screen->dishes_per_page)->toBe($size)
+            ->and($screen->products()->pluck('products.id')->all())->toBe([$second->id, $first->id]);
+    })->with(ScreenPageSize::cases());
+
+    it('asks for what it reads and nothing it ignores', function (): void {
+        $screen = DisplayScreen::factory()->brick()->create();
+
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(EditDisplayScreen::class, ['record' => $screen->getRouteKey()])
+            ->assertSee('Dishes on each page')
+            ->assertSee('Seconds per page')
+            ->assertDontSee('Label style')
+            ->assertDontSee('This board never reloads on its own')
+            ->fillForm(['layout' => ScreenLayout::Picks->value])
+            ->assertDontSee('Dishes on each page')
+            ->assertDontSee('Seconds per page');
+    });
+
+    it('counts its chosen dishes in the list of screens', function (): void {
+        $screen = DisplayScreen::factory()->brick()->create();
+        $screen->products()->attach(Product::factory()->count(3)->create());
+
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(ListDisplayScreens::class)->assertSee('3 chosen');
+    });
+});
+
 describe('the label on a hand-picked tile', function (): void {
     it('is the notch unless the shop chose otherwise', function (): void {
         $screen = DisplayScreen::factory()->handPicked()->create();
@@ -480,18 +569,18 @@ describe('the look of a hand-picked board', function (): void {
 });
 
 describe('the screens in the dashboard', function (): void {
-    it('marks the hand-picked layout as new, and still saves it', function (): void {
+    it('marks the brick layout as new, and still saves it', function (): void {
         $this->actingAs(User::factory()->create());
 
         Livewire::test(CreateDisplayScreen::class)
             ->assertSeeHtml('fi-badge')
-            ->assertSeeInOrder(['Hand-picked', 'New'])
-            ->fillForm(['name' => 'Window tablet', 'layout' => ScreenLayout::Picks->value])
+            ->assertSeeInOrder(['Brick wall', 'New'])
+            ->fillForm(['name' => 'Window tablet', 'layout' => ScreenLayout::Brick->value])
             ->call('create')
             ->assertHasNoFormErrors();
 
         expect(DisplayScreen::query()->where('name', 'Window tablet')->sole()->layout)
-            ->toBe(ScreenLayout::Picks);
+            ->toBe(ScreenLayout::Brick);
     });
 
     it('asks a hand-picked screen which menu its code opens only once it shows a code', function (): void {

@@ -50,7 +50,7 @@ class DisplayScreensTable
                     ->formatStateUsing(fn (int $state, DisplayScreen $record): string => match (true) {
                         // A hand-picked screen runs no categories at all, so
                         // counting them would call it the whole menu.
-                        $record->layout === ScreenLayout::Picks => $record->products()->count().' chosen',
+                        $record->layout->showsChosenDishes() => $record->products()->count().' chosen',
                         $state === 0 => 'Whole menu',
                         $state === 1 => '1 category',
                         default => $state.' categories',
@@ -121,7 +121,7 @@ class DisplayScreensTable
                             ->icon($style->getIcon())
                             ->url(fn (DisplayScreen $record): string => route('screen.show', $record).'?simple='.$style->value)
                             ->openUrlInNewTab()
-                            ->hidden(fn (DisplayScreen $record): bool => $record->layout === ScreenLayout::Picks),
+                            ->hidden(fn (DisplayScreen $record): bool => $record->layout->showsChosenDishes()),
                         SimpleScreenStyle::cases(),
                     ))->dropdown(false),
 

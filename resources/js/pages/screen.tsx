@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { lazy, Suspense, useMemo } from 'react';
 
 import { BoardPage } from '@/components/screen/board-page';
+import { BrickBoard } from '@/components/screen/brick-board';
 import { PicksBoard } from '@/components/screen/picks-board';
 import { ShowcasePage } from '@/components/screen/showcase-page';
 import { SlidePage } from '@/components/screen/slide-page';
@@ -49,9 +50,9 @@ const FULL_BLEED: ReadonlySet<ScreenLayout> = new Set(['spotlight', 'split']);
  * itself again every so often so a price changed in the dashboard reaches the
  * wall on its own.
  *
- * Five of the layouts turn pages and one does not. The hand-picked board shows
- * the dishes chosen for it, all at once, and stands still; the rest are dealt a
- * deck and rotate through it.
+ * Five of the layouts are dealt a deck and rotate through it. The other two
+ * show the dishes chosen for them: the hand-picked board all at once, standing
+ * still, and the brick board a poster at a time.
  */
 export default function ScreenBoard({
     screen,
@@ -65,6 +66,25 @@ export default function ScreenBoard({
     /** The dishes chosen for a hand-picked screen; empty on every other. */
     products: Product[];
 }) {
+    const board = (): ReactNode => {
+        if (screen.layout === 'picks') {
+            return <PicksBoard screen={screen} products={products} />;
+        }
+
+        if (screen.layout === 'brick') {
+            return <BrickBoard screen={screen} products={products} />;
+        }
+
+        return (
+            <RotatingBoard
+                screen={screen}
+                layout={screen.layout}
+                categories={categories}
+                slides={slides}
+            />
+        );
+    };
+
     useWakeLock();
     useTimedReload(screen.refreshMinutes);
 
@@ -74,16 +94,7 @@ export default function ScreenBoard({
                 <meta name="robots" content="noindex, nofollow" />
             </Head>
 
-            {screen.layout === 'picks' ? (
-                <PicksBoard screen={screen} products={products} />
-            ) : (
-                <RotatingBoard
-                    screen={screen}
-                    layout={screen.layout}
-                    categories={categories}
-                    slides={slides}
-                />
-            )}
+            {board()}
         </>
     );
 }

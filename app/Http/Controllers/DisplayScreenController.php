@@ -53,7 +53,7 @@ class DisplayScreenController extends Controller
 
         // A hand-picked screen shows its own list and nothing else, so the
         // menu and the slider are not fetched for it at all.
-        $handPicked = $displayScreen->layout === ScreenLayout::Picks;
+        $handPicked = $displayScreen->layout->showsChosenDishes();
 
         $categories = $handPicked ? new Collection : $this->categories($displayScreen, $orderType);
         $slides = $handPicked ? new Collection : $this->slides($displayScreen, $orderType);
@@ -74,6 +74,7 @@ class DisplayScreenController extends Controller
                 'tileSpacing' => $displayScreen->tile_spacing->value,
                 'labelSize' => $displayScreen->label_size->value,
                 'showMarks' => $displayScreen->show_marks,
+                'dishesPerPage' => $displayScreen->dishes_per_page->value,
                 'showLogo' => $displayScreen->show_logo,
                 'showQr' => $displayScreen->show_qr,
                 // Where a customer's phone lands when they scan the code. The
@@ -81,10 +82,10 @@ class DisplayScreenController extends Controller
                 'menuUrl' => $orderType === OrderType::Delivery
                     ? route('menu.delivery')
                     : route('menu.dine-in'),
-                // A hand-picked board is left exactly as it was opened: it
-                // never fetches itself again, whatever the column still holds
-                // from a layout the screen was on before.
-                'refreshMinutes' => $handPicked ? null : $displayScreen->refreshMinutes(),
+                // The still board is left exactly as it was opened: it never
+                // fetches itself again, whatever the column still holds from a
+                // layout the screen was on before.
+                'refreshMinutes' => $displayScreen->layout === ScreenLayout::Picks ? null : $displayScreen->refreshMinutes(),
             ],
             'categories' => CategoryResource::collection($categories)->resolve(),
             'slides' => SlideResource::collection($slides)->resolve(),

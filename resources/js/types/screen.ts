@@ -3,13 +3,13 @@ export type ScreenOrientation = 'landscape' | 'portrait';
 
 /** Mirrors `App\Enums\ScreenLayout` — how a screen draws its pages. */
 export type ScreenLayout =
-    'board' | 'spotlight' | 'split' | 'showcase' | 'strip' | 'picks';
+    'board' | 'spotlight' | 'split' | 'showcase' | 'strip' | 'picks' | 'brick';
 
 /**
- * The layouts that turn pages: everything but the hand-picked board, which
- * shows its own list, all at once, and never moves.
+ * The layouts dealt a deck: everything but the two hand-picked boards, which
+ * show their own list and nothing else.
  */
-export type DeckLayout = Exclude<ScreenLayout, 'picks'>;
+export type DeckLayout = Exclude<ScreenLayout, 'picks' | 'brick'>;
 
 /**
  * Mirrors `App\Enums\ScreenLabelStyle` — how a hand-picked tile sets its name
@@ -54,6 +54,8 @@ export type Screen = {
     labelSize: ScreenLabelSize;
     /** Whether the favourite, spicy and vegan marks are drawn on a tile. */
     showMarks: boolean;
+    /** How many dishes the brick board sets on a page. Read by it alone. */
+    dishesPerPage: number;
     showLogo: boolean;
     /** Whether a code to open the menu on a phone is drawn in the corner. */
     showQr: boolean;

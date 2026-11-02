@@ -7,6 +7,7 @@ use App\Enums\ScreenLabelSize;
 use App\Enums\ScreenLabelStyle;
 use App\Enums\ScreenLayout;
 use App\Enums\ScreenOrientation;
+use App\Enums\ScreenPageSize;
 use App\Enums\ScreenTileCorners;
 use App\Enums\ScreenTileSpacing;
 use App\Enums\ScreenTone;
@@ -109,8 +110,9 @@ class DisplayScreenForm
                             ->live()
                             ->required(),
 
-                        // The hand-picked board measures the set itself, so
-                        // it has no use for being told which way up it is.
+                        // The hand-picked boards measure the set themselves,
+                        // so they have no use for being told which way up it
+                        // is.
                         ToggleButtons::make('orientation')
                             ->label('How it is hung')
                             ->options(ScreenOrientation::class)
@@ -122,9 +124,11 @@ class DisplayScreenForm
                     ]),
 
                 Section::make('What it shows')
-                    ->description(fn (Get $get): string => self::isHandPicked($get)
-                        ? 'Exactly the dishes you list here, all on the screen at once.'
-                        : 'Whole categories, turned over one page at a time.')
+                    ->description(fn (Get $get): string => match (true) {
+                        self::isStillBoard($get) => 'Exactly the dishes you list here, all on the screen at once.',
+                        self::isHandPicked($get) => 'Exactly the dishes you list here, turned over one page at a time when there are more than fit.',
+                        default => 'Whole categories, turned over one page at a time.',
+                    })
                     ->icon(Heroicon::OutlinedQueueList)
                     ->columnSpanFull()
                     ->components([
@@ -164,7 +168,9 @@ class DisplayScreenForm
                             ->grid(['md' => 2, 'xl' => 3])
                             ->reorderable()
                             ->addActionLabel('Add a dish')
-                            ->helperText('Drag to reorder: the screen reads left to right, top to bottom, in this order. Up to about twelve reads well from across a room; every one you add makes each of them smaller.')
+                            ->helperText(fn (Get $get): string => self::isStillBoard($get)
+                                ? 'Drag to reorder: the screen reads left to right, top to bottom, in this order. Up to about twelve reads well from across a room; every one you add makes each of them smaller.'
+                                : 'Drag to reorder: the screen reads left to right, top to bottom, in this order, and carries on onto the next page.')
                             ->visible(fn (Get $get): bool => self::isHandPicked($get))
                             ->dehydrated(false)
                             ->afterStateHydrated(function (Repeater $component, ?DisplayScreen $record): void {
@@ -190,17 +196,26 @@ class DisplayScreenForm
 
                                 $record->products()->sync($chosen);
                             }),
+
+                        ToggleButtons::make('dishes_per_page')
+                            ->label('Dishes on each page')
+                            ->options(ScreenPageSize::class)
+                            ->default(ScreenPageSize::Six->value)
+                            ->inline()
+                            ->required()
+                            ->visible(fn (Get $get): bool => self::layout($get) === ScreenLayout::Brick)
+                            ->helperText('Fewer makes each photograph larger. A page with one or two dishes left on it draws them large whatever is set here.'),
                     ]),
 
-                // Its own section, and only on the board that has labels: the
-                // other layouts set their names and prices in the layout
-                // itself, and have nothing here to choose between.
+                // Its own section, and only on the board that has labels to
+                // dress: the other layouts set their names and prices in the
+                // layout itself, and have nothing here to choose between.
                 Section::make('Look')
                     ->description('How the board is dressed. None of this changes which dishes it shows, only how they are set out.')
                     ->icon(Heroicon::OutlinedPaintBrush)
                     ->columnSpanFull()
                     ->columns(['md' => 2, 'xl' => 4])
-                    ->visible(fn (Get $get): bool => self::isHandPicked($get))
+                    ->visible(fn (Get $get): bool => self::isStillBoard($get))
                     ->components([
                         TextInput::make('heading')
                             ->label('Heading')
@@ -305,7 +320,7 @@ class DisplayScreenForm
                             ->default(12)
                             ->suffix('sec')
                             ->required()
-                            ->hidden(fn (Get $get): bool => self::isHandPicked($get))
+                            ->hidden(fn (Get $get): bool => self::isStillBoard($get))
                             ->helperText('How long one page holds before the next takes its place. Ten to fifteen suits a queue; longer suits a table.')
                             ->columnSpan(['md' => 1, 'xl' => 2]),
 
@@ -317,7 +332,7 @@ class DisplayScreenForm
                             ->default(30)
                             ->suffix('min')
                             ->placeholder('Never')
-                            ->hidden(fn (Get $get): bool => self::isHandPicked($get))
+                            ->hidden(fn (Get $get): bool => self::isStillBoard($get))
                             ->helperText('How often the screen fetches the menu again, so a price you change here reaches it on its own. Leave empty to leave the set alone.')
                             ->columnSpan(['md' => 1, 'xl' => 2]),
 
@@ -326,7 +341,7 @@ class DisplayScreenForm
                         // is not going to notice.
                         Text::make('This board never reloads on its own. After changing its dishes or a price, refresh the screen once by hand.')
                             ->color('gray')
-                            ->visible(fn (Get $get): bool => self::isHandPicked($get))
+                            ->visible(fn (Get $get): bool => self::isStillBoard($get))
                             ->columnSpanFull(),
                     ]),
             ]);
@@ -344,7 +359,7 @@ class DisplayScreenForm
         $options = [];
 
         foreach (ScreenLayout::cases() as $layout) {
-            $options[$layout->value] = $layout === ScreenLayout::Picks
+            $options[$layout->value] = $layout === ScreenLayout::Brick
                 ? new HtmlString(
                     '<span style="display: inline-flex; align-items: center; gap: 0.5rem;">'
                     .e($layout->getLabel())
@@ -378,14 +393,32 @@ class DisplayScreenForm
     }
 
     /**
-     * Whether the form is on the layout that shows chosen dishes rather than
+     * Whether the form is on a layout that shows chosen dishes rather than
      * categories, which is what decides which of its fields mean anything.
      */
     private static function isHandPicked(Get $get): bool
     {
+        return self::layout($get)?->showsChosenDishes() ?? false;
+    }
+
+    /**
+     * Whether the form is on the one layout that never turns a page, which has
+     * no use for a timer or a reload.
+     */
+    private static function isStillBoard(Get $get): bool
+    {
+        return self::layout($get) === ScreenLayout::Picks;
+    }
+
+    /**
+     * The layout the form is on, which arrives as the enum or as its value
+     * depending on where in the form's life it is read.
+     */
+    private static function layout(Get $get): ?ScreenLayout
+    {
         $layout = $get('layout');
 
-        return ($layout instanceof ScreenLayout ? $layout : ScreenLayout::tryFrom((string) $layout)) === ScreenLayout::Picks;
+        return $layout instanceof ScreenLayout ? $layout : ScreenLayout::tryFrom((string) $layout);
     }
 
     /**

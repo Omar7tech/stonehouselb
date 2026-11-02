@@ -9,9 +9,10 @@ use Filament\Support\Contracts\HasLabel;
 use Filament\Support\Icons\Heroicon;
 
 /**
- * How a screen draws the page it is holding. Every layout is fed the same deck
+ * How a screen draws the page it is holding. Most layouts are fed the same deck
  * — a category's dishes, then the next category's, with any promotions dealt in
- * between — so this is a look, not a different menu.
+ * between — so for them this is a look, not a different menu. The last two show
+ * a list the shop chose by hand instead.
  */
 enum ScreenLayout: string implements HasDescription, HasIcon, HasLabel
 {
@@ -31,11 +32,25 @@ enum ScreenLayout: string implements HasDescription, HasIcon, HasLabel
     case Strip = 'strip';
 
     /**
-     * The dishes the shop picked by hand, as still square tiles on white. The
-     * one layout that is not fed the deck: it shows its own list and nothing
-     * else, and it never moves.
+     * The dishes the shop picked by hand, as still square tiles on white. It
+     * shows its own list and nothing else, and it never moves.
      */
     case Picks = 'picks';
+
+    /**
+     * The dishes the shop picked by hand, as a poster on a whitewashed brick
+     * wall: photographs joined to orange labels, six, four or two to a page.
+     */
+    case Brick = 'brick';
+
+    /**
+     * Whether the screen shows a list chosen by hand rather than being fed the
+     * deck, which is what decides whether categories mean anything to it.
+     */
+    public function showsChosenDishes(): bool
+    {
+        return in_array($this, [self::Picks, self::Brick], true);
+    }
 
     public function getLabel(): string
     {
@@ -46,6 +61,7 @@ enum ScreenLayout: string implements HasDescription, HasIcon, HasLabel
             self::Showcase => 'Wall',
             self::Strip => 'Strip',
             self::Picks => 'Hand-picked',
+            self::Brick => 'Brick wall',
         };
     }
 
@@ -58,6 +74,7 @@ enum ScreenLayout: string implements HasDescription, HasIcon, HasLabel
             self::Showcase => 'A wall of tiles, one dish to each, the first given twice the room. The way the website draws its categories.',
             self::Strip => 'The category travelling sideways, never stopping. For a wide screen people walk past rather than queue at.',
             self::Picks => 'Only the dishes you choose, as square photographs on a white screen with the price under each. Nothing moves and nothing turns over.',
+            self::Brick => 'Only the dishes you choose, on a white brick wall with orange brush strokes, each photograph joined to an orange label. Six, four or two to a page, and the pages turn when there are more.',
         };
     }
 
@@ -70,6 +87,7 @@ enum ScreenLayout: string implements HasDescription, HasIcon, HasLabel
             self::Showcase => Heroicon::OutlinedSquares2x2,
             self::Strip => Heroicon::OutlinedArrowsRightLeft,
             self::Picks => Heroicon::OutlinedCursorArrowRays,
+            self::Brick => Heroicon::OutlinedRectangleGroup,
         };
     }
 }

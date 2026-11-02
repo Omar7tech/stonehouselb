@@ -254,6 +254,26 @@ export function useFullscreen(): {
     return { active, toggle: supported ? toggle : null };
 }
 
+/**
+ * Whether the set is stood on its end right now, read off the set itself so a
+ * board that measures its own room needs no telling and follows a tablet as it
+ * is turned.
+ */
+export function useIsPortrait(): boolean {
+    return useSyncExternalStore(
+        (notify) => {
+            const query = window.matchMedia('(orientation: portrait)');
+
+            query.addEventListener('change', notify);
+
+            return () => query.removeEventListener('change', notify);
+        },
+        () => window.matchMedia('(orientation: portrait)').matches,
+        // Server-rendered, where there is no set to measure yet.
+        () => false,
+    );
+}
+
 /** Which sheet a board is drawn on. Dark is the default, and the usual answer. */
 export type BoardTheme = 'dark' | 'light';
 

@@ -7,6 +7,7 @@ use App\Enums\ScreenLabelSize;
 use App\Enums\ScreenLabelStyle;
 use App\Enums\ScreenLayout;
 use App\Enums\ScreenOrientation;
+use App\Enums\ScreenPageSize;
 use App\Enums\ScreenTileCorners;
 use App\Enums\ScreenTileSpacing;
 use App\Enums\ScreenTone;
@@ -54,7 +55,7 @@ class DisplayScreen extends Model
 
     /**
      * The dishes a hand-picked screen shows, in the order the shop put them in.
-     * Read only by the layout that draws them; every other layout runs the
+     * Read only by the layouts that draw them; every other layout runs the
      * categories above.
      *
      * @return BelongsToMany<Product, $this>
@@ -108,6 +109,7 @@ class DisplayScreen extends Model
             'tile_spacing' => ScreenTileSpacing::class,
             'label_size' => ScreenLabelSize::class,
             'show_marks' => 'boolean',
+            'dishes_per_page' => ScreenPageSize::class,
             'show_logo' => 'boolean',
             'show_slides' => 'boolean',
             'show_qr' => 'boolean',

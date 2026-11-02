@@ -7,6 +7,7 @@ use App\Enums\ScreenLabelSize;
 use App\Enums\ScreenLabelStyle;
 use App\Enums\ScreenLayout;
 use App\Enums\ScreenOrientation;
+use App\Enums\ScreenPageSize;
 use App\Enums\ScreenTileCorners;
 use App\Enums\ScreenTileSpacing;
 use App\Enums\ScreenTone;
@@ -38,6 +39,7 @@ class DisplayScreenFactory extends Factory
             'tile_spacing' => ScreenTileSpacing::Regular,
             'label_size' => ScreenLabelSize::Regular,
             'show_marks' => false,
+            'dishes_per_page' => ScreenPageSize::Six,
             'show_logo' => true,
             'show_slides' => true,
             'show_qr' => false,
@@ -53,6 +55,14 @@ class DisplayScreenFactory extends Factory
     public function handPicked(): static
     {
         return $this->state(fn (): array => ['layout' => ScreenLayout::Picks]);
+    }
+
+    /**
+     * A screen showing the dishes chosen for it on the brick wall.
+     */
+    public function brick(): static
+    {
+        return $this->state(fn (): array => ['layout' => ScreenLayout::Brick]);
     }
 
     /**
